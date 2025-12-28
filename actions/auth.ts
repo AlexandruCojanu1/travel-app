@@ -10,7 +10,19 @@ export type ActionResult = { success: boolean; error?: string }
 export async function login(data: LoginInput, redirectPath?: string): Promise<ActionResult> {
   try {
     const validated = loginSchema.parse(data)
-    const supabase = await createClient()
+    
+    let supabase
+    try {
+      supabase = await createClient()
+    } catch (clientError: any) {
+      if (clientError.message?.includes('Missing Supabase environment variables')) {
+        return { 
+          success: false, 
+          error: 'Configuration error: Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your Vercel project settings.' 
+        }
+      }
+      throw clientError
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email: validated.email,
@@ -54,7 +66,19 @@ export async function login(data: LoginInput, redirectPath?: string): Promise<Ac
 export async function signup(data: SignupInput, redirectPath?: string): Promise<ActionResult> {
   try {
     const validated = signupSchema.parse(data)
-    const supabase = await createClient()
+    
+    let supabase
+    try {
+      supabase = await createClient()
+    } catch (clientError: any) {
+      if (clientError.message?.includes('Missing Supabase environment variables')) {
+        return { 
+          success: false, 
+          error: 'Configuration error: Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your Vercel project settings.' 
+        }
+      }
+      throw clientError
+    }
 
     const { error } = await supabase.auth.signUp({
       email: validated.email,
