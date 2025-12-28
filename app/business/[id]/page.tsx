@@ -1,18 +1,19 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { MapPin, Loader2 } from 'lucide-react'
-import { HeroParallax } from '@/components/business/hero-parallax'
-import { AttributeGrid } from '@/components/business/attribute-grid'
-import { StickyActionBar } from '@/components/business/sticky-action-bar'
-import { Gallery } from '@/components/business/gallery'
-import { ReviewsSection } from '@/components/business/reviews-section'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { getBusinessById, type Business } from '@/services/business.service'
+import { MapPin, Loader2, Settings, Edit } from 'lucide-react'
+import { HeroParallax } from '@/components/features/business/public/hero-parallax'
+import { AttributeGrid } from '@/components/features/business/public/attribute-grid'
+import { StickyActionBar } from '@/components/features/business/public/sticky-action-bar'
+import { Gallery } from '@/components/features/business/public/gallery'
+import { ReviewsSection } from '@/components/features/business/public/reviews-section'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs'
+import { Button } from '@/components/shared/ui/button'
+import { getBusinessById, type Business } from '@/services/business/business.service'
 import { createClient } from '@/lib/supabase/client'
-import type { Review } from '@/components/business/review-card'
+import type { Review } from '@/components/features/business/public/review-card'
 
 interface BusinessResource {
   id: string
@@ -27,6 +28,7 @@ interface BusinessResource {
 
 export default function BusinessDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const businessId = params.id as string
 
   const [business, setBusiness] = useState<Business | null>(null)
@@ -34,6 +36,7 @@ export default function BusinessDetailPage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [attributes, setAttributes] = useState<Record<string, any>>({})
+  const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
     async function loadBusinessData() {
@@ -41,6 +44,24 @@ export default function BusinessDetailPage() {
 
       setIsLoading(true)
       try {
+        const supabase = createClient()
+        
+        // Check if user is authenticated and is the owner
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: businessCheck } = await supabase
+            .from('businesses')
+            .select('owner_user_id, owner_id')
+            .eq('id', businessId)
+            .single()
+          
+          if (businessCheck) {
+            const isOwnerCheck = businessCheck.owner_user_id === user.id || 
+                                 businessCheck.owner_id === user.id
+            setIsOwner(isOwnerCheck)
+          }
+        }
+
         // Fetch business
         const businessData = await getBusinessById(businessId)
         if (!businessData) {
@@ -50,7 +71,6 @@ export default function BusinessDetailPage() {
         setBusiness(businessData)
 
         // Fetch business resources (if table exists)
-        const supabase = createClient()
         const { data: resourcesData, error: resourcesError } = await supabase
           .from('business_resources')
           .select('*')
@@ -146,6 +166,30 @@ export default function BusinessDetailPage() {
       {/* Content Container */}
       <div className="relative -mt-12 bg-white rounded-t-3xl z-10">
         <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
+          {/* Owner Actions Bar */}
+          {isOwner && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                    <Settings className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Business Owner Dashboard</h3>
+                    <p className="text-sm text-slate-600">Manage your business, bookings, and promotions</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => router.push('/business-portal/dashboard')}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Open Dashboard
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Tabs */}
           <Tabs defaultValue="about" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">

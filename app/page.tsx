@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { MapPin, Calendar, Bookmark, ArrowRight, Building2, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/shared/ui/button"
 
 export default async function LandingPage() {
   // Check server-side session
@@ -52,10 +52,7 @@ export default async function LandingPage() {
               
               <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 {/* User CTA Card */}
-                <Link
-                  href="/auth/login"
-                  className="group relative bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-blue-500"
-                >
+                <div className="group relative bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-blue-500">
                   <div className="flex flex-col items-center text-center space-y-4">
                     <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Users className="h-8 w-8 text-blue-600" />
@@ -66,21 +63,31 @@ export default async function LandingPage() {
                     <p className="text-slate-600">
                       Explore destinations, plan trips, and book amazing experiences
                     </p>
-                    <Button
-                      size="lg"
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white group-hover:shadow-lg transition-all"
-                    >
-                      Get Started
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                    <div className="w-full space-y-3">
+                      <Link href="/auth/login">
+                        <Button
+                          size="lg"
+                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white group-hover:shadow-lg transition-all"
+                        >
+                          Get Started
+                          <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </Link>
+                      <Link href="/auth/login">
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                        >
+                          Create Account
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
-                </Link>
+                </div>
 
                 {/* Business CTA Card */}
-                <Link
-                  href="/business-portal/onboarding"
-                  className="group relative bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-purple-500"
-                >
+                <div className="group relative bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-purple-500">
                   <div className="flex flex-col items-center text-center space-y-4">
                     <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-200 flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Building2 className="h-8 w-8 text-purple-600" />
@@ -91,16 +98,28 @@ export default async function LandingPage() {
                     <p className="text-slate-600">
                       Manage your business, rooms, and bookings on our platform
                     </p>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full border-2 border-purple-600 text-purple-600 hover:bg-purple-50 group-hover:shadow-lg transition-all"
-                    >
-                      Claim Your Business
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                    <div className="w-full space-y-3">
+                      <Link href="/auth/login?redirect=/business-portal/onboarding">
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="w-full border-2 border-purple-600 text-purple-600 hover:bg-purple-50 group-hover:shadow-lg transition-all"
+                        >
+                          Login
+                        </Button>
+                      </Link>
+                      <Link href="/auth/login?redirect=/business-portal/onboarding&mode=signup">
+                        <Button
+                          size="lg"
+                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white group-hover:shadow-lg transition-all"
+                        >
+                          Create Business Account
+                          <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
-                </Link>
+                </div>
               </div>
 
               {/* Login Link */}

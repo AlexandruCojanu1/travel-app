@@ -1,0 +1,2 @@
+agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url,agency_email
+CTBUS,CT BUS SA,http://www.ctbus.ro/?utm_source=gmaps,Europe/Bucharest,ro,0241694960,https://www.ctbus.ro/%23Tarife?utm_source=gmaps,office@ctbus.ro

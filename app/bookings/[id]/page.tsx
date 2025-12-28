@@ -5,10 +5,10 @@ import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { QRCodeSVG } from 'qrcode.react'
 import { MapPin, Download, X, ArrowLeft, Calendar, Users } from 'lucide-react'
-import { getBookingDetails } from '@/services/booking.service'
-import { Button } from '@/components/ui/button'
+import { getBookingDetails } from '@/services/booking/booking.service'
+import { Button } from '@/components/shared/ui/button'
 import { format } from 'date-fns'
-import type { BookingWithDetails } from '@/services/booking.service'
+import type { BookingWithDetails } from '@/services/booking/booking.service'
 
 export default function BookingDetailPage() {
   const params = useParams()

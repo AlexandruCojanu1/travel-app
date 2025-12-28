@@ -3,31 +3,34 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { getUserBusinesses, getBusinessBookings, updateBookingStatus } from "@/actions/business-portal"
-import { ResourceManager } from "@/components/business-portal/resource-manager"
-import { AvailabilityCalendarSelector } from "@/components/business-portal/availability-calendar-selector"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { getBusinessBookings, updateBookingStatus } from "@/actions/business-portal"
+import { InventoryManager } from "@/components/features/business/portal/inventory-manager"
+import { AvailabilityCalendarSelector } from "@/components/features/business/portal/availability-calendar-selector"
+import { DashboardOverview } from "@/components/features/business/portal/dashboard-overview"
+import { BookingsKanban } from "@/components/features/business/portal/bookings-kanban"
+import { ReviewsReputation } from "@/components/features/business/portal/reviews-reputation"
+import { Button } from "@/components/shared/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shared/ui/tabs"
 import { 
   Building2, 
   Calendar, 
   DollarSign, 
   Star, 
-  Check, 
-  X, 
   Loader2,
   Plus,
-  Settings
+  LayoutDashboard,
+  MessageSquare,
+  Package,
+  TrendingUp
 } from "lucide-react"
-import { format } from "date-fns"
 import { toast } from "sonner"
-import { useTransition } from "react"
 import Link from "next/link"
 
 interface Business {
   id: string
   name: string
   category: string
+  type?: string
   rating: number | null
   is_verified: boolean
 }
@@ -53,44 +56,81 @@ export default function BusinessPortalDashboard() {
   const router = useRouter()
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
-  const [bookings, setBookings] = useState<Booking[]>([])
-  const [stats, setStats] = useState({
-    totalBookings: 0,
-    revenueThisMonth: 0,
-    rating: 0,
-  })
   const [isLoading, setIsLoading] = useState(true)
-  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
-    loadBusinesses()
+    // Wait for page to fully load and cookies to be available
+    const timer = setTimeout(() => {
+      loadBusinesses()
+    }, 500) // Increased delay to ensure cookies are propagated
+    
+    return () => clearTimeout(timer)
   }, [])
-
-  useEffect(() => {
-    if (selectedBusiness) {
-      loadBookings()
-      loadStats()
-    }
-  }, [selectedBusiness])
 
   const loadBusinesses = async () => {
     setIsLoading(true)
     try {
-      const result = await getUserBusinesses()
+      console.log("Business Dashboard: Loading businesses...")
+      
+      // First verify user is authenticated on client side
+      const supabase = createClient()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        console.error("Business Dashboard: User not authenticated on client:", authError)
+        toast.error("Sesiunea a expirat. Te rugăm să te autentifici din nou.")
+        router.push("/auth/login?redirect=/business-portal/dashboard")
+        return
+      }
+      
+      console.log("Business Dashboard: User authenticated:", user.id)
+      
+      // Get session token to send with request
+      const { data: { session } } = await supabase.auth.getSession()
+      const authToken = session?.access_token
+      
+      // Use API route instead of server action for better cookie handling
+      const headers: HeadersInit = {
+        'Cache-Control': 'no-cache',
+      }
+      
+      // If we have a session token, send it as Authorization header as fallback
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`
+      }
+      
+      const response = await fetch('/api/business/list', {
+        method: 'GET',
+        credentials: 'include', // CRITICAL: Include cookies for session
+        headers,
+      })
+      
+      const result = await response.json()
+      console.log("Business Dashboard: Result", result)
+      
       if (result.success && result.businesses) {
+        console.log("Business Dashboard: Found", result.businesses.length, "businesses")
         setBusinesses(result.businesses)
         if (result.businesses.length > 0) {
           setSelectedBusiness(result.businesses[0])
+          console.log("Business Dashboard: Selected business", result.businesses[0].name)
         } else {
           // No businesses, redirect to onboarding
+          console.log("Business Dashboard: No businesses found, redirecting to onboarding")
           router.push("/business-portal/onboarding")
         }
       } else {
+        console.error("Business Dashboard: Failed to load businesses", result.error)
         toast.error(result.error || "Failed to load businesses")
-        router.push("/business-portal/onboarding")
+        // If not authenticated, redirect to login
+        if (response.status === 401) {
+          router.push("/auth/login?redirect=/business-portal/dashboard")
+        } else {
+          router.push("/business-portal/onboarding")
+        }
       }
     } catch (error) {
-      console.error("Error loading businesses:", error)
+      console.error("Business Dashboard: Exception loading businesses", error)
       toast.error("Failed to load businesses")
       router.push("/business-portal/onboarding")
     } finally {
@@ -98,67 +138,6 @@ export default function BusinessPortalDashboard() {
     }
   }
 
-  const loadBookings = async () => {
-    if (!selectedBusiness) return
-
-    try {
-      const result = await getBusinessBookings(selectedBusiness.id)
-      if (result.success && result.bookings) {
-        setBookings(result.bookings)
-      }
-    } catch (error) {
-      console.error("Error loading bookings:", error)
-    }
-  }
-
-  const loadStats = async () => {
-    if (!selectedBusiness) return
-
-    try {
-      const supabase = createClient()
-      const now = new Date()
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-
-      // Total bookings
-      const { count: totalCount } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("business_id", selectedBusiness.id)
-
-      // Revenue this month
-      const { data: monthBookings } = await supabase
-        .from("bookings")
-        .select("total_amount")
-        .eq("business_id", selectedBusiness.id)
-        .eq("status", "confirmed")
-        .gte("created_at", monthStart.toISOString())
-        .lte("created_at", monthEnd.toISOString())
-
-      const revenue = monthBookings?.reduce((sum, b) => sum + parseFloat(b.total_amount.toString()), 0) || 0
-
-      setStats({
-        totalBookings: totalCount || 0,
-        revenueThisMonth: revenue,
-        rating: selectedBusiness.rating || 0,
-      })
-    } catch (error) {
-      console.error("Error loading stats:", error)
-    }
-  }
-
-  const handleBookingAction = async (bookingId: string, status: "confirmed" | "cancelled") => {
-    startTransition(async () => {
-      const result = await updateBookingStatus(bookingId, status)
-      if (result.success) {
-        toast.success(`Booking ${status === "confirmed" ? "accepted" : "rejected"}`)
-        loadBookings()
-        loadStats()
-      } else {
-        toast.error(result.error || "Failed to update booking")
-      }
-    })
-  }
 
   if (isLoading) {
     return (
@@ -190,27 +169,61 @@ export default function BusinessPortalDashboard() {
     )
   }
 
-  const pendingBookings = bookings.filter((b) => b.status === "awaiting_payment")
-  const recentBookings = bookings.slice(0, 10)
-
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Business Portal</h1>
-            <p className="text-slate-600 mt-1">{selectedBusiness.name}</p>
+    <div className="min-h-screen bg-slate-50">
+      <div className="flex">
+        {/* Sidebar Navigation */}
+        <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col min-h-screen">
+          <div className="p-6 border-b border-slate-200">
+            <h1 className="text-xl font-bold text-slate-900">Business Portal</h1>
+            <p className="text-sm text-slate-600 mt-1">{selectedBusiness?.name}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <nav className="flex-1 p-4 space-y-2">
+            <Link
+              href="#overview"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+            >
+              <LayoutDashboard className="h-5 w-5" />
+              <span className="font-medium">Overview</span>
+            </Link>
+            <Link
+              href="#bookings"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+            >
+              <Calendar className="h-5 w-5" />
+              <span className="font-medium">Bookings</span>
+            </Link>
+            <Link
+              href="#reviews"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+            >
+              <Star className="h-5 w-5" />
+              <span className="font-medium">Reviews</span>
+            </Link>
+            <Link
+              href="#resources"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+            >
+              <Package className="h-5 w-5" />
+              <span className="font-medium">Inventory</span>
+            </Link>
+            <Link
+              href="/business-portal/promote"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+            >
+              <TrendingUp className="h-5 w-5" />
+              <span className="font-medium">Promote</span>
+            </Link>
+          </nav>
+          <div className="p-4 border-t border-slate-200">
             {businesses.length > 1 && (
               <select
-                value={selectedBusiness.id}
+                value={selectedBusiness?.id || ''}
                 onChange={(e) => {
                   const business = businesses.find((b) => b.id === e.target.value)
                   if (business) setSelectedBusiness(business)
                 }}
-                className="h-10 px-4 rounded-md border border-input bg-background"
+                className="w-full h-10 px-4 rounded-lg border border-slate-200 bg-white text-sm"
               >
                 {businesses.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -219,181 +232,91 @@ export default function BusinessPortalDashboard() {
                 ))}
               </select>
             )}
-            <Button variant="outline" asChild>
+            <Button variant="outline" className="w-full mt-3" asChild>
               <Link href="/business-portal/onboarding">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Business
               </Link>
             </Button>
           </div>
-        </div>
+        </aside>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl p-6 border border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-slate-600">Total Bookings</span>
-              <Calendar className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="text-3xl font-bold text-slate-900">
-              {stats.totalBookings}
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-6 border border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-slate-600">Revenue (This Month)</span>
-              <DollarSign className="h-5 w-5 text-green-600" />
-            </div>
-            <div className="text-3xl font-bold text-slate-900">
-              {stats.revenueThisMonth.toFixed(2)} RON
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-6 border border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-slate-600">Rating</span>
-              <Star className="h-5 w-5 text-yellow-600" />
-            </div>
-            <div className="text-3xl font-bold text-slate-900">
-              {stats.rating.toFixed(1)}
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="bookings" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="resources">Resources</TabsTrigger>
-            <TabsTrigger value="availability">Availability</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="bookings" className="mt-6">
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-200">
-                <h2 className="text-xl font-bold text-slate-900">Recent Bookings</h2>
+        {/* Main Content */}
+        <main className="flex-1 py-8 px-4 md:px-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Mobile Header */}
+            <div className="md:hidden flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">Business Portal</h1>
+                <p className="text-sm text-slate-600">{selectedBusiness?.name}</p>
               </div>
-              {recentBookings.length === 0 ? (
-                <div className="p-12 text-center text-slate-600">
-                  <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                  <p>No bookings yet</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">
-                          Customer
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">
-                          Resource
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">
-                          Dates
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">
-                          Guests
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">
-                          Amount
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {recentBookings.map((booking) => (
-                        <tr key={booking.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-4">
-                            <div>
-                              <div className="font-medium text-slate-900">
-                                {booking.user?.full_name || "Guest"}
-                              </div>
-                              <div className="text-sm text-slate-600">
-                                {booking.user?.email || ""}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-slate-900">
-                            {booking.resource?.name || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 text-slate-900">
-                            <div className="text-sm">
-                              {format(new Date(booking.start_date), "MMM dd")} -{" "}
-                              {format(new Date(booking.end_date), "MMM dd, yyyy")}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-slate-900">
-                            {booking.guest_count}
-                          </td>
-                          <td className="px-6 py-4 font-semibold text-slate-900">
-                            {parseFloat(booking.total_amount.toString()).toFixed(2)} RON
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                booking.status === "confirmed"
-                                  ? "bg-green-100 text-green-700"
-                                  : booking.status === "cancelled"
-                                  ? "bg-red-100 text-red-700"
-                                  : "bg-yellow-100 text-yellow-700"
-                              }`}
-                            >
-                              {booking.status.charAt(0).toUpperCase() +
-                                booking.status.slice(1).replace("_", " ")}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            {booking.status === "awaiting_payment" && (
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() =>
-                                    handleBookingAction(booking.id, "confirmed")
-                                  }
-                                  disabled={isPending}
-                                  className="text-green-600 hover:text-green-700"
-                                >
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Accept
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() =>
-                                    handleBookingAction(booking.id, "cancelled")
-                                  }
-                                  disabled={isPending}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Reject
-                                </Button>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/business-portal/onboarding">
+                  <Plus className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
-          </TabsContent>
 
-          <TabsContent value="resources" className="mt-6">
-            <ResourceManager businessId={selectedBusiness.id} />
-          </TabsContent>
+            {/* Main Content Tabs */}
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span className="hidden sm:inline">Overview</span>
+                </TabsTrigger>
+                <TabsTrigger value="bookings" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">Bookings</span>
+                </TabsTrigger>
+                <TabsTrigger value="reviews" className="flex items-center gap-2">
+                  <Star className="h-4 w-4" />
+                  <span className="hidden sm:inline">Reviews</span>
+                </TabsTrigger>
+                <TabsTrigger value="resources" className="flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  <span className="hidden sm:inline">Inventory</span>
+                </TabsTrigger>
+                <TabsTrigger value="availability" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">Calendar</span>
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="availability" className="mt-6">
-            <AvailabilityCalendarSelector businessId={selectedBusiness.id} />
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="overview" className="mt-6">
+                {selectedBusiness && (
+                  <DashboardOverview businessId={selectedBusiness.id} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="bookings" className="mt-6">
+                {selectedBusiness && (
+                  <BookingsKanban businessId={selectedBusiness.id} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="reviews" className="mt-6">
+                {selectedBusiness && (
+                  <ReviewsReputation businessId={selectedBusiness.id} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="resources" className="mt-6">
+                {selectedBusiness && (
+                  <InventoryManager 
+                    businessId={selectedBusiness.id} 
+                    businessType={selectedBusiness.type || selectedBusiness.category} 
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="availability" className="mt-6">
+                {selectedBusiness && (
+                  <AvailabilityCalendarSelector businessId={selectedBusiness.id} />
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
       </div>
     </div>
   )

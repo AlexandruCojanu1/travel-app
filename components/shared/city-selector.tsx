@@ -11,7 +11,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { Toast } from "@/components/ui/toast"
+import { toast as sonnerToast } from "sonner"
 import { useAppStore } from "@/store/app-store"
 import { getActiveCities } from "@/services/city.service"
 import { updateLastVisitedCity } from "@/actions/user"
@@ -230,11 +230,14 @@ export function CitySelector() {
 
       {/* Toast Notification */}
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+          <div className={`
+            px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium
+            ${toast.type === 'success' ? 'bg-green-600' : 'bg-blue-600'}
+          `}>
+            {toast.message}
+          </div>
+        </div>
       )}
     </>
   )

@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { getBookingDetails } from '@/services/booking.service'
-import { BookingSummary } from '@/components/checkout/booking-summary'
-import { StripeWrapper } from '@/components/checkout/stripe-wrapper'
+import { getBookingDetails } from '@/services/booking/booking.service'
+import { BookingSummary } from '@/components/features/booking/checkout/booking-summary'
+import { StripeWrapper } from '@/components/features/booking/checkout/stripe-wrapper'
 import { Loader2, AlertCircle } from 'lucide-react'
-import type { Business } from '@/services/business.service'
+import type { Business } from '@/services/business/business.service'
 
 interface BookingData {
   id: string
@@ -23,7 +23,7 @@ interface BookingData {
   }
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const bookingId = searchParams.get('bookingId')
@@ -152,6 +152,21 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading checkout...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   )
 }
 

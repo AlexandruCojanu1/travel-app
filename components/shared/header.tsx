@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { CitySelector } from "./city-selector"
 import { useAppStore } from "@/store/app-store"
+import { createClient } from "@/lib/supabase/client"
 
 const navLinks = [
   { label: "Home", href: "/home" },
@@ -22,10 +23,48 @@ export function Header() {
   const pathname = usePathname()
   const { currentCity, openCitySelector } = useAppStore()
   const [mounted, setMounted] = useState(false)
+  const [userInitials, setUserInitials] = useState("U")
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   // Prevent hydration mismatch by ensuring client-side state
   useEffect(() => {
     setMounted(true)
+    
+    // Get user data for avatar
+    async function loadUserData() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // Get initials from email or name
+        const name = user.user_metadata?.full_name || user.email || 'User'
+        const initials = name
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2) || 'U'
+        setUserInitials(initials)
+        
+        // Try to get avatar from profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url, full_name')
+          .eq('id', user.id)
+          .single()
+        
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url)
+        } else if (profile?.full_name) {
+          // Generate avatar URL from name
+          setAvatarUrl(`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name)}&background=6366f1&color=fff`)
+        } else {
+          setAvatarUrl(`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`)
+        }
+      }
+    }
+    
+    loadUserData()
   }, [])
 
   return (
@@ -87,9 +126,12 @@ export function Header() {
           {/* User Avatar - Always Visible */}
           <Link href="/profile">
             <Avatar className="h-9 w-9 ring-2 ring-slate-200 hover:ring-blue-400 transition-all cursor-pointer">
-              <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
+              <AvatarImage 
+                src={avatarUrl || undefined} 
+                alt="User" 
+              />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-sm font-semibold">
-                JD
+                {userInitials}
               </AvatarFallback>
             </Avatar>
           </Link>

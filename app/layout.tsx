@@ -2,8 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
 import "./globals.css"
-import { Header } from "@/components/shared/header"
-import { BottomNav } from "@/components/shared/bottom-nav"
+import { ConditionalLayout } from "@/components/shared/conditional-layout"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,10 +25,8 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Travel App",
   },
-  icons: {
-    apple: [
-      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
-    ],
+  other: {
+    "mobile-web-app-capable": "yes",
   },
 }
 
@@ -41,15 +38,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="antialiased">
-        <div className="mx-auto w-full max-w-screen-xl min-h-screen flex flex-col">
-          <Header />
-          
-          <main className="flex-1 pt-4 pb-24 md:pb-10 px-4 md:px-6">
-            {children}
-          </main>
-
-          <BottomNav />
-        </div>
+        <ConditionalLayout>
+          {children}
+        </ConditionalLayout>
         <Toaster position="top-center" richColors />
       </body>
     </html>

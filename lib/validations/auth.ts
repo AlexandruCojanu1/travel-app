@@ -1,48 +1,32 @@
 import { z } from 'zod'
 
+/**
+ * Login schema
+ */
 export const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
+/**
+ * Signup schema
+ */
 export const signupSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
+  fullName: z.string().min(2, 'Name must be at least 2 characters'),
 })
 
+/**
+ * Onboarding schema
+ */
 export const onboardingSchema = z.object({
-  homeCityId: z.string().min(1, 'Please select your city'),
+  homeCityId: z.string().uuid('Invalid city ID'),
   role: z.enum(['tourist', 'local'], {
-    errorMap: () => ({ message: 'Please select your role' }),
+    errorMap: () => ({ message: 'Role must be either tourist or local' }),
   }),
 })
 
 export type LoginInput = z.infer<typeof loginSchema>
 export type SignupInput = z.infer<typeof signupSchema>
 export type OnboardingInput = z.infer<typeof onboardingSchema>
-
-
-
-export const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-})
-
-export const signupSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-})
-
-export const onboardingSchema = z.object({
-  homeCityId: z.string().min(1, 'Please select your city'),
-  role: z.enum(['tourist', 'local'], {
-    errorMap: () => ({ message: 'Please select your role' }),
-  }),
-})
-
-export type LoginInput = z.infer<typeof loginSchema>
-export type SignupInput = z.infer<typeof signupSchema>
-export type OnboardingInput = z.infer<typeof onboardingSchema>
-

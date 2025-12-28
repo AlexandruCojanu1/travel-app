@@ -3,15 +3,16 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { getHomeContext, getCityFeed, type HomeContext, type CityFeedData } from "@/services/feed.service"
-import { QuickFilters } from "@/components/feed/quick-filters"
-import { FeaturedCarousel } from "@/components/feed/featured-carousel"
-import { NewsCard } from "@/components/feed/news-card"
-import { FeedSkeleton } from "@/components/feed/feed-skeleton"
-import { GlobalSearch } from "@/components/search/global-search"
+import { getHomeContext, getCityFeed, type HomeContext, type CityFeedData } from "@/services/feed/feed.service"
+import { getUserBusinesses } from "@/actions/business-portal"
+import { QuickFilters } from "@/components/features/feed/quick-filters"
+import { FeaturedCarousel } from "@/components/features/feed/featured-carousel"
+import { NewsCard } from "@/components/features/feed/news-card"
+import { FeedSkeleton } from "@/components/features/feed/feed-skeleton"
+import { GlobalSearch } from "@/components/features/map/search/global-search"
 import { useAppStore } from "@/store/app-store"
 import { useSearchStore } from "@/store/search-store"
-import { getCityById } from "@/services/city.service"
+import { getCityById } from "@/services/auth/city.service"
 import { Calendar, MapPin, Sparkles } from "lucide-react"
 import { format } from "date-fns"
 
@@ -24,11 +25,63 @@ export default function HomePage() {
   const [feedData, setFeedData] = useState<CityFeedData | null>(null)
   const [activeFilter, setActiveFilter] = useState("All")
   const [error, setError] = useState<string | null>(null)
+  const [isBusinessOwner, setIsBusinessOwner] = useState(false)
+
+  // Check if user is a business owner
+  useEffect(() => {
+    async function checkBusinessOwner() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        setIsBusinessOwner(false)
+        return
+      }
+
+      // Check if user owns any businesses
+      // Try to query with owner_id, but handle gracefully if column doesn't exist or RLS blocks it
+      const { data: businesses, error } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_id', user.id)
+        .limit(1)
+
+      if (error) {
+        // If error is 400 (bad request) or column doesn't exist, just assume false
+        if (error.code === 'PGRST116' || error.code === '42703' || error.message?.includes('column') || error.message?.includes('owner_id')) {
+          console.warn('Business ownership check failed (column may not exist or RLS issue):', error.message)
+          setIsBusinessOwner(false)
+          return
+        }
+        console.error('Error checking business ownership:', error)
+        setIsBusinessOwner(false)
+        return
+      }
+
+      setIsBusinessOwner((businesses?.length || 0) > 0)
+    }
+
+    checkBusinessOwner()
+  }, [])
 
   // Initialize city from user's home city on first load
   useEffect(() => {
     async function initializeCity() {
-      if (currentCity) return // Already have a city selected
+      // If we already have a city in store, use it (e.g., from onboarding)
+      if (currentCity) {
+        // Still load context for feed data
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          try {
+            const context = await getHomeContext(user.id)
+            setHomeContext(context)
+          } catch (error) {
+            console.error('Error loading home context:', error)
+          }
+        }
+        return
+      }
 
       const supabase = createClient()
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -43,25 +96,86 @@ export default function HomePage() {
         const context = await getHomeContext(user.id)
         setHomeContext(context)
 
-        if (!context.homeCityId) {
-          // No home city set, open city selector
-          openCitySelector()
+        // Only redirect to onboarding if user hasn't completed it
+        // Check both homeCityId and role to ensure onboarding is complete
+        if (!context.homeCityId || !context.role) {
+          console.log('Home: Onboarding incomplete, redirecting to onboarding')
+          router.push('/onboarding')
           return
         }
 
-        // Load user's home city into global store
+        // Check if user has businesses - if yes, redirect to business portal
+        console.log('Home: Checking if user has businesses for user:', user.id)
+        try {
+          // Use the existing getUserBusinesses function which handles RLS and missing columns
+          const businessesResult = await getUserBusinesses()
+          
+          console.log('Home: Business check result:', {
+            success: businessesResult.success,
+            businessesCount: businessesResult.businesses?.length || 0,
+            error: businessesResult.error,
+            userId: user.id,
+            businesses: businessesResult.businesses
+          })
+          
+          // Log full result for debugging
+          console.log('Home: Full businessesResult:', JSON.stringify(businessesResult, null, 2))
+
+          // If we successfully found businesses, redirect to business portal
+          if (businessesResult.success && businessesResult.businesses && businessesResult.businesses.length > 0) {
+            console.log('Home: User has', businessesResult.businesses.length, 'business(es), redirecting to business portal')
+            window.location.href = '/business-portal/dashboard'
+            return
+          } else {
+            console.log('Home: No businesses found for user, continuing normally')
+          }
+        } catch (error) {
+          // If check fails completely, log it but continue normally
+          console.warn('Home: Exception checking businesses:', error)
+        }
+
+        // Onboarding is complete - load user's home city into global store
         if (context.homeCity) {
           setCity(context.homeCity)
+        } else if (context.homeCityId) {
+          // If we have ID but not full city data, fetch it
+          const city = await getCityById(context.homeCityId)
+          if (city) {
+            setCity(city)
+          }
         }
       } catch (error) {
-        console.error('Error loading home context:', error)
-        // If error, just open city selector
-        openCitySelector()
+        console.error('Home: Error loading home context:', error)
+        // On error, try to get profile directly with better error handling
+        const supabase = createClient()
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('home_city_id, role')
+          .eq('id', user.id)
+          .single()
+        
+        if (profileError) {
+          console.error('Home: Profile fetch error:', profileError)
+          // If it's an RLS error, don't redirect - just show error
+          // User might have completed onboarding but RLS is blocking access
+          if (profileError.code === 'PGRST116') {
+            // Profile truly doesn't exist
+            router.push('/onboarding')
+          } else {
+            // RLS error - log it but don't redirect
+            console.warn('Home: RLS error detected, but not redirecting to onboarding')
+            setError('Unable to load profile. Please check RLS policies.')
+          }
+        } else if (!profile || !profile.home_city_id || !profile.role) {
+          // Profile exists but onboarding incomplete
+          router.push('/onboarding')
+        }
+        // If profile exists and onboarding is complete, continue normally
       }
     }
 
     initializeCity()
-  }, [])
+  }, [currentCity, router, setCity])
 
   // Fetch feed data when currentCity, filter, search query, or filters change
   useEffect(() => {
@@ -263,9 +377,12 @@ export default function HomePage() {
             <p className="text-slate-600 text-sm">
               Be the first to share something happening in your city
             </p>
-            <button className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors">
-              Create Post
-            </button>
+            {/* Only show Create Post button for business owners */}
+            {isBusinessOwner && (
+              <button className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors">
+                Create Post
+              </button>
+            )}
           </div>
         )}
       </section>

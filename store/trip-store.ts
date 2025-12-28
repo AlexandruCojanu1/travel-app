@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
-import { createOrUpdateTrip, fetchUserTrip } from '@/services/trip.service'
+import { createOrUpdateTrip, fetchUserTrip } from '@/services/trip/trip.service'
 
 export interface TripDetails {
   cityId: string
@@ -251,7 +251,7 @@ export const useTripStore = create<TripState>()(
               budget: trip.budget_total
                 ? { total: trip.budget_total, currency: 'RON' }
                 : null,
-              items: trip.items.map((item) => ({
+              items: (trip.items as any[] || []).map((item: any) => ({
                 id: item.id || `${Date.now()}-${Math.random()}`,
                 business_id: item.business_id,
                 business_name: item.business_name,
