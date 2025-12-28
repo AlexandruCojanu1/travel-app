@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
 import "./globals.css"
@@ -14,12 +14,6 @@ export const metadata: Metadata = {
   title: "Travel App - Your Premium Travel Companion",
   description: "Mobile-first travel platform for discovering and booking amazing experiences",
   manifest: "/manifest.json",
-  themeColor: "#2563eb",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    interactiveWidget: "resizes-content",
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -28,6 +22,13 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
   },
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
+  themeColor: "#2563eb",
 }
 
 export default function RootLayout({
