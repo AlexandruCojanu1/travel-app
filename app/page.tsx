@@ -5,13 +5,19 @@ import { MapPin, Calendar, Bookmark, ArrowRight, Building2, Users } from "lucide
 import { Button } from "@/components/shared/ui/button"
 
 export default async function LandingPage() {
-  // Check server-side session
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // Check server-side session with error handling
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
 
-  // If user is logged in, redirect to home
-  if (user) {
-    redirect("/home")
+    // If user is logged in, redirect to home
+    if (user && !error) {
+      redirect("/home")
+    }
+  } catch (error) {
+    // If there's an error checking auth, continue to show landing page
+    // This prevents the entire page from crashing
+    console.warn('Landing page: Error checking auth status:', error)
   }
 
   // If guest, render landing page
