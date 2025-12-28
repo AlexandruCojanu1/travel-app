@@ -19,22 +19,27 @@ export function TimelineView() {
   const [localItems, setLocalItems] = useState<TripItem[]>([])
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
 
-  if (!tripDetails) {
-    return null
-  }
-
-  const dayItems = getItemsByDay(selectedDayIndex)
-  const daysCount = getDaysCount()
+  // Calculate dayItems and daysCount - use empty array if no tripDetails
+  const dayItems = tripDetails ? getItemsByDay(selectedDayIndex) : []
+  const daysCount = tripDetails ? getDaysCount() : 0
 
   // Sync local items with store items when day changes
   React.useEffect(() => {
-    setLocalItems(dayItems)
-  }, [selectedDayIndex, dayItems.length])
+    if (tripDetails) {
+      setLocalItems(dayItems)
+    }
+  }, [selectedDayIndex, dayItems.length, tripDetails, dayItems])
 
   // Sync when store items change
   React.useEffect(() => {
-    setLocalItems(dayItems)
-  }, [dayItems])
+    if (tripDetails) {
+      setLocalItems(dayItems)
+    }
+  }, [dayItems, tripDetails])
+
+  if (!tripDetails) {
+    return null
+  }
 
   const handleItemDrag = (itemId: string, y: number) => {
     const itemIndex = localItems.findIndex((item) => item.id === itemId)
