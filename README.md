@@ -1,4 +1,4 @@
-# TravelPWA - Mobile-First Travel Platform
+# MOVA - Mobile-First Travel Platform
 
 A premium, responsive Progressive Web App (PWA) built with Next.js 14+, designed for seamless travel planning and booking experiences across all devices.
 
@@ -13,7 +13,7 @@ A premium, responsive Progressive Web App (PWA) built with Next.js 14+, designed
 - **Feed System**: City-based content feed with posts, promotions, and featured businesses
 
 ### Design System
-- **Airbnb-Inspired Design**: Clean, modern UI with coral red accent (#FF5A5F)
+- **MOVA Brand Design**: Clean, modern UI with vibrant blue primary color (#3B82F6) from logo gradient
 - **Mobile-First**: Optimized for mobile devices with touch-friendly interactions
 - **Responsive**: Gracefully scales to desktop screens
 - **Hybrid Navigation**: Bottom nav on mobile, top nav on desktop
@@ -110,11 +110,14 @@ npm start
 
 ## 🎨 Design System
 
-### Colors (Airbnb-Inspired)
-- **Primary Red**: `#FF5A5F` (airbnb-red)
-- **Dark Text**: `#2B2B2B` (airbnb-dark)
-- **Gray Text**: `#737373` (airbnb-gray)
-- **Light Background**: `#F5F5F5` (airbnb-light-gray)
+### Colors (MOVA Brand)
+- **Primary Blue**: `#3B82F6` (mova-blue) - Vibrant blue from logo
+- **Teal**: `#14B8A6` (mova-teal) - Teal from logo gradient
+- **Green**: `#10B981` (mova-green) - Green from logo gradient
+- **Orange**: `#F97316` (mova-orange) - Orange from logo gradient
+- **Dark Text**: `#1E293B` (mova-dark)
+- **Gray Text**: `#64748B` (mova-gray)
+- **Light Background**: `#F1F5F9` (mova-light-gray)
 
 ### Border Radius
 - **Default**: `12px` (rounded-airbnb)

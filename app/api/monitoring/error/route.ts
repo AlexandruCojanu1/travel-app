@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger'
 /**
  * Custom error monitoring endpoint
  * Stores errors in database or logs them for analysis
- * This is a free alternative to Sentry
+ * Custom error monitoring endpoint
  */
 export async function POST(request: NextRequest) {
   try {

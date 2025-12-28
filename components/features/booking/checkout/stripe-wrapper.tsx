@@ -140,7 +140,7 @@ function PaymentForm({ bookingId, amount }: StripeWrapperProps) {
         <h2 className="text-xl font-bold text-slate-900 mb-4">Payment Details</h2>
         
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+          <div className="mb-4 p-3 bg-blue-50 border border-red-200 rounded-lg flex items-start gap-2">
             <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-red-600">{error}</p>
           </div>

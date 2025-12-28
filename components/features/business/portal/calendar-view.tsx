@@ -332,9 +332,9 @@ export function CalendarView({ businessId, resourceId }: CalendarViewProps) {
       case 'blocked':
         return 'bg-red-100 hover:bg-red-200 border-red-300'
       case 'past':
-        return 'bg-airbnb-light-gray border-gray-200 opacity-50 cursor-not-allowed'
+        return 'bg-mova-light-gray border-gray-200 opacity-50 cursor-not-allowed'
       default:
-        return 'bg-white hover:bg-airbnb-light-gray border-gray-200'
+        return 'bg-white hover:bg-mova-light-gray border-gray-200'
     }
   }
 
@@ -349,17 +349,17 @@ export function CalendarView({ businessId, resourceId }: CalendarViewProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-airbnb-gray">Loading calendar...</div>
+        <div className="text-mova-gray">Loading calendar...</div>
       </div>
     )
   }
 
   if (resources.length === 0) {
     return (
-      <div className="text-center py-12 bg-airbnb-light-gray rounded-airbnb-lg border-2 border-dashed border-gray-300">
-        <CalendarIcon className="h-12 w-12 text-airbnb-gray mx-auto mb-4" />
-        <p className="text-airbnb-gray mb-4">No resources available</p>
-        <p className="text-sm text-airbnb-gray">Create rooms or services first to manage availability</p>
+      <div className="text-center py-12 bg-mova-light-gray rounded-airbnb-lg border-2 border-dashed border-gray-300">
+        <CalendarIcon className="h-12 w-12 text-mova-gray mx-auto mb-4" />
+        <p className="text-mova-gray mb-4">No resources available</p>
+        <p className="text-sm text-mova-gray">Create rooms or services first to manage availability</p>
       </div>
     )
   }
@@ -371,8 +371,8 @@ export function CalendarView({ businessId, resourceId }: CalendarViewProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-airbnb-dark">Availability Calendar</h3>
-          <p className="text-sm text-airbnb-gray mt-1">
+          <h3 className="text-xl font-semibold text-mova-dark">Availability Calendar</h3>
+          <p className="text-sm text-mova-gray mt-1">
             Manage availability, block dates, and adjust prices
           </p>
         </div>
@@ -399,13 +399,13 @@ export function CalendarView({ businessId, resourceId }: CalendarViewProps) {
       {/* Resource Selector */}
       {resources.length > 1 && (
         <div className="airbnb-card p-4">
-          <label className="block text-sm font-semibold text-airbnb-dark mb-2">
+          <label className="block text-sm font-semibold text-mova-dark mb-2">
             Select Resource
           </label>
           <select
             value={selectedResourceId || ''}
             onChange={(e) => setSelectedResourceId(e.target.value)}
-            className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20"
+            className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20"
           >
             {resources.map((resource) => (
               <option key={resource.id} value={resource.id}>
@@ -444,7 +444,7 @@ export function CalendarView({ businessId, resourceId }: CalendarViewProps) {
           {/* Day Headers */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-center text-sm font-semibold text-airbnb-gray py-2">
+              <div key={day} className="text-center text-sm font-semibold text-mova-gray py-2">
                 {day}
               </div>
             ))}
@@ -481,13 +481,13 @@ export function CalendarView({ businessId, resourceId }: CalendarViewProps) {
                   <div className="flex items-center justify-between mb-1">
                     <span className={cn(
                       "text-sm font-semibold",
-                      isToday(date) && "bg-airbnb-red text-white rounded-full w-6 h-6 flex items-center justify-center",
-                      !isToday(date) && "text-airbnb-dark"
+                      isToday(date) && "bg-mova-blue text-white rounded-full w-6 h-6 flex items-center justify-center",
+                      !isToday(date) && "text-mova-dark"
                     )}>
                       {format(date, 'd')}
                     </span>
                     {avail?.price_override && (
-                      <DollarSign className="h-3 w-3 text-airbnb-red" />
+                      <DollarSign className="h-3 w-3 text-mova-blue" />
                     )}
                     {status === 'blocked' && (
                       <Lock className="h-3 w-3 text-red-600" />
@@ -495,19 +495,19 @@ export function CalendarView({ businessId, resourceId }: CalendarViewProps) {
                   </div>
                   
                   {booking && booking.count > 0 && (
-                    <div className="text-xs text-airbnb-gray mt-1">
+                    <div className="text-xs text-mova-gray mt-1">
                       {booking.count} {booking.count === 1 ? 'booking' : 'bookings'}
                     </div>
                   )}
                   
                   {avail && (
-                    <div className="text-xs text-airbnb-gray mt-1">
+                    <div className="text-xs text-mova-gray mt-1">
                       {avail.units_available} {avail.units_available === 1 ? 'unit' : 'units'}
                     </div>
                   )}
 
                   {avail?.price_override && (
-                    <div className="text-xs font-semibold text-airbnb-red mt-1">
+                    <div className="text-xs font-semibold text-mova-blue mt-1">
                       {avail.price_override.toFixed(0)} RON
                     </div>
                   )}
@@ -526,15 +526,15 @@ export function CalendarView({ businessId, resourceId }: CalendarViewProps) {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-yellow-100 border border-yellow-300" />
-              <span className="text-airbnb-dark">Low Availability</span>
+              <span className="text-mova-dark">Low Availability</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-red-100 border border-red-300" />
-              <span className="text-airbnb-dark">Blocked / Fully Booked</span>
+              <span className="text-mova-dark">Blocked / Fully Booked</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-airbnb-light-gray border border-gray-200 opacity-50" />
-              <span className="text-airbnb-dark">Past Dates</span>
+              <div className="w-4 h-4 rounded bg-mova-light-gray border border-gray-200 opacity-50" />
+              <span className="text-mova-dark">Past Dates</span>
             </div>
           </div>
         </div>

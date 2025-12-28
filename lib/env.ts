@@ -16,9 +16,6 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().min(1, 'STRIPE_SECRET_KEY is required'),
   STRIPE_WEBHOOK_SECRET: z.string().min(1, 'STRIPE_WEBHOOK_SECRET is required'),
   
-  // Sentry (OPTIONAL but recommended)
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
-  
   // Application URL (CRITICAL for redirects and webhooks)
   NEXT_PUBLIC_APP_URL: z.string().url('NEXT_PUBLIC_APP_URL must be a valid URL'),
   

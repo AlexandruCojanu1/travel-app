@@ -14,9 +14,10 @@ type Mode = 'login' | 'signup'
 interface AuthFormProps {
   redirectTo?: string
   defaultMode?: 'login' | 'signup'
+  role?: string // 'tourist' or 'local' from homepage selection
 }
 
-export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFormProps) {
+export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: AuthFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [mode, setMode] = useState<Mode>(defaultMode)
@@ -53,26 +54,44 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
 
         startTransition(async () => {
           try {
-            const result = await login(validated.data, redirectTo)
+            console.log('🔐 Login attempt started')
+            // Build redirect path with role if available
+            const loginRedirect = role ? `${redirectTo}?role=${role}` : redirectTo
+            const result = await login(validated.data, loginRedirect)
+            console.log('🔐 Login result:', result)
             
             // If result exists and has error, show it
             if (result && !result.success) {
+              console.error('❌ Login failed:', result.error)
               setErrors({ submit: result.error || 'Login failed' })
               return
             }
             
-            // If login successful, redirect will happen via server action redirect()
-            // Use window.location for hard redirect to ensure clean state
-            window.location.href = redirectTo
+            // Use redirect from server action result
+            // The server action already checked onboarding and business status
+            const redirectPath = result?.redirect || redirectTo
+            
+            console.log('🔄 Redirecting to:', redirectPath)
+            
+            // Refresh router to ensure cookies are loaded
+            router.refresh()
+            
+            // Wait for cookies to be properly set and propagated
+            // Server action sets cookies, but we need to wait for them to be available
+            setTimeout(() => {
+              window.location.href = redirectPath
+            }, 800)
           } catch (err: any) {
+            console.error('❌ Login error:', err)
             // Next.js redirect throws a special error - this is expected
             if (err?.message === 'NEXT_REDIRECT' || 
                 err?.digest?.startsWith('NEXT_REDIRECT') ||
                 (err instanceof Error && err.message.includes('NEXT_REDIRECT'))) {
-              // Redirect is happening via server action - this is expected, do nothing
+              // Redirect is happening - use window.location as fallback
+              const redirectPath = role ? `/onboarding?role=${role}` : '/onboarding'
+              window.location.href = redirectPath
               return
             }
-            // Other errors
             setErrors({ submit: err.message || 'Login failed' })
           }
         })
@@ -92,25 +111,46 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
 
         startTransition(async () => {
           try {
-            // Determine redirect path: if redirectTo is business onboarding, use it; otherwise use /onboarding for traveler
-            const signupRedirect = redirectTo.includes('/business-portal') ? redirectTo : '/onboarding'
+            // Determine redirect path: if redirectTo is business onboarding, use it; otherwise use /onboarding with role
+            const signupRedirect = redirectTo.includes('/business-portal') 
+              ? redirectTo 
+              : (role ? `/onboarding?role=${role}` : '/onboarding')
+            console.log('📝 Signup attempt started, redirect to:', signupRedirect, 'role:', role)
             const result = await signup(validated.data, signupRedirect)
+            console.log('📝 Signup result:', result)
             
             // If result exists and has error, show it
             if (result && !result.success) {
+              console.error('❌ Signup failed:', result.error)
               setErrors({ submit: result.error || 'Signup failed' })
               return
             }
             
-            // If signup successful, redirect will happen via server action redirect()
-            // Use window.location for hard redirect to ensure clean state
-            window.location.href = signupRedirect
+            // Use redirect from result if provided, otherwise use signupRedirect
+            const redirectPath = result?.redirect || signupRedirect
+            console.log('🔄 Redirecting to:', redirectPath)
+            
+            // Refresh router to ensure cookies are loaded
+            router.refresh()
+            
+            // Force a hard redirect with a delay to ensure cookies are set
+            // This is necessary because Supabase cookies need time to propagate
+            setTimeout(() => {
+              if (typeof window !== 'undefined') {
+                // Use window.location.href for hard redirect
+                // This ensures a full page reload with fresh cookies
+                window.location.href = redirectPath
+              }
+            }, 500)
           } catch (err: any) {
+            console.error('❌ Signup error:', err)
             // Next.js redirect throws a special error - this is expected
             if (err?.message === 'NEXT_REDIRECT' || 
                 err?.digest?.startsWith('NEXT_REDIRECT') ||
                 (err instanceof Error && err.message.includes('NEXT_REDIRECT'))) {
-              // Redirect is happening - this is expected, do nothing
+              // Redirect is happening - use window.location as fallback
+              console.log('🔄 NEXT_REDIRECT detected, redirecting to:', signupRedirect)
+              window.location.href = signupRedirect
               return
             }
             // Other errors
@@ -159,7 +199,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-airbnb-gray hover:text-airbnb-dark"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-mova-gray hover:text-mova-dark"
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -209,7 +249,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-airbnb-gray hover:text-airbnb-dark"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-mova-gray hover:text-mova-dark"
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -219,7 +259,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
       </AnimatePresence>
 
       {errors.submit && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-airbnb">
+        <div className="p-3 bg-blue-50 border border-red-200 rounded-airbnb">
           <p className="text-sm text-red-600">{errors.submit}</p>
         </div>
       )}
@@ -228,7 +268,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
         type="submit"
         disabled={isPending}
         className={cn(
-          "w-full h-12 bg-airbnb-red text-white font-semibold rounded-airbnb-lg shadow-airbnb-md hover:bg-[#FF484D] hover:shadow-airbnb-lg transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+          "w-full h-12 bg-mova-blue text-white font-semibold rounded-airbnb-lg shadow-airbnb-md hover:bg-[#2563EB] hover:shadow-airbnb-lg transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
         )}
       >
         {isPending ? (
@@ -249,12 +289,12 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
             setErrors({})
             setFormData({ email: '', password: '', fullName: '' })
           }}
-          className="text-sm text-airbnb-gray hover:text-airbnb-dark transition-colors"
+          className="text-sm text-mova-gray hover:text-mova-dark transition-colors"
         >
           {mode === 'login' ? (
-            <>Don't have an account? <span className="font-semibold text-airbnb-red">Sign up</span></>
+            <>Don't have an account? <span className="font-semibold text-mova-blue">Sign up</span></>
           ) : (
-            <>Already have an account? <span className="font-semibold text-airbnb-red">Sign in</span></>
+            <>Already have an account? <span className="font-semibold text-mova-blue">Sign in</span></>
           )}
         </button>
       </div>

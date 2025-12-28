@@ -34,10 +34,10 @@ interface BookingsKanbanProps {
 
 const STATUS_COLUMNS = [
   { id: 'pending', label: 'Pending', color: 'bg-yellow-50 border-yellow-200' },
-  { id: 'confirmed', label: 'Confirmed', color: 'bg-airbnb-light-red border-airbnb-red/30' },
+  { id: 'confirmed', label: 'Confirmed', color: 'bg-mova-light-blue border-mova-blue/30' },
   { id: 'checked_in', label: 'Checked-In', color: 'bg-green-50 border-green-200' },
-  { id: 'completed', label: 'Completed', color: 'bg-airbnb-light-gray border-gray-200' },
-  { id: 'cancelled', label: 'Cancelled', color: 'bg-red-50 border-red-200' },
+  { id: 'completed', label: 'Completed', color: 'bg-mova-light-gray border-gray-200' },
+  { id: 'cancelled', label: 'Cancelled', color: 'bg-blue-50 border-red-200' },
 ] as const
 
 export function BookingsKanban({ businessId }: BookingsKanbanProps) {
@@ -148,7 +148,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-airbnb-gray">Loading bookings...</div>
+        <div className="text-mova-gray">Loading bookings...</div>
       </div>
     )
   }
@@ -158,8 +158,8 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-airbnb-dark">Reservations & Operations</h3>
-          <p className="text-sm text-airbnb-gray mt-1">
+          <h3 className="text-xl font-semibold text-mova-dark">Reservations & Operations</h3>
+          <p className="text-sm text-mova-gray mt-1">
             Manage bookings, check-ins, and guest communications
           </p>
         </div>
@@ -210,7 +210,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
                       />
                     ))}
                     {columnBookings.length === 0 && (
-                      <div className="text-center py-8 text-airbnb-gray text-sm">
+                      <div className="text-center py-8 text-mova-gray text-sm">
                         No bookings
                       </div>
                     )}

@@ -151,7 +151,7 @@ export function BookingDialog({ business, isOpen, onOpenChange }: BookingDialogP
         <div className="space-y-6 py-4">
           {/* Error Message */}
           {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+            <div className="p-4 bg-blue-50 border border-red-200 rounded-xl flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-600">{error}</p>
             </div>

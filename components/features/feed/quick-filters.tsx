@@ -6,11 +6,11 @@ import { Hotel, UtensilsCrossed, Trees, Compass } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const filters = [
-  { id: "All", label: "All", icon: Compass },
-  { id: "Hotels", label: "Hotels", icon: Hotel },
-  { id: "Food", label: "Food & Dining", icon: UtensilsCrossed },
-  { id: "Nature", label: "Nature", icon: Trees },
-  { id: "Activities", label: "Activities", icon: Compass },
+  { id: "All", label: "Toate", icon: Compass },
+  { id: "Hotels", label: "Hoteluri", icon: Hotel },
+  { id: "Food", label: "Mâncare & Restaurante", icon: UtensilsCrossed },
+  { id: "Nature", label: "Natură", icon: Trees },
+  { id: "Activities", label: "Activități", icon: Compass },
 ]
 
 interface QuickFiltersProps {
@@ -21,7 +21,7 @@ interface QuickFiltersProps {
 export function QuickFilters({ activeFilter, onFilterChange }: QuickFiltersProps) {
   return (
     <div className="relative">
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+      <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-2 justify-center">
         {filters.map((filter) => {
           const Icon = filter.icon
           const isActive = activeFilter === filter.id
@@ -31,20 +31,20 @@ export function QuickFilters({ activeFilter, onFilterChange }: QuickFiltersProps
               key={filter.id}
               onClick={() => onFilterChange(filter.id)}
               className={cn(
-                "relative flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap transition-all duration-200",
+                "relative flex items-center gap-2 px-5 py-3 rounded-full font-semibold text-sm whitespace-nowrap transition-all duration-200",
                 isActive
-                  ? "bg-airbnb-dark text-white shadow-airbnb-md"
-                  : "bg-airbnb-light-gray text-airbnb-dark hover:bg-gray-200"
+                  ? "bg-mova-blue text-white shadow-airbnb-md hover:bg-[#2563EB]"
+                  : "bg-white text-mova-dark hover:bg-mova-light-gray border border-gray-200 hover:border-mova-blue/30"
               )}
               whileTap={{ scale: 0.95 }}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-mova-gray")} />
               <span>{filter.label}</span>
               
               {isActive && (
                 <motion.div
                   layoutId="activeFilterIndicator"
-                  className="absolute inset-0 rounded-full bg-airbnb-dark -z-10"
+                  className="absolute inset-0 rounded-full bg-mova-blue -z-10"
                   initial={false}
                   transition={{
                     type: "spring",

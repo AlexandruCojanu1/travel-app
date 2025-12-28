@@ -161,7 +161,7 @@ export function RoomFormDialog({
               className={cn(
                 "w-full px-4 py-3 rounded-xl border-2 transition-all",
                 errors.name
-                  ? "border-red-300 bg-red-50"
+                  ? "border-red-300 bg-blue-50"
                   : "border-slate-200 focus:border-blue-500"
               )}
             />
@@ -188,7 +188,7 @@ export function RoomFormDialog({
                 className={cn(
                   "w-full px-4 py-3 rounded-xl border-2 transition-all",
                   errors.base_price
-                    ? "border-red-300 bg-red-50"
+                    ? "border-red-300 bg-blue-50"
                     : "border-slate-200 focus:border-blue-500"
                 )}
               />
@@ -211,7 +211,7 @@ export function RoomFormDialog({
                 className={cn(
                   "w-full px-4 py-3 rounded-xl border-2 transition-all",
                   errors.capacity
-                    ? "border-red-300 bg-red-50"
+                    ? "border-red-300 bg-blue-50"
                     : "border-slate-200 focus:border-blue-500"
                 )}
               />
@@ -298,7 +298,7 @@ export function RoomFormDialog({
                   <button
                     type="button"
                     onClick={() => removeImageUrl(index)}
-                    className="px-4 py-3 rounded-xl border-2 border-red-200 text-red-600 hover:bg-red-50"
+                    className="px-4 py-3 rounded-xl border-2 border-red-200 text-red-600 hover:bg-blue-50"
                   >
                     <X className="h-4 w-4" />
                   </button>

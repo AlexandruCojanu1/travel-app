@@ -94,12 +94,12 @@ export function CitySelector() {
           </DialogHeader>
           <Command className="rounded-lg border-none">
             <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-              <div className="h-10 w-10 rounded-airbnb-lg bg-airbnb-red flex items-center justify-center flex-shrink-0">
+              <div className="h-10 w-10 rounded-airbnb-lg bg-mova-blue flex items-center justify-center flex-shrink-0">
                 <MapPin className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-airbnb-dark">Where to next?</h2>
-                <p className="text-sm text-airbnb-gray">Select a city to explore</p>
+                <h2 className="text-lg font-bold text-mova-dark">Where to next?</h2>
+                <p className="text-sm text-mova-gray">Select a city to explore</p>
               </div>
             </div>
 
@@ -112,10 +112,10 @@ export function CitySelector() {
               <CommandEmpty>
                 {isLoading ? (
                   <div className="flex items-center justify-center py-6">
-                    <Loader2 className="h-6 w-6 animate-spin text-airbnb-red" />
+                    <Loader2 className="h-6 w-6 animate-spin text-mova-blue" />
                   </div>
                 ) : (
-                  <div className="py-6 text-center text-sm text-airbnb-gray">
+                  <div className="py-6 text-center text-sm text-mova-gray">
                     No cities found.
                   </div>
                 )}
@@ -132,20 +132,20 @@ export function CitySelector() {
                         className="cursor-pointer"
                       >
                         <div className="flex items-center gap-3 flex-1">
-                          <div className="h-10 w-10 rounded-airbnb bg-red-50 flex items-center justify-center flex-shrink-0">
-                            <MapPin className="h-5 w-5 text-airbnb-red" />
+                          <div className="h-10 w-10 rounded-airbnb bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <MapPin className="h-5 w-5 text-mova-blue" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-airbnb-dark">
+                            <div className="font-semibold text-mova-dark">
                               {currentCity.name}
                             </div>
-                            <div className="text-xs text-airbnb-gray truncate">
+                            <div className="text-xs text-mova-gray truncate">
                               {currentCity.state_province
                                 ? `${currentCity.state_province}, ${currentCity.country}`
                                 : currentCity.country}
                             </div>
                           </div>
-                          <Check className="h-5 w-5 text-airbnb-red flex-shrink-0" />
+                          <Check className="h-5 w-5 text-mova-blue flex-shrink-0" />
                         </div>
                       </CommandItem>
                     </CommandGroup>
@@ -164,14 +164,14 @@ export function CitySelector() {
                           className="cursor-pointer"
                         >
                           <div className="flex items-center gap-3 flex-1">
-                            <div className="h-10 w-10 rounded-airbnb bg-airbnb-light-gray flex items-center justify-center flex-shrink-0">
-                              <MapPin className="h-5 w-5 text-airbnb-gray" />
+                            <div className="h-10 w-10 rounded-airbnb bg-mova-light-gray flex items-center justify-center flex-shrink-0">
+                              <MapPin className="h-5 w-5 text-mova-gray" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium text-airbnb-dark">
+                              <div className="font-medium text-mova-dark">
                                 {city.name}
                               </div>
-                              <div className="text-xs text-airbnb-gray truncate">
+                              <div className="text-xs text-mova-gray truncate">
                                 {city.state_province
                                   ? `${city.state_province}, ${city.country}`
                                   : city.country}
@@ -196,14 +196,14 @@ export function CitySelector() {
                             className="cursor-pointer"
                           >
                             <div className="flex items-center gap-3 flex-1">
-                              <div className="h-10 w-10 rounded-airbnb bg-airbnb-light-gray flex items-center justify-center flex-shrink-0">
-                                <MapPin className="h-5 w-5 text-airbnb-gray" />
+                              <div className="h-10 w-10 rounded-airbnb bg-mova-light-gray flex items-center justify-center flex-shrink-0">
+                                <MapPin className="h-5 w-5 text-mova-gray" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium text-airbnb-dark">
+                                <div className="font-medium text-mova-dark">
                                   {city.name}
                                 </div>
-                                <div className="text-xs text-airbnb-gray truncate">
+                                <div className="text-xs text-mova-gray truncate">
                                   {city.state_province
                                     ? `${city.state_province}, ${city.country}`
                                     : city.country}
@@ -218,8 +218,8 @@ export function CitySelector() {
               )}
             </CommandList>
 
-            <div className="p-4 border-t border-gray-200 bg-airbnb-light-gray">
-              <p className="text-xs text-airbnb-gray flex items-center gap-2">
+            <div className="p-4 border-t border-gray-200 bg-mova-light-gray">
+              <p className="text-xs text-mova-gray flex items-center gap-2">
                 <Sparkles className="h-3 w-3" />
                 <span>Content will update based on your selected city</span>
               </p>
@@ -233,7 +233,7 @@ export function CitySelector() {
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
           <div className={`
             px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium
-            ${toast.type === 'success' ? 'bg-green-600' : 'bg-airbnb-red'}
+            ${toast.type === 'success' ? 'bg-green-600' : 'bg-mova-blue'}
           `}>
             {toast.message}
           </div>

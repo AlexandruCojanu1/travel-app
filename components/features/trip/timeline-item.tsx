@@ -78,7 +78,7 @@ export function TimelineItem({
       {/* Center: Connector Line & Node */}
       <div className="flex flex-col items-center w-6 flex-shrink-0">
         {/* Node (Dot) */}
-        <div className="w-4 h-4 rounded-full bg-airbnb-red border-4 border-white shadow-airbnb-md z-10" />
+        <div className="w-4 h-4 rounded-full bg-mova-blue border-4 border-white shadow-airbnb-md z-10" />
 
         {/* Vertical Line */}
         {!isLast && (
@@ -123,11 +123,11 @@ export function TimelineItem({
           {/* Header */}
           <div className="flex items-start justify-between mb-2 pl-6">
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-airbnb-dark text-base mb-1 line-clamp-1">
+              <h3 className="font-bold text-mova-dark text-base mb-1 line-clamp-1">
                 {item.business_name || 'Business'}
               </h3>
-              <div className="flex items-center gap-2 text-sm text-airbnb-gray">
-                <div className="text-airbnb-gray">{categoryIcon}</div>
+              <div className="flex items-center gap-2 text-sm text-mova-gray">
+                <div className="text-mova-gray">{categoryIcon}</div>
                 <span>{item.business_category || 'Activity'}</span>
               </div>
             </div>
@@ -140,7 +140,7 @@ export function TimelineItem({
                 e.stopPropagation()
                 removeItem(item.id)
               }}
-              className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0"
+              className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-blue-50 flex-shrink-0"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -148,7 +148,7 @@ export function TimelineItem({
 
           {/* Footer: Cost Badge */}
           <div className="flex items-center justify-end mt-3 pl-6">
-            <span className="px-3 py-1 bg-airbnb-light-red text-airbnb-red rounded-full text-sm font-semibold">
+            <span className="px-3 py-1 bg-mova-light-blue text-mova-blue rounded-full text-sm font-semibold">
               {item.estimated_cost.toFixed(0)} {budget?.currency || 'RON'}
             </span>
           </div>

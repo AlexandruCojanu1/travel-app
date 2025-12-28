@@ -83,7 +83,7 @@ export function MenuSectionDialog({
               className={cn(
                 "w-full px-4 py-3 rounded-xl border-2 transition-all",
                 error
-                  ? "border-red-300 bg-red-50"
+                  ? "border-red-300 bg-blue-50"
                   : "border-slate-200 focus:border-blue-500"
               )}
             />

@@ -41,7 +41,7 @@ export function InventoryManager({ businessId, businessType }: InventoryManagerP
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin text-airbnb-red" />
+        <Loader2 className="h-6 w-6 animate-spin text-mova-blue" />
       </div>
     )
   }
@@ -61,7 +61,7 @@ export function InventoryManager({ businessId, businessType }: InventoryManagerP
         return <TrailStatusManager businessId={businessId} />
       default:
         return (
-          <div className="p-8 text-center text-airbnb-gray">
+          <div className="p-8 text-center text-mova-gray">
             <p>Inventory management is not available for this business type.</p>
           </div>
         )
@@ -71,8 +71,8 @@ export function InventoryManager({ businessId, businessType }: InventoryManagerP
   return (
     <div className="w-full">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-airbnb-dark">Inventory & Resources</h2>
-        <p className="text-airbnb-gray mt-1">
+        <h2 className="text-2xl font-bold text-mova-dark">Inventory & Resources</h2>
+        <p className="text-mova-gray mt-1">
           Manage your {businessType?.toLowerCase() || 'business'} inventory and resources
         </p>
       </div>

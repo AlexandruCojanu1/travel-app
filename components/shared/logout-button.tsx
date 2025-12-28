@@ -52,7 +52,7 @@ export function LogoutButton({ className, variant = "default" }: LogoutButtonPro
       onClick={handleLogout}
       disabled={isPending}
       className={cn(
-        "w-full bg-red-50 text-red-600 rounded-xl p-4 flex items-center justify-center gap-2 font-semibold hover:bg-red-100 transition-colors disabled:opacity-50",
+        "w-full bg-blue-50 text-red-600 rounded-xl p-4 flex items-center justify-center gap-2 font-semibold hover:bg-red-100 transition-colors disabled:opacity-50",
         className
       )}
     >

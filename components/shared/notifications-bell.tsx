@@ -35,23 +35,37 @@ export function NotificationsBell() {
     
     // Set up real-time subscription
     const supabase = createClient()
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-        },
-        () => {
-          loadNotifications()
-        }
-      )
-      .subscribe()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    
+    // Only subscribe if user is authenticated
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        channel = supabase
+          .channel('notifications')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'notifications',
+            },
+            () => {
+              loadNotifications()
+            }
+          )
+          .subscribe()
+      }
+    })
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channel) {
+        try {
+          supabase.removeChannel(channel)
+        } catch (error) {
+          // Ignore errors when removing channel (e.g., if already closed)
+          console.warn('Error removing channel:', error)
+        }
+      }
     }
   }, [])
 
@@ -138,7 +152,7 @@ export function NotificationsBell() {
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 h-5 w-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}

@@ -46,10 +46,22 @@ export async function updateSession(request: NextRequest) {
 
     // IMPORTANT: Call getUser() to refresh the session if needed
     // This ensures cookies are updated after login
+    // Also refresh the session explicitly to ensure cookies are set
     let user = null
     try {
-        const { data: { user: userData } } = await supabase.auth.getUser()
-        user = userData
+        // Refresh session first to ensure cookies are up to date
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) {
+            logger.warn('Middleware: Error getting session', { error: sessionError })
+        }
+        
+        // Then get user
+        const { data: { user: userData }, error: userError } = await supabase.auth.getUser()
+        if (userError) {
+            logger.warn('Middleware: Error getting user', { error: userError })
+        } else {
+            user = userData
+        }
     } catch (error) {
         // If getUser() fails, continue without user (will be handled below)
         logger.warn('Middleware: Failed to get user', { error })
@@ -73,19 +85,9 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse
     }
     
-    // If no user and trying to access protected route, redirect to login
-    if (!user && !isPublicPath) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/auth/login'
-        // Preserve redirect parameter
-        if (pathname !== '/auth/login') {
-            url.searchParams.set('redirect', pathname)
-        }
-        return NextResponse.redirect(url)
-    }
-    
     // If user is authenticated and trying to access login/signup, redirect to home
-    if (user && pathname.startsWith('/auth/login')) {
+    // Do this BEFORE checking if user is missing, to avoid redirect loops
+    if (user && pathname.startsWith('/auth')) {
         const url = request.nextUrl.clone()
         // Check if user has businesses using centralized service
         try {
@@ -95,6 +97,23 @@ export async function updateSession(request: NextRequest) {
             // If check fails, default to home page
             logger.warn('Middleware: Failed to check businesses', { error, userId: user.id })
             url.pathname = '/home'
+        }
+        return NextResponse.redirect(url)
+    }
+    
+    // If no user and trying to access protected route, redirect to login
+    // BUT: Allow /onboarding even without user if coming from signup (cookies might not be set yet)
+    if (!user && !isPublicPath) {
+        // Special case: if trying to access /onboarding, allow it (user might have just signed up)
+        if (pathname === '/onboarding') {
+            return supabaseResponse
+        }
+        
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/login'
+        // Preserve redirect parameter
+        if (pathname !== '/auth/login') {
+            url.searchParams.set('redirect', pathname)
         }
         return NextResponse.redirect(url)
     }

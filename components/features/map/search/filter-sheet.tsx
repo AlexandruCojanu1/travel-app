@@ -34,7 +34,7 @@ const AMENITIES = ['Wifi', 'Pool', 'Parking', 'Breakfast', 'Spa', 'Gym']
 const DIFFICULTY_OPTIONS = [
   { value: 'easy', label: 'Easy', color: 'bg-green-500' },
   { value: 'moderate', label: 'Moderate', color: 'bg-yellow-500' },
-  { value: 'hard', label: 'Hard', color: 'bg-red-500' },
+  { value: 'hard', label: 'Hard', color: 'bg-blue-500' },
 ]
 
 export function FilterSheet({

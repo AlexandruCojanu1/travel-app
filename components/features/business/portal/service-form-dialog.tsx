@@ -123,7 +123,7 @@ export function ServiceFormDialog({
               className={cn(
                 "w-full px-4 py-3 rounded-xl border-2 transition-all",
                 errors.name
-                  ? "border-red-300 bg-red-50"
+                  ? "border-red-300 bg-blue-50"
                   : "border-slate-200 focus:border-blue-500"
               )}
             />
@@ -164,7 +164,7 @@ export function ServiceFormDialog({
                 className={cn(
                   "w-full px-4 py-3 rounded-xl border-2 transition-all",
                   errors.price
-                    ? "border-red-300 bg-red-50"
+                    ? "border-red-300 bg-blue-50"
                     : "border-slate-200 focus:border-blue-500"
                 )}
               />
@@ -187,7 +187,7 @@ export function ServiceFormDialog({
                 className={cn(
                   "w-full px-4 py-3 rounded-xl border-2 transition-all",
                   errors.duration_minutes
-                    ? "border-red-300 bg-red-50"
+                    ? "border-red-300 bg-blue-50"
                     : "border-slate-200 focus:border-blue-500"
                 )}
               />
@@ -210,7 +210,7 @@ export function ServiceFormDialog({
                 className={cn(
                   "w-full px-4 py-3 rounded-xl border-2 transition-all",
                   errors.max_participants
-                    ? "border-red-300 bg-red-50"
+                    ? "border-red-300 bg-blue-50"
                     : "border-slate-200 focus:border-blue-500"
                 )}
               />

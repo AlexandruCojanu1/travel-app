@@ -1,13 +1,11 @@
 "use client"
 
 import { useState, useTransition, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
-import { MapPin, User, Compass, Home, Loader2, ArrowRight } from "lucide-react"
+import { MapPin, Loader2, ArrowRight } from "lucide-react"
 import { CitySelect } from "@/components/features/auth/city-select"
-import { completeOnboarding } from "@/actions/auth"
 import { onboardingSchema } from "@/lib/validations/auth"
-import { cn } from "@/lib/utils"
 import { useAppStore } from "@/store/app-store"
 import { getCityById } from "@/services/auth/city.service"
 import { createClient } from "@/lib/supabase/client"
@@ -16,12 +14,14 @@ type Role = "tourist" | "local"
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
-  const [step, setStep] = useState<1 | 2>(1)
   const { setCity } = useAppStore()
+  // Get role from URL params (set from homepage) or default to 'tourist'
+  const roleFromUrl = searchParams?.get('role') as Role | null
   const [formData, setFormData] = useState({
     homeCityId: "",
-    role: "" as Role | "",
+    role: (roleFromUrl || "tourist") as Role, // Default to tourist if not provided
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string>("")
@@ -31,9 +31,42 @@ export default function OnboardingPage() {
   useEffect(() => {
     async function checkOnboardingStatus() {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
       
-      if (!user) {
+      // First refresh session to ensure cookies are up to date
+      // This is critical for existing users who logged in before
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) {
+          console.warn('Onboarding: Session refresh warning:', sessionError)
+          // If session error, try to refresh it
+          if (sessionError.message?.includes('expired') || sessionError.message?.includes('invalid')) {
+            console.log('Onboarding: Session expired, redirecting to login')
+            router.push('/auth/login')
+            return
+          }
+        }
+        
+        // If no session, redirect to login
+        if (!session) {
+          console.log('Onboarding: No session found, redirecting to login')
+          router.push('/auth/login')
+          return
+        }
+      } catch (sessionRefreshError) {
+        console.warn('Onboarding: Failed to refresh session:', sessionRefreshError)
+        router.push('/auth/login')
+        return
+      }
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        console.error('Onboarding: User not authenticated:', userError)
+        // If it's a session error, redirect to login
+        if (userError?.message?.includes('session') || userError?.message?.includes('JWT') || userError?.message?.includes('expired')) {
+          router.push('/auth/login')
+          return
+        }
         router.push('/auth/login')
         return
       }
@@ -68,19 +101,6 @@ export default function OnboardingPage() {
     checkOnboardingStatus()
   }, [router])
 
-  const handleNext = () => {
-    if (!formData.homeCityId) {
-      setErrors({ homeCityId: "Please select your city" })
-      return
-    }
-    setErrors({})
-    setStep(2)
-  }
-
-  const handleBack = () => {
-    setStep(1)
-  }
-
   const handleSubmit = async () => {
     setErrors({})
     setServerError("")
@@ -91,9 +111,10 @@ export default function OnboardingPage() {
       return
     }
 
+    // Role is already set from URL or default, no need to validate
     if (!formData.role) {
-      setErrors({ role: "Please select your role" })
-      return
+      // Fallback: if somehow role is missing, default to tourist
+      setFormData(prev => ({ ...prev, role: "tourist" }))
     }
 
     console.log("Onboarding: Submitting form data:", {
@@ -131,18 +152,43 @@ export default function OnboardingPage() {
           }
         }
 
-        // Call completeOnboarding
-        const result = await completeOnboarding(validated.data)
+        // Use client-side Supabase to complete onboarding
+        // This ensures we have direct access to the session
+        const supabase = createClient()
         
-        if (result && result.success) {
-          // Onboarding completed successfully, redirect to home
-          console.log("Onboarding: Onboarding completed, redirecting to home")
-          window.location.href = '/home'
-        } else {
-          // Show error message
-          console.error("Onboarding: Failed to complete onboarding", result)
-          setServerError(result?.error || "Failed to complete onboarding. Please try again.")
+        // First verify user is authenticated
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        
+        if (userError || !user) {
+          console.error("Onboarding: User not authenticated:", userError)
+          setServerError("Nu ești autentificat. Te rugăm să te autentifici din nou.")
+          return
         }
+        
+        console.log("Onboarding: User authenticated, saving profile:", user.id)
+        
+        // Save profile directly using client-side Supabase
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            home_city_id: validated.data.homeCityId,
+            role: validated.data.role,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'id',
+          })
+        
+        if (profileError) {
+          console.error("Onboarding: Error saving profile:", profileError)
+          setServerError(`Eroare la salvare: ${profileError.message || 'Failed to save profile'}`)
+          return
+        }
+        
+        console.log("Onboarding: Profile saved successfully, redirecting to home")
+        
+        // Redirect to home
+        window.location.href = '/home'
       } catch (error: any) {
         // Next.js redirect throws a special error - this is expected and normal
         // We need to check for the redirect error and let it propagate
@@ -171,7 +217,7 @@ export default function OnboardingPage() {
   if (isChecking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-airbnb-red" />
+        <Loader2 className="h-8 w-8 animate-spin text-mova-blue" />
       </div>
     )
   }
@@ -180,249 +226,83 @@ export default function OnboardingPage() {
     <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden p-4">
       {/* Subtle Background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-airbnb-red/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-airbnb-red/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-mova-blue/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-mova-blue/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 w-full max-w-2xl">
-        {/* Progress Indicator */}
+        {/* Progress Indicator - Single step now */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2">
-            <div
-              className={cn(
-                "h-2 w-24 rounded-full transition-colors",
-                step >= 1 ? "bg-airbnb-red" : "bg-airbnb-light-gray"
-              )}
-            />
-            <div
-              className={cn(
-                "h-2 w-24 rounded-full transition-colors",
-                step >= 2 ? "bg-airbnb-red" : "bg-airbnb-light-gray"
-              )}
-            />
+            <div className="h-2 w-48 rounded-full bg-mova-blue" />
           </div>
-          <p className="text-center text-sm text-airbnb-gray mt-3">
-            Step {step} of 2
+          <p className="text-center text-sm text-mova-gray mt-3">
+            Finalizare setare
           </p>
         </div>
 
         {/* Card Container */}
         <motion.div
-          key={step}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
           className="bg-white rounded-airbnb-lg shadow-airbnb-lg border border-gray-200 p-8 md:p-12"
         >
-          {step === 1 ? (
-            <>
-              {/* Step 1: City Selection */}
-              <div className="text-center mb-8">
-                <div className="flex h-16 w-16 items-center justify-center rounded-airbnb-lg bg-airbnb-red shadow-airbnb-lg mx-auto mb-4">
-                  <MapPin className="h-8 w-8 text-white" strokeWidth={2.5} />
-                </div>
-                <h1 className="text-3xl md:text-4xl font-bold text-airbnb-dark mb-2">
-                  Where are you from?
-                </h1>
-                <p className="text-airbnb-gray text-lg">
-                  Select your home city to personalize your experience
-                </p>
+          {/* City Selection - Only Step */}
+          <div className="text-center mb-8">
+            <div className="flex h-16 w-16 items-center justify-center rounded-airbnb-lg bg-mova-blue shadow-airbnb-lg mx-auto mb-4">
+              <MapPin className="h-8 w-8 text-white" strokeWidth={2.5} />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-mova-dark mb-2">
+              Unde locuiești?
+            </h1>
+            <p className="text-mova-gray text-lg">
+              Selectează orașul tău pentru a personaliza experiența
+            </p>
+            {/* Show role info if available */}
+            {formData.role && (
+              <p className="text-sm text-mova-gray mt-2">
+                {formData.role === 'tourist' ? 'Călător' : 'Proprietar de afacere'}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            <CitySelect
+              value={formData.homeCityId}
+              onChange={(cityId) => {
+                console.log("Onboarding: City selected, ID:", cityId)
+                setFormData((prev) => ({ ...prev, homeCityId: cityId }))
+                setErrors({}) // Clear errors when city is selected
+              }}
+              error={errors.homeCityId}
+            />
+
+            {serverError && (
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200">
+                <p className="text-red-600 text-sm font-medium">{serverError}</p>
               </div>
+            )}
 
-              <div className="space-y-6">
-                <CitySelect
-                  value={formData.homeCityId}
-                  onChange={(cityId) => {
-                    console.log("Onboarding: City selected, ID:", cityId)
-                    setFormData((prev) => ({ ...prev, homeCityId: cityId }))
-                    setErrors({}) // Clear errors when city is selected
-                  }}
-                  error={errors.homeCityId}
-                />
-
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="airbnb-button w-full h-14 flex items-center justify-center gap-2 group"
-                >
-                  <span>Continue</span>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isPending || !formData.homeCityId}
+              className="airbnb-button w-full h-14 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Se procesează...</span>
+                </>
+              ) : (
+                <>
+                  <span>Finalizează setarea</span>
                   <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Step 2: Role Selection */}
-              <div className="text-center mb-8">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-xl shadow-blue-500/25 mx-auto mb-4">
-                  <User className="h-8 w-8 text-white" strokeWidth={2.5} />
-                </div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-                  How will you use TravelPWA?
-                </h1>
-                <p className="text-slate-600 text-lg">
-                  Choose your primary role to customize your experience
-                </p>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                {/* Tourist Option */}
-                <button
-                  type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, role: "tourist" }))}
-                  className={cn(
-                    "w-full p-6 rounded-2xl border-2 transition-all text-left group",
-                    formData.role === "tourist"
-                      ? "border-airbnb-red bg-airbnb-light-red shadow-airbnb-md"
-                      : "border-gray-300 bg-white hover:border-airbnb-red/50 hover:shadow-airbnb"
-                  )}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={cn(
-                        "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
-                        formData.role === "tourist"
-                          ? "bg-airbnb-red"
-                          : "bg-airbnb-light-gray group-hover:bg-airbnb-light-red"
-                      )}
-                    >
-                      <Compass
-                        className={cn(
-                          "h-6 w-6",
-                          formData.role === "tourist"
-                            ? "text-white"
-                            : "text-airbnb-gray group-hover:text-airbnb-red"
-                        )}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3
-                        className={cn(
-                          "text-xl font-bold mb-1",
-                          formData.role === "tourist" ? "text-airbnb-dark" : "text-airbnb-dark"
-                        )}
-                      >
-                        Tourist / Traveler
-                      </h3>
-                      <p className="text-airbnb-gray text-sm">
-                        I'm planning trips and exploring new destinations around the world
-                      </p>
-                    </div>
-                    {formData.role === "tourist" && (
-                      <svg
-                        className="h-6 w-6 text-airbnb-red flex-shrink-0"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </button>
-
-                {/* Local Option */}
-                <button
-                  type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, role: "local" }))}
-                  className={cn(
-                    "w-full p-6 rounded-2xl border-2 transition-all text-left group",
-                    formData.role === "local"
-                      ? "border-purple-500 bg-purple-50 shadow-airbnb-md"
-                      : "border-gray-300 bg-white hover:border-purple-300 hover:shadow-airbnb"
-                  )}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={cn(
-                        "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
-                        formData.role === "local"
-                          ? "bg-purple-600"
-                          : "bg-airbnb-light-gray group-hover:bg-purple-100"
-                      )}
-                    >
-                      <Home
-                        className={cn(
-                          "h-6 w-6",
-                          formData.role === "local"
-                            ? "text-white"
-                            : "text-airbnb-gray group-hover:text-purple-600"
-                        )}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3
-                        className={cn(
-                          "text-xl font-bold mb-1",
-                          formData.role === "local" ? "text-purple-900" : "text-airbnb-dark"
-                        )}
-                      >
-                        Local / Guide
-                      </h3>
-                      <p className="text-airbnb-gray text-sm">
-                        I want to share my city's best spots and help travelers discover authentic experiences
-                      </p>
-                    </div>
-                    {formData.role === "local" && (
-                      <svg
-                        className="h-6 w-6 text-purple-600 flex-shrink-0"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </button>
-              </div>
-
-              {errors.role && (
-                <p className="text-red-600 text-sm font-medium mb-4 px-1">
-                  {errors.role}
-                </p>
+                </>
               )}
-
-              {serverError && (
-                <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200">
-                  <p className="text-red-600 text-sm font-medium">{serverError}</p>
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  disabled={isPending}
-                  className="flex-1 h-14 bg-airbnb-light-gray text-airbnb-dark font-semibold rounded-airbnb-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={isPending}
-                  className="flex-1 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-                >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <span>Complete Setup</span>
-                  )}
-                </button>
-              </div>
-            </>
-          )}
+            </button>
+          </div>
         </motion.div>
       </div>
     </div>

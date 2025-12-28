@@ -1,12 +1,19 @@
 {
-  "name": "Travel App",
-  "short_name": "Travel",
+  "name": "MOVA",
+  "short_name": "MOVA",
   "description": "Mobile-first travel platform for discovering and booking amazing experiences",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "theme_color": "#3B82F6",
   "orientation": "portrait",
   "scope": "/",
-  "icons": []
+  "icons": [
+    {
+      "src": "/images/mova-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }

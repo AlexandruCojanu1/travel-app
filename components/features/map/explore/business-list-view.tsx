@@ -14,7 +14,7 @@ export function BusinessListView({ businesses, onBusinessClick }: BusinessListVi
           className="p-5 airbnb-card cursor-pointer"
           onClick={() => onBusinessClick?.(business)}
         >
-          <h3 className="font-semibold text-airbnb-dark text-base">{business.name}</h3>
+          <h3 className="font-semibold text-mova-dark text-base">{business.name}</h3>
         </div>
       ))}
     </div>

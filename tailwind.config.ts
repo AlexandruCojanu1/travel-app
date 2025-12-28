@@ -43,11 +43,25 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        // Airbnb-specific colors
-        'airbnb-red': '#FF5A5F',
-        'airbnb-dark': '#2B2B2B',
-        'airbnb-gray': '#737373',
-        'airbnb-light-gray': '#F5F5F5',
+        // MOVA brand colors from logo gradient
+        // Gradient: Blue → Teal → Yellow-Green → Orange
+        'mova-blue': '#3B82F6',      // Vibrant blue (M)
+        'mova-teal': '#14B8A6',      // Teal/cyan (o)
+        'mova-green': '#10B981',     // Yellow-green (v)
+        'mova-orange': '#F97316',    // Warm orange (a)
+        // Primary brand color (using blue as main)
+        'mova-primary': '#3B82F6',
+        // Secondary colors
+        'mova-dark': '#1E293B',      // Dark slate for text
+        'mova-gray': '#64748B',      // Medium gray
+        'mova-light-gray': '#F1F5F9', // Light background
+        'mova-light-blue': '#DBEAFE', // Light blue tint
+        // Legacy support (mapped to MOVA colors)
+        'airbnb-red': '#3B82F6',     // Mapped to mova-blue
+        'airbnb-dark': '#1E293B',    // Mapped to mova-dark
+        'airbnb-gray': '#64748B',    // Mapped to mova-gray
+        'airbnb-light-gray': '#F1F5F9', // Mapped to mova-light-gray
+        'airbnb-light-red': '#DBEAFE', // Mapped to mova-light-blue
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -203,7 +203,7 @@ export default function PromotePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-airbnb-red" />
+        <Loader2 className="h-8 w-8 animate-spin text-mova-blue" />
       </div>
     )
   }
@@ -212,11 +212,11 @@ export default function PromotePage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <Star className="h-16 w-16 text-airbnb-gray mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-airbnb-dark mb-2">
+          <Star className="h-16 w-16 text-mova-gray mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-mova-dark mb-2">
             No Business Found
           </h2>
-          <p className="text-airbnb-gray mb-6">
+          <p className="text-mova-gray mb-6">
             Create a business first to promote it
           </p>
           <Button asChild>
@@ -234,10 +234,10 @@ export default function PromotePage() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-airbnb-dark mb-2">
+          <h1 className="text-4xl font-bold text-mova-dark mb-2">
             Promote Your Business
           </h1>
-          <p className="text-airbnb-gray text-lg">
+          <p className="text-mova-gray text-lg">
             Boost your visibility and reach more customers
           </p>
         </div>
@@ -245,13 +245,13 @@ export default function PromotePage() {
         {/* Business Selector */}
         {businesses.length > 1 && (
           <div className="airbnb-card p-6">
-            <label className="block text-sm font-semibold text-airbnb-dark mb-2">
+            <label className="block text-sm font-semibold text-mova-dark mb-2">
               Select Business
             </label>
             <select
               value={selectedBusinessId || ''}
               onChange={(e) => setSelectedBusinessId(e.target.value)}
-              className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20"
+              className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20"
             >
               {businesses.map((business) => (
                 <option key={business.id} value={business.id}>
@@ -265,7 +265,7 @@ export default function PromotePage() {
         {/* Active Promotions */}
         {activePromotions.length > 0 && (
           <div className="airbnb-card p-6">
-            <h2 className="text-xl font-semibold text-airbnb-dark mb-4">
+            <h2 className="text-xl font-semibold text-mova-dark mb-4">
               Active Promotions
             </h2>
             <div className="space-y-3">
@@ -275,7 +275,7 @@ export default function PromotePage() {
                 return (
                   <div
                     key={promotion.id}
-                    className="flex items-center justify-between p-4 rounded-airbnb border-2 border-gray-200 bg-airbnb-light-gray"
+                    className="flex items-center justify-between p-4 rounded-airbnb border-2 border-gray-200 bg-mova-light-gray"
                   >
                     <div className="flex items-center gap-4">
                       {packageData && (
@@ -287,10 +287,10 @@ export default function PromotePage() {
                             {packageData.icon && <packageData.icon className="h-6 w-6 text-white" />}
                           </div>
                           <div>
-                            <div className="font-semibold text-airbnb-dark">
+                            <div className="font-semibold text-mova-dark">
                               {packageData.name} Package
                             </div>
-                            <div className="text-sm text-airbnb-gray">
+                            <div className="text-sm text-mova-gray">
                               {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} remaining
                             </div>
                           </div>
@@ -298,7 +298,7 @@ export default function PromotePage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-airbnb-gray">
+                      <span className="text-sm text-mova-gray">
                         Valid until: {new Date(promotion.valid_until).toLocaleDateString()}
                       </span>
                       {promotion.status === 'pending_payment' && (
@@ -325,7 +325,7 @@ export default function PromotePage() {
                   "relative bg-white rounded-2xl border-2 p-8 transition-all hover:shadow-xl",
                   pkg.popular
                     ? "border-yellow-400 shadow-airbnb-lg scale-105"
-                    : "border-gray-200 hover:border-airbnb-red/50"
+                    : "border-gray-200 hover:border-mova-blue/50"
                 )}
               >
                 {pkg.popular && (
@@ -343,16 +343,16 @@ export default function PromotePage() {
                   )}>
                     <Icon className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-airbnb-dark mb-2">
+                  <h3 className="text-2xl font-bold text-mova-dark mb-2">
                     {pkg.name}
                   </h3>
                   <div className="mb-4">
-                    <span className="text-4xl font-bold text-airbnb-dark">
+                    <span className="text-4xl font-bold text-mova-dark">
                       {pkg.price}
                     </span>
-                    <span className="text-airbnb-gray ml-2">RON</span>
+                    <span className="text-mova-gray ml-2">RON</span>
                   </div>
-                  <div className="text-sm text-airbnb-gray">
+                  <div className="text-sm text-mova-gray">
                     {pkg.duration_days} {pkg.duration_days === 1 ? 'day' : 'days'}
                   </div>
                 </div>
@@ -361,7 +361,7 @@ export default function PromotePage() {
                   {pkg.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-airbnb-dark">{feature}</span>
+                      <span className="text-sm text-mova-dark">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -392,16 +392,16 @@ export default function PromotePage() {
 
         {/* Comparison Table */}
         <div className="airbnb-card p-6">
-          <h2 className="text-xl font-semibold text-airbnb-dark mb-4">
+          <h2 className="text-xl font-semibold text-mova-dark mb-4">
             Compare Packages
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-airbnb-dark">Feature</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-mova-dark">Feature</th>
                   {PACKAGES.map((pkg) => (
-                    <th key={pkg.id} className="px-4 py-3 text-center text-sm font-semibold text-airbnb-dark">
+                    <th key={pkg.id} className="px-4 py-3 text-center text-sm font-semibold text-mova-dark">
                       {pkg.name}
                     </th>
                   ))}
@@ -409,23 +409,23 @@ export default function PromotePage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 <tr>
-                  <td className="px-4 py-3 text-sm text-airbnb-gray">Duration</td>
+                  <td className="px-4 py-3 text-sm text-mova-gray">Duration</td>
                   {PACKAGES.map((pkg) => (
-                    <td key={pkg.id} className="px-4 py-3 text-center text-sm text-airbnb-dark">
+                    <td key={pkg.id} className="px-4 py-3 text-center text-sm text-mova-dark">
                       {pkg.duration_days} days
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-sm text-airbnb-gray">Price</td>
+                  <td className="px-4 py-3 text-sm text-mova-gray">Price</td>
                   {PACKAGES.map((pkg) => (
-                    <td key={pkg.id} className="px-4 py-3 text-center text-sm font-semibold text-airbnb-dark">
+                    <td key={pkg.id} className="px-4 py-3 text-center text-sm font-semibold text-mova-dark">
                       {pkg.price} RON
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-sm text-airbnb-gray">Search Boost</td>
+                  <td className="px-4 py-3 text-sm text-mova-gray">Search Boost</td>
                   {PACKAGES.map((pkg) => (
                     <td key={pkg.id} className="px-4 py-3 text-center">
                       {pkg.id !== 'silver' ? (
@@ -437,7 +437,7 @@ export default function PromotePage() {
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-sm text-airbnb-gray">Homepage Carousel</td>
+                  <td className="px-4 py-3 text-sm text-mova-gray">Homepage Carousel</td>
                   {PACKAGES.map((pkg) => (
                     <td key={pkg.id} className="px-4 py-3 text-center">
                       {pkg.id === 'gold' || pkg.id === 'platinum' ? (
@@ -449,7 +449,7 @@ export default function PromotePage() {
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-sm text-airbnb-gray">Push Notifications</td>
+                  <td className="px-4 py-3 text-sm text-mova-gray">Push Notifications</td>
                   {PACKAGES.map((pkg) => (
                     <td key={pkg.id} className="px-4 py-3 text-center">
                       {pkg.id === 'platinum' ? (

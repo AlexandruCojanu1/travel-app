@@ -21,7 +21,7 @@ export function NewsCard({ post }: NewsCardProps) {
       className="flex gap-4 airbnb-card p-5 group"
     >
       {/* Image - Left Side (Square) */}
-      <div className="relative flex-none w-24 h-24 rounded-airbnb overflow-hidden bg-airbnb-light-gray">
+      <div className="relative flex-none w-24 h-24 rounded-airbnb overflow-hidden bg-mova-light-gray">
         {post.image_url ? (
           <Image
             src={post.image_url}
@@ -41,25 +41,25 @@ export function NewsCard({ post }: NewsCardProps) {
       <div className="flex-1 min-w-0">
         {/* Category Badge */}
         {post.category && (
-          <span className="inline-block px-2.5 py-1 rounded-airbnb bg-airbnb-light-gray text-airbnb-dark text-xs font-semibold mb-2">
+          <span className="inline-block px-2.5 py-1 rounded-airbnb bg-mova-light-gray text-mova-dark text-xs font-semibold mb-2">
             {post.category}
           </span>
         )}
 
         {/* Title */}
-        <h3 className="font-semibold text-airbnb-dark line-clamp-2 mb-2 group-hover:text-airbnb-red transition-colors text-base">
+        <h3 className="font-semibold text-mova-dark line-clamp-2 mb-2 group-hover:text-mova-blue transition-colors text-base">
           {post.title}
         </h3>
 
         {/* Excerpt */}
         {post.excerpt && (
-          <p className="text-sm text-airbnb-gray line-clamp-2 mb-3">
+          <p className="text-sm text-mova-gray line-clamp-2 mb-3">
             {post.excerpt}
           </p>
         )}
 
         {/* Metadata */}
-        <div className="flex items-center gap-3 text-xs text-airbnb-gray">
+        <div className="flex items-center gap-3 text-xs text-mova-gray">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
             <span>{timeAgo}</span>

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Plane, ChevronDown, MapPin } from "lucide-react"
+import { ChevronDown, MapPin } from "lucide-react"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar"
 import { Button } from "@/components/shared/ui/button"
@@ -77,24 +78,30 @@ export function Header() {
             <div className="flex items-center gap-4">
               {/* Logo */}
               <Link href="/home" className="flex items-center gap-2 group">
-                <div className="flex h-10 w-10 items-center justify-center rounded-airbnb bg-airbnb-red shadow-airbnb transition-transform group-hover:scale-105">
-                  <Plane className="h-5 w-5 text-white" strokeWidth={2.5} />
+                <div className="flex h-10 w-10 items-center justify-center rounded-airbnb bg-white shadow-airbnb transition-transform group-hover:scale-105 overflow-hidden">
+                  <Image
+                    src="/images/mova-logo.png"
+                    alt="MOVA Logo"
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
                 </div>
               </Link>
 
               {/* City Selector Trigger */}
               <button
                 onClick={openCitySelector}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-airbnb hover:bg-airbnb-light-gray transition-colors group"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-airbnb hover:bg-mova-light-gray transition-colors group"
               >
-                <MapPin className="h-4 w-4 text-airbnb-gray group-hover:text-airbnb-red transition-colors" />
+                <MapPin className="h-4 w-4 text-mova-gray group-hover:text-mova-blue transition-colors" />
                 <span 
-                  className="text-sm font-semibold text-airbnb-dark group-hover:text-airbnb-red transition-colors"
+                  className="text-sm font-semibold text-mova-dark group-hover:text-mova-blue transition-colors"
                   suppressHydrationWarning
                 >
                   {mounted ? (currentCity?.name || "Select City") : "Select City"}
                 </span>
-                <ChevronDown className="h-4 w-4 text-airbnb-gray group-hover:text-airbnb-red transition-colors" />
+                <ChevronDown className="h-4 w-4 text-mova-gray group-hover:text-mova-blue transition-colors" />
               </button>
             </div>
 
@@ -110,8 +117,8 @@ export function Header() {
                     className={cn(
                       "relative px-5 py-2.5 text-sm font-semibold transition-colors rounded-airbnb",
                       isActive
-                        ? "text-airbnb-red bg-airbnb-light-gray hover:bg-gray-100"
-                        : "text-airbnb-gray hover:text-airbnb-dark hover:bg-airbnb-light-gray"
+                        ? "text-mova-blue bg-mova-light-gray hover:bg-gray-100"
+                        : "text-mova-gray hover:text-mova-dark hover:bg-mova-light-gray"
                     )}
                   >
                     {link.label}
@@ -125,12 +132,12 @@ export function Header() {
           <div className="flex items-center gap-3">
             <NotificationsBell />
             <Link href="/profile">
-              <Avatar className="h-10 w-10 ring-2 ring-gray-200 hover:ring-airbnb-red transition-all cursor-pointer rounded-airbnb">
+              <Avatar className="h-10 w-10 ring-2 ring-gray-200 hover:ring-mova-blue transition-all cursor-pointer rounded-airbnb">
                 <AvatarImage 
                   src={avatarUrl || undefined} 
                   alt="User" 
                 />
-                <AvatarFallback className="bg-airbnb-red text-white text-sm font-semibold">
+                <AvatarFallback className="bg-mova-blue text-white text-sm font-semibold">
                   {userInitials}
                 </AvatarFallback>
               </Avatar>

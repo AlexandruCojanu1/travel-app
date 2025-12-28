@@ -4,41 +4,42 @@
 
 @layer base {
   :root {
-    /* Airbnb-inspired color palette */
+    /* MOVA brand color palette from logo gradient */
+    /* Gradient: Blue (#3B82F6) → Teal (#14B8A6) → Green (#10B981) → Orange (#F97316) */
     --background: 0 0% 100%;
-    --foreground: 0 0% 17%; /* #2B2B2B - dark gray text */
+    --foreground: 222 47% 11%; /* #1E293B - MOVA dark slate */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 17%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 17%;
+    --popover-foreground: 222 47% 11%;
     
-    /* Airbnb primary color - Coral Red */
-    --primary: 4 90% 58%; /* #FF5A5F - Airbnb coral */
+    /* MOVA primary color - Vibrant Blue */
+    --primary: 217 91% 60%; /* #3B82F6 - MOVA blue */
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary - Light gray */
-    --secondary: 0 0% 96%; /* #F5F5F5 */
-    --secondary-foreground: 0 0% 17%;
+    /* Secondary - Light blue tint */
+    --secondary: 214 95% 93%; /* #DBEAFE - MOVA light blue */
+    --secondary-foreground: 222 47% 11%;
     
-    /* Muted - Medium gray */
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%; /* #737373 */
+    /* Muted - Light gray */
+    --muted: 214 32% 91%; /* #F1F5F9 - MOVA light gray */
+    --muted-foreground: 215 16% 47%; /* #64748B - MOVA gray */
     
-    /* Accent - Slightly darker gray */
-    --accent: 0 0% 98%;
-    --accent-foreground: 0 0% 17%;
+    /* Accent - Teal from logo */
+    --accent: 173 80% 40%; /* #14B8A6 - MOVA teal */
+    --accent-foreground: 0 0% 100%;
     
-    /* Destructive - Keep red but softer */
-    --destructive: 0 84% 60%;
+    /* Destructive - Orange from logo */
+    --destructive: 25 95% 53%; /* #F97316 - MOVA orange */
     --destructive-foreground: 0 0% 100%;
     
-    /* Borders - Very light gray */
-    --border: 0 0% 90%; /* #E5E5E5 */
-    --input: 0 0% 90%;
-    --ring: 4 90% 58%; /* Airbnb coral for focus */
+    /* Borders - Light gray */
+    --border: 214 32% 91%; /* #E2E8F0 */
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%; /* MOVA blue for focus */
     
-    /* Border radius - Airbnb uses rounded corners */
-    --radius: 0.75rem; /* 12px - more rounded */
+    /* Border radius - Rounded corners */
+    --radius: 0.75rem; /* 12px */
   }
 
   .dark {
@@ -145,8 +146,9 @@
   }
 
   .airbnb-button {
-    @apply bg-airbnb-red text-white font-semibold rounded-airbnb px-6 py-3;
-    @apply hover:bg-[#FF484D] transition-colors duration-200;
+    @apply text-white font-semibold rounded-airbnb px-6 py-3;
+    background-color: #3B82F6;
+    @apply hover:bg-[#2563EB] transition-colors duration-200;
   }
 
   .airbnb-button-outline {

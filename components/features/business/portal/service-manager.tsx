@@ -275,7 +275,7 @@ export function ServiceManager({ businessId }: ServiceManagerProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDeleteService(service.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-red-600 hover:text-red-700 hover:bg-blue-50"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

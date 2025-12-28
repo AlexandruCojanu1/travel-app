@@ -34,13 +34,13 @@ export default function PlanPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="text-center max-w-md">
-          <div className="h-24 w-24 rounded-airbnb-lg bg-airbnb-red flex items-center justify-center mx-auto mb-6 shadow-airbnb-lg">
+          <div className="h-24 w-24 rounded-airbnb-lg bg-mova-blue flex items-center justify-center mx-auto mb-6 shadow-airbnb-lg">
             <Sparkles className="h-12 w-12 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-airbnb-dark mb-3">
+          <h2 className="text-3xl font-bold text-mova-dark mb-3">
             Start Planning Your Trip
           </h2>
-          <p className="text-airbnb-gray mb-8">
+          <p className="text-mova-gray mb-8">
             Create your perfect itinerary, set a budget, and track your spending all in one place.
           </p>
           <Button
@@ -115,26 +115,26 @@ export default function PlanPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
-            <MapPin className="h-5 w-5 text-airbnb-red" />
-            <span className="text-sm font-medium text-airbnb-gray">Places</span>
+            <MapPin className="h-5 w-5 text-mova-blue" />
+            <span className="text-sm font-medium text-mova-gray">Places</span>
           </div>
-          <p className="text-2xl font-bold text-airbnb-dark">{placesCount}</p>
+          <p className="text-2xl font-bold text-mova-dark">{placesCount}</p>
         </div>
 
         <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="h-5 w-5 text-purple-600" />
-            <span className="text-sm font-medium text-airbnb-gray">Days</span>
+            <span className="text-sm font-medium text-mova-gray">Days</span>
           </div>
-          <p className="text-2xl font-bold text-airbnb-dark">{daysCount}</p>
+          <p className="text-2xl font-bold text-mova-dark">{daysCount}</p>
         </div>
 
         <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
-            <span className="text-sm font-medium text-airbnb-gray">Spent</span>
+            <span className="text-sm font-medium text-mova-gray">Spent</span>
           </div>
-          <p className="text-2xl font-bold text-airbnb-dark">
+          <p className="text-2xl font-bold text-mova-dark">
             {spent.toFixed(0)} {budget?.currency || 'RON'}
           </p>
         </div>
@@ -142,9 +142,9 @@ export default function PlanPage() {
         <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-5 w-5 text-orange-600" />
-            <span className="text-sm font-medium text-airbnb-gray">Remaining</span>
+            <span className="text-sm font-medium text-mova-gray">Remaining</span>
           </div>
-          <p className="text-2xl font-bold text-airbnb-dark">
+          <p className="text-2xl font-bold text-mova-dark">
             {budget
               ? (budget.total - spent).toFixed(0)
               : 0}{" "}
@@ -174,7 +174,7 @@ export default function PlanPage() {
 
       {/* Timeline View */}
       <div>
-        <h2 className="text-xl font-bold text-airbnb-dark mb-4">Itinerary</h2>
+        <h2 className="text-xl font-bold text-mova-dark mb-4">Itinerary</h2>
         <TimelineView />
       </div>
 
@@ -182,10 +182,10 @@ export default function PlanPage() {
       {isEditBudgetOpen && budget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-airbnb-lg p-6 max-w-md w-full mx-4 shadow-airbnb-lg border border-gray-200">
-            <h3 className="text-lg font-bold text-airbnb-dark mb-4">Edit Budget</h3>
+            <h3 className="text-lg font-bold text-mova-dark mb-4">Edit Budget</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-airbnb-dark mb-2">
+                <label className="block text-sm font-medium text-mova-dark mb-2">
                   Budget: {budget.total.toLocaleString()} {budget.currency}
                 </label>
                 <input
@@ -195,7 +195,7 @@ export default function PlanPage() {
                   step="100"
                   value={budget.total}
                   onChange={(e) => updateBudget(Number(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-airbnb focus:ring-2 focus:ring-airbnb-red focus:border-airbnb-red"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-airbnb focus:ring-2 focus:ring-mova-blue focus:border-mova-blue"
                 />
               </div>
               <div className="flex items-center justify-end gap-3">

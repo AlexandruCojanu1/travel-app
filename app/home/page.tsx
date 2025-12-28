@@ -262,10 +262,10 @@ export default function HomePage() {
           <span>{currentDate}</span>
         </div>
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-airbnb-dark">
+          <h1 className="text-3xl md:text-4xl font-bold text-mova-dark">
             {currentCity.name}
           </h1>
-          <div className="flex items-center gap-2 text-airbnb-gray mt-2">
+          <div className="flex items-center gap-2 text-mova-gray mt-2">
             <MapPin className="h-4 w-4" />
             <span className="text-base">
               {currentCity.state_province
@@ -277,7 +277,7 @@ export default function HomePage() {
       </div>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-airbnb-red to-[#FF7A7F] rounded-airbnb-lg p-8 md:p-10 text-white shadow-airbnb-md">
+      <div className="bg-gradient-to-br from-mova-blue to-mova-teal rounded-airbnb-lg p-8 md:p-10 text-white shadow-airbnb-md">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="h-5 w-5" />
           <span className="text-white/90 font-semibold">{getGreeting()}</span>
@@ -301,9 +301,9 @@ export default function HomePage() {
       {/* Featured Section - "Don't Miss" */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-airbnb-dark">Don't Miss</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Don't Miss</h2>
           {feedData.featuredBusinesses.length > 0 && (
-            <button className="text-airbnb-red text-sm font-semibold hover:underline transition-colors">
+            <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors">
               View All
             </button>
           )}
@@ -329,9 +329,9 @@ export default function HomePage() {
       {/* News/Events Section - "Happening Nearby" */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-airbnb-dark">Happening Nearby</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Happening Nearby</h2>
           {feedData.cityPosts.length > 0 && (
-            <button className="text-airbnb-red text-sm font-semibold hover:underline transition-colors">
+            <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors">
               View All
             </button>
           )}
@@ -345,13 +345,13 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="airbnb-card p-12 text-center">
-            <div className="h-16 w-16 rounded-full bg-airbnb-light-gray flex items-center justify-center mx-auto mb-4">
-              <Calendar className="h-8 w-8 text-airbnb-gray" />
+            <div className="h-16 w-16 rounded-full bg-mova-light-gray flex items-center justify-center mx-auto mb-4">
+              <Calendar className="h-8 w-8 text-mova-gray" />
             </div>
-            <h3 className="font-semibold text-airbnb-dark mb-2 text-lg">
+            <h3 className="font-semibold text-mova-dark mb-2 text-lg">
               No news or events yet
             </h3>
-            <p className="text-airbnb-gray text-sm">
+            <p className="text-mova-gray text-sm">
               Be the first to share something happening in your city
             </p>
             {/* Only show Create Post button for business owners */}
@@ -368,8 +368,8 @@ export default function HomePage() {
       {feedData.promotions.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-airbnb-dark">Special Offers</h2>
-            <button className="text-airbnb-red text-sm font-semibold hover:underline transition-colors">
+            <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Special Offers</h2>
+            <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors">
               View All
             </button>
           </div>

@@ -178,7 +178,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-airbnb-gray">Loading reviews...</div>
+        <div className="text-mova-gray">Loading reviews...</div>
       </div>
     )
   }
@@ -187,8 +187,8 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h3 className="text-xl font-semibold text-airbnb-dark">Reviews & Reputation</h3>
-        <p className="text-sm text-airbnb-gray mt-1">
+        <h3 className="text-xl font-semibold text-mova-dark">Reviews & Reputation</h3>
+        <p className="text-sm text-mova-gray mt-1">
           Manage reviews, respond to feedback, and monitor your reputation
         </p>
       </div>
@@ -197,34 +197,34 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="airbnb-card p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-airbnb-gray">Average Rating</span>
+            <span className="text-sm text-mova-gray">Average Rating</span>
             <Star className="h-5 w-5 text-yellow-600 fill-yellow-600" />
           </div>
-          <div className="text-3xl font-bold text-airbnb-dark">
+          <div className="text-3xl font-bold text-mova-dark">
             {averageRating.toFixed(1)}
           </div>
-          <div className="text-sm text-airbnb-gray mt-1">
+          <div className="text-sm text-mova-gray mt-1">
             Based on {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
           </div>
         </div>
         <div className="airbnb-card p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-airbnb-gray">Response Rate</span>
-            <Reply className="h-5 w-5 text-airbnb-red" />
+            <span className="text-sm text-mova-gray">Response Rate</span>
+            <Reply className="h-5 w-5 text-mova-blue" />
           </div>
-          <div className="text-3xl font-bold text-airbnb-dark">
+          <div className="text-3xl font-bold text-mova-dark">
             {responseRate.toFixed(0)}%
           </div>
-          <div className="text-sm text-airbnb-gray mt-1">
+          <div className="text-sm text-mova-gray mt-1">
             You've replied to {reviews.filter(r => r.reply_text).length} reviews
           </div>
         </div>
         <div className="airbnb-card p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-airbnb-gray">Total Reviews</span>
+            <span className="text-sm text-mova-gray">Total Reviews</span>
             <Star className="h-5 w-5 text-purple-600" />
           </div>
-          <div className="text-3xl font-bold text-airbnb-dark">
+          <div className="text-3xl font-bold text-mova-dark">
             {reviews.length}
           </div>
         </div>
@@ -233,14 +233,14 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
       {/* Sentiment Analysis */}
       {sentimentData.length > 0 && (
         <div className="airbnb-card p-6">
-          <h4 className="text-lg font-semibold text-airbnb-dark mb-4">Sentiment Analysis</h4>
+          <h4 className="text-lg font-semibold text-mova-dark mb-4">Sentiment Analysis</h4>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={sentimentData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis domain={[0, 5]} />
               <Tooltip />
-              <Bar dataKey="value" fill="#FF5A5F" name="Rating" />
+              <Bar dataKey="value" fill="#3B82F6" name="Rating" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -250,15 +250,15 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
       <div className="airbnb-card p-4">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-airbnb-gray" />
-            <span className="text-sm font-semibold text-airbnb-dark">Filters:</span>
+            <Filter className="h-4 w-4 text-mova-gray" />
+            <span className="text-sm font-semibold text-mova-dark">Filters:</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-airbnb-gray">Rating:</span>
+            <span className="text-sm text-mova-gray">Rating:</span>
             <select
               value={filterRating || ''}
               onChange={(e) => setFilterRating(e.target.value ? parseInt(e.target.value) : null)}
-              className="px-3 py-1.5 rounded-airbnb border border-gray-300 text-sm focus:ring-2 focus:ring-airbnb-red focus:border-airbnb-red"
+              className="px-3 py-1.5 rounded-airbnb border border-gray-300 text-sm focus:ring-2 focus:ring-mova-blue focus:border-mova-blue"
             >
               <option value="">All</option>
               <option value="5">5 stars</option>
@@ -269,14 +269,14 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-airbnb-gray">Replied:</span>
+            <span className="text-sm text-mova-gray">Replied:</span>
             <select
               value={showRepliedOnly === null ? '' : showRepliedOnly ? 'yes' : 'no'}
               onChange={(e) => {
                 if (e.target.value === '') setShowRepliedOnly(null)
                 else setShowRepliedOnly(e.target.value === 'yes')
               }}
-              className="px-3 py-1.5 rounded-airbnb border border-gray-300 text-sm focus:ring-2 focus:ring-airbnb-red focus:border-airbnb-red"
+              className="px-3 py-1.5 rounded-airbnb border border-gray-300 text-sm focus:ring-2 focus:ring-mova-blue focus:border-mova-blue"
             >
               <option value="">All</option>
               <option value="yes">With reply</option>
@@ -284,11 +284,11 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-airbnb-gray">Sort:</span>
+            <span className="text-sm text-mova-gray">Sort:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-1.5 rounded-airbnb border border-gray-300 text-sm focus:ring-2 focus:ring-airbnb-red focus:border-airbnb-red"
+              className="px-3 py-1.5 rounded-airbnb border border-gray-300 text-sm focus:ring-2 focus:ring-mova-blue focus:border-mova-blue"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
@@ -301,9 +301,9 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
       {/* Reviews List */}
       <div className="space-y-4">
         {reviews.length === 0 ? (
-          <div className="text-center py-12 bg-airbnb-light-gray rounded-airbnb-lg border-2 border-dashed border-gray-300">
-            <Star className="h-12 w-12 text-airbnb-gray mx-auto mb-4" />
-            <p className="text-airbnb-gray">No reviews yet</p>
+          <div className="text-center py-12 bg-mova-light-gray rounded-airbnb-lg border-2 border-dashed border-gray-300">
+            <Star className="h-12 w-12 text-mova-gray mx-auto mb-4" />
+            <p className="text-mova-gray">No reviews yet</p>
           </div>
         ) : (
           reviews.map((review) => (
@@ -315,7 +315,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-airbnb-dark">
+                    <span className="font-semibold text-mova-dark">
                       {review.user?.full_name || 'Anonymous'}
                     </span>
                     <div className="flex items-center gap-1">
@@ -332,7 +332,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
                       ))}
                     </div>
                   </div>
-                  <div className="text-sm text-airbnb-gray">
+                  <div className="text-sm text-mova-gray">
                     {format(new Date(review.created_at), 'MMMM dd, yyyy')}
                   </div>
                 </div>
@@ -341,23 +341,23 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
               {/* Review Comment */}
               {review.comment && (
                 <div className="mb-4">
-                  <p className="text-airbnb-dark">{review.comment}</p>
+                  <p className="text-mova-dark">{review.comment}</p>
                 </div>
               )}
 
               {/* Reply Section */}
               {review.reply_text ? (
-                <div className="mt-4 p-4 bg-airbnb-light-red rounded-airbnb border border-airbnb-red/30">
+                <div className="mt-4 p-4 bg-mova-light-blue rounded-airbnb border border-mova-blue/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Reply className="h-4 w-4 text-airbnb-red" />
-                    <span className="text-sm font-semibold text-airbnb-dark">Your Reply</span>
+                    <Reply className="h-4 w-4 text-mova-blue" />
+                    <span className="text-sm font-semibold text-mova-dark">Your Reply</span>
                     {review.reply_date && (
-                      <span className="text-xs text-airbnb-gray">
+                      <span className="text-xs text-mova-gray">
                         {format(new Date(review.reply_date), 'MMM dd, yyyy')}
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-airbnb-dark">{review.reply_text}</p>
+                  <p className="text-sm text-mova-dark">{review.reply_text}</p>
                 </div>
               ) : (
                 <div className="mt-4">
@@ -369,10 +369,10 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
                         placeholder="Write your reply..."
                         rows={3}
                         maxLength={500}
-                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 resize-none"
+                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 resize-none"
                       />
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-airbnb-gray">
+                        <span className="text-xs text-mova-gray">
                           {replyText.length}/500 characters
                         </span>
                         <div className="flex items-center gap-2">

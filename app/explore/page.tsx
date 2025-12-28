@@ -13,6 +13,7 @@ import { QuickFilters } from "@/components/features/feed/quick-filters"
 import { searchBusinesses, getBusinessesForMap, type MapBusiness } from "@/services/business/business.service"
 import { Button } from "@/components/shared/ui/button"
 import { logger } from "@/lib/logger"
+import { cn } from "@/lib/utils"
 
 export default function ExplorePage() {
   const { currentCity, openCitySelector } = useAppStore()
@@ -150,25 +151,39 @@ export default function ExplorePage() {
     }
   }, [currentCity, mapBounds, activeFilter])
 
+  // Handle center map on user location
+  const handleCenterMap = useCallback(() => {
+    if (initialCenter) {
+      setMapBounds({
+        north: initialCenter.lat + 0.01,
+        south: initialCenter.lat - 0.01,
+        east: initialCenter.lng + 0.01,
+        west: initialCenter.lng - 0.01,
+      })
+      // Trigger map recenter via MapView component
+      // This would need to be implemented in MapView component
+    }
+  }, [initialCenter])
+
   // Show city selector prompt if no city selected
   if (!currentCity) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4">
         <div className="text-center max-w-md">
-          <div className="h-20 w-20 rounded-airbnb-lg bg-airbnb-red flex items-center justify-center mx-auto mb-6 shadow-airbnb-lg">
+          <div className="h-20 w-20 rounded-airbnb-lg bg-mova-blue flex items-center justify-center mx-auto mb-6 shadow-airbnb-lg">
             <MapPin className="h-10 w-10 text-white" />
           </div>
-          <h3 className="text-2xl font-bold text-airbnb-dark mb-3">
-            Choose Your Destination
+          <h3 className="text-2xl font-bold text-mova-dark mb-3">
+            Alege Destinația
           </h3>
-          <p className="text-airbnb-gray mb-6">
-            Select a city to explore amazing places and experiences on the map
+          <p className="text-mova-gray mb-6">
+            Selectează un oraș pentru a explora locuri și experiențe uimitoare pe hartă
           </p>
           <button
             onClick={openCitySelector}
             className="airbnb-button px-8 py-4"
           >
-            Select City
+            Selectează Oraș
           </button>
         </div>
       </div>
@@ -176,47 +191,61 @@ export default function ExplorePage() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative h-screen w-full overflow-hidden">
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white px-4 py-2 rounded-full shadow-airbnb-md flex items-center gap-2 border border-gray-200">
-          <Loader2 className="h-4 w-4 animate-spin text-airbnb-red" />
-          <span className="text-sm font-semibold text-airbnb-dark">Loading...</span>
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[60] bg-white px-4 py-2 rounded-full shadow-airbnb-md flex items-center gap-2 border border-gray-200">
+          <Loader2 className="h-4 w-4 animate-spin text-mova-blue" />
+          <span className="text-sm font-semibold text-mova-dark">Se încarcă...</span>
         </div>
       )}
 
-      {/* Global Search - Floating at top - Centered on desktop */}
-      <div className="absolute top-4 left-4 right-4 z-40">
-        <div className="max-w-screen-xl mx-auto">
-          <GlobalSearch variant="floating" />
-        </div>
-      </div>
-
-      {/* Quick Filters - Below search - Centered on desktop */}
-      <div className="absolute top-20 left-4 right-4 z-40">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="bg-white rounded-airbnb-lg shadow-airbnb-md p-3 border border-gray-200">
-            <QuickFilters
-              activeFilter={activeFilter}
-              onFilterChange={setActiveFilter}
-            />
+      {/* Top Bar - Search and Filters Grouped - Below Header */}
+      <div className="absolute top-16 left-0 right-0 z-40 bg-white/98 backdrop-blur-md border-b border-gray-200/80 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+          <div className="flex flex-col gap-3">
+            {/* Global Search Bar - Centered */}
+            <div className="w-full max-w-2xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <GlobalSearch variant="floating" />
+              </motion.div>
+            </div>
+            
+            {/* Quick Filters and Search Area Button - Aligned */}
+            <div className="flex items-center justify-center gap-4 overflow-x-auto scrollbar-hide pb-1">
+              <div className="flex items-center gap-2.5 flex-1 justify-center min-w-0">
+                <QuickFilters
+                  activeFilter={activeFilter}
+                  onFilterChange={setActiveFilter}
+                />
+              </div>
+              {showSearchArea && viewMode === 'map' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex-shrink-0 ml-2"
+                >
+                  <Button
+                    onClick={handleSearchArea}
+                    size="sm"
+                    className="bg-mova-blue text-white hover:bg-[#2563EB] shadow-airbnb-md px-4 py-2 rounded-full font-semibold flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Navigation className="h-4 w-4" />
+                    <span className="text-sm hidden sm:inline">Caută în această zonă</span>
+                    <span className="text-sm sm:hidden">Zonă</span>
+                  </Button>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Search This Area Button - Appears when map is moved (only in map mode) */}
-      {showSearchArea && viewMode === 'map' && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40">
-          <Button
-            onClick={handleSearchArea}
-            size="sm"
-            className="bg-airbnb-dark text-white hover:bg-[#1F1F1F] shadow-airbnb-lg px-6 py-5 rounded-full font-semibold"
-          >
-            <Navigation className="h-4 w-4 mr-2" />
-            Search this area
-          </Button>
-        </div>
-      )}
 
       {/* Map View - Keep mounted but hidden when in list mode */}
       {initialCenter && (
@@ -255,42 +284,70 @@ export default function ExplorePage() {
         )}
       </AnimatePresence>
 
-      {/* Transit Toggle Button - Only show on map view */}
+      {/* Map Controls - Right Side - Grouped and Aligned */}
       {viewMode === 'map' && (
-        <motion.div
-          className="fixed top-20 right-4 z-40"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Button
-            onClick={() => setShowTransit(!showTransit)}
-            className={`
-              shadow-airbnb-md px-4 py-2 rounded-full font-semibold flex items-center gap-2
-              ${showTransit 
-                ? 'bg-airbnb-red text-white hover:bg-[#FF484D]' 
-                : 'bg-white text-airbnb-dark hover:bg-airbnb-light-gray border-2 border-gray-300'
-              }
-            `}
+        <div className="absolute right-4 top-[180px] z-50 flex flex-col gap-2.5">
+          {/* Transport Toggle */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
           >
-            <Bus className="h-4 w-4" />
-            <span className="hidden md:inline">
-              {showTransit ? 'Ascunde Transport' : 'Afișează Transport'}
-            </span>
+            <Button
+              onClick={() => setShowTransit(!showTransit)}
+              className={cn(
+                "shadow-airbnb-lg px-4 py-2.5 rounded-full font-semibold flex items-center gap-2 transition-all min-w-[120px] justify-center cursor-pointer",
+                showTransit 
+                  ? 'bg-mova-blue text-white hover:bg-[#2563EB] shadow-mova-blue/30' 
+                  : 'bg-white/95 backdrop-blur-sm text-mova-dark hover:bg-white border-2 border-mova-blue/30 hover:border-mova-blue'
+              )}
+            >
+              <Bus className={cn("h-4 w-4 flex-shrink-0", showTransit ? "text-white" : "text-mova-blue")} />
+              <span className="text-sm whitespace-nowrap">
+                {showTransit ? 'Ascunde Transport' : 'Transport'}
+              </span>
+            </Button>
+          </motion.div>
+
+          {/* Zoom Controls */}
+          <div className="bg-white rounded-airbnb shadow-airbnb-lg overflow-hidden border border-gray-200">
+            <button
+              onClick={() => {/* Zoom in logic */}}
+              className="w-11 h-11 flex items-center justify-center border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
+              aria-label="Mărește"
+            >
+              <span className="text-lg font-semibold text-mova-dark">+</span>
+            </button>
+            <button
+              onClick={() => {/* Zoom out logic */}}
+              className="w-11 h-11 flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer"
+              aria-label="Micșorează"
+            >
+              <span className="text-lg font-semibold text-mova-dark">−</span>
+            </button>
+          </div>
+
+          {/* Location Button */}
+          <Button
+            onClick={handleCenterMap}
+            className="bg-white/95 backdrop-blur-sm text-mova-dark hover:bg-white border-2 border-mova-blue/30 hover:border-mova-blue shadow-airbnb-lg w-11 h-11 rounded-full p-0 flex items-center justify-center cursor-pointer"
+            aria-label="Centrare pe locație"
+          >
+            <MapPin className="h-5 w-5 text-mova-blue" />
           </Button>
-        </motion.div>
+        </div>
       )}
 
-      {/* View Toggle Button - Floating */}
+      {/* View Toggle Button - Bottom Center */}
       <motion.div
-        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40"
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
         <Button
           onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
-          className="bg-airbnb-dark text-white hover:bg-[#1F1F1F] shadow-airbnb-md px-6 py-3 rounded-full font-semibold flex items-center gap-2"
+          className="bg-mova-blue text-white hover:bg-[#2563EB] shadow-airbnb-lg px-6 py-3 rounded-full font-semibold flex items-center gap-2 backdrop-blur-sm shadow-mova-blue/30"
         >
           <AnimatePresence mode="wait">
             {viewMode === 'map' ? (
@@ -303,7 +360,7 @@ export default function ExplorePage() {
                 className="flex items-center gap-2"
               >
                 <List className="h-4 w-4" />
-                <span>Afișează Listă</span>
+                <span className="text-sm">Afișează Listă</span>
               </motion.div>
             ) : (
               <motion.div
@@ -315,7 +372,7 @@ export default function ExplorePage() {
                 className="flex items-center gap-2"
               >
                 <MapIcon className="h-4 w-4" />
-                <span>Afișează Hartă</span>
+                <span className="text-sm">Afișează Hartă</span>
               </motion.div>
             )}
           </AnimatePresence>

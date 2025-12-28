@@ -21,7 +21,7 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
         <div className="relative">
           {Icon && (
             <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-              <Icon className="h-5 w-5 text-airbnb-gray" />
+              <Icon className="h-5 w-5 text-mova-gray" />
             </div>
           )}
           <input
@@ -41,7 +41,7 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
               Icon && "pl-12",
               error
                 ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                : "border-gray-300 focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20",
+                : "border-gray-300 focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20",
               className
             )}
           />
@@ -59,8 +59,8 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
               isFocused || hasValue
                 ? error
                   ? "text-red-600"
-                  : "text-airbnb-red"
-                : "text-airbnb-gray"
+                  : "text-mova-blue"
+                : "text-mova-gray"
             )}
           >
             {label}

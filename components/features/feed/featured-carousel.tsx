@@ -51,8 +51,8 @@ export function FeaturedCarousel({ businesses }: FeaturedCarouselProps) {
             {/* Verified Badge */}
             {business.is_verified && (
               <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-sm flex items-center gap-1.5 shadow-airbnb">
-                <TrendingUp className="h-3.5 w-3.5 text-airbnb-red" />
-                <span className="text-xs font-semibold text-airbnb-dark">Verified</span>
+                <TrendingUp className="h-3.5 w-3.5 text-mova-blue" />
+                <span className="text-xs font-semibold text-mova-dark">Verified</span>
               </div>
             )}
 

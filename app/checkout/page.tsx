@@ -88,8 +88,8 @@ function CheckoutContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-airbnb-red mx-auto mb-4" />
-          <p className="text-airbnb-gray">Loading checkout...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-mova-blue mx-auto mb-4" />
+          <p className="text-mova-gray">Loading checkout...</p>
         </div>
       </div>
     )
@@ -102,15 +102,15 @@ function CheckoutContent() {
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-airbnb-dark mb-2">
+              <h3 className="text-lg font-semibold text-mova-dark mb-2">
                 Unable to Load Checkout
               </h3>
-              <p className="text-sm text-airbnb-gray mb-4">
+              <p className="text-sm text-mova-gray mb-4">
                 {error || 'Booking not found'}
               </p>
               <button
                 onClick={() => router.push('/bookings')}
-                className="text-sm text-airbnb-red hover:underline font-semibold"
+                className="text-sm text-mova-blue hover:underline font-semibold"
               >
                 Go to Bookings →
               </button>
@@ -124,8 +124,8 @@ function CheckoutContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-airbnb-dark mb-2">Checkout</h1>
-        <p className="text-airbnb-gray">
+        <h1 className="text-3xl font-bold text-mova-dark mb-2">Checkout</h1>
+        <p className="text-mova-gray">
           Complete your payment to confirm your booking
         </p>
       </div>
@@ -160,8 +160,8 @@ export default function CheckoutPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-airbnb-red mx-auto mb-4" />
-          <p className="text-airbnb-gray">Loading checkout...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-mova-blue mx-auto mb-4" />
+          <p className="text-mova-gray">Loading checkout...</p>
         </div>
       </div>
     }>

@@ -81,7 +81,7 @@ export function BottomNav() {
                   {isActive && (
                     <motion.div
                       layoutId="bottomNavIndicator"
-                      className="absolute inset-0 rounded-airbnb bg-airbnb-light-gray"
+                      className="absolute inset-0 rounded-airbnb bg-mova-light-gray"
                       initial={false}
                       transition={{
                         type: "spring",
@@ -98,8 +98,8 @@ export function BottomNav() {
                         className={cn(
                           "transition-colors duration-200",
                           isActive
-                            ? "text-airbnb-red"
-                            : "text-airbnb-gray group-hover:text-airbnb-dark"
+                            ? "text-mova-blue"
+                            : "text-mova-gray group-hover:text-mova-dark"
                         )}
                       >
                         <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
@@ -110,7 +110,7 @@ export function BottomNav() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="absolute -top-1 -right-1 h-3 w-3 bg-airbnb-red rounded-full border-2 border-white"
+                          className="absolute -top-1 -right-1 h-3 w-3 bg-mova-blue rounded-full border-2 border-white"
                         />
                       )}
                     </div>
@@ -118,8 +118,8 @@ export function BottomNav() {
                       className={cn(
                         "text-xs font-semibold transition-colors duration-200",
                         isActive
-                          ? "text-airbnb-red"
-                          : "text-airbnb-gray group-hover:text-airbnb-dark"
+                          ? "text-mova-blue"
+                          : "text-mova-gray group-hover:text-mova-dark"
                       )}
                     >
                       {item.label}

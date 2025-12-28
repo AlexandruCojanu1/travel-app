@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { MapPin, Calendar, Bookmark, ArrowRight, Building2, Users } from "lucide-react"
 import { Button } from "@/components/shared/ui/button"
+import Image from "next/image"
 
 export const dynamic = 'force-dynamic'
 
@@ -24,27 +25,54 @@ export default async function LandingPage() {
 
   // If guest, render landing page
   return (
-    <div className="min-h-screen bg-airbnb-light-gray">
+    <div className="min-h-screen bg-mova-light-gray">
+      {/* Header with Logo */}
+      <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+        <div className="mx-auto w-full max-w-screen-xl">
+          <div className="flex h-16 md:h-20 items-center justify-between px-4 md:px-8">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-airbnb bg-white shadow-airbnb transition-transform group-hover:scale-105 overflow-hidden">
+                <Image
+                  src="/images/mova-logo.png"
+                  alt="MOVA Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+              </div>
+            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/auth/login"
+                className="text-mova-gray hover:text-mova-blue font-semibold transition-colors"
+              >
+                Autentificare
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-airbnb-red/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-airbnb-red/5 rounded-full blur-3xl animate-pulse delay-700" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-mova-blue/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-mova-blue/5 rounded-full blur-3xl animate-pulse delay-700" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-20 lg:py-32">
           <div className="text-center space-y-6 md:space-y-8">
             {/* Main Heading */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-airbnb-dark leading-tight px-2">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-mova-dark leading-tight px-2">
               Planifică-ți călătoria perfectă în
               <br />
-              <span className="text-airbnb-red">
+              <span className="text-mova-blue">
                 România
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-airbnb-gray max-w-3xl mx-auto px-2">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-mova-gray max-w-3xl mx-auto px-2">
               Descoperă destinații uimitoare, planifică călătorii perfecte și rezervă
               experiențe de neuitat cu cea mai intuitivă platformă de călătorii.
             </p>
@@ -52,26 +80,26 @@ export default async function LandingPage() {
             {/* Dual CTA Section - Users vs Businesses */}
             <div className="pt-8 space-y-6">
               <div className="text-center">
-                <p className="text-lg font-semibold text-airbnb-dark mb-6">
+                <p className="text-lg font-semibold text-mova-dark mb-6">
                   Sunt...
                 </p>
               </div>
               
               <div className="grid md:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto w-full">
                 {/* User CTA Card */}
-                <div className="group relative airbnb-card p-8 shadow-airbnb hover:shadow-airbnb-hover transition-all border-2 border-transparent hover:border-airbnb-red/30">
+                <div className="group relative airbnb-card p-8 shadow-airbnb hover:shadow-airbnb-hover transition-all border-2 border-transparent hover:border-mova-blue/30">
                   <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="h-16 w-16 rounded-airbnb-lg bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Users className="h-8 w-8 text-airbnb-red" />
+                    <div className="h-16 w-16 rounded-airbnb-lg bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Users className="h-8 w-8 text-mova-blue" />
                     </div>
-                    <h3 className="text-2xl font-bold text-airbnb-dark">
+                    <h3 className="text-2xl font-bold text-mova-dark">
                       Călător
                     </h3>
-                    <p className="text-airbnb-gray">
+                    <p className="text-mova-gray">
                       Explorează destinații, planifică călătorii și rezervă experiențe uimitoare
                     </p>
                     <div className="w-full space-y-3">
-                      <Link href="/auth/login">
+                      <Link href="/auth/login?role=tourist">
                         <Button
                           size="lg"
                           className="w-full airbnb-button group-hover:shadow-airbnb-hover transition-all"
@@ -80,11 +108,11 @@ export default async function LandingPage() {
                           <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </Link>
-                      <Link href="/auth/login">
+                      <Link href="/auth/login?role=tourist&mode=signup">
                         <Button
                           size="lg"
                           variant="outline"
-                          className="w-full border-2 border-airbnb-red text-airbnb-red hover:bg-red-50"
+                          className="w-full border-2 border-mova-blue text-mova-blue hover:bg-blue-50"
                         >
                           Creează cont
                         </Button>
@@ -94,28 +122,28 @@ export default async function LandingPage() {
                 </div>
 
                 {/* Business CTA Card */}
-                <div className="group relative airbnb-card p-8 shadow-airbnb hover:shadow-airbnb-hover transition-all border-2 border-transparent hover:border-airbnb-red/30">
+                <div className="group relative airbnb-card p-8 shadow-airbnb hover:shadow-airbnb-hover transition-all border-2 border-transparent hover:border-mova-blue/30">
                   <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="h-16 w-16 rounded-airbnb-lg bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Building2 className="h-8 w-8 text-airbnb-red" />
+                    <div className="h-16 w-16 rounded-airbnb-lg bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Building2 className="h-8 w-8 text-mova-blue" />
                     </div>
-                    <h3 className="text-2xl font-bold text-airbnb-dark">
+                    <h3 className="text-2xl font-bold text-mova-dark">
                       Proprietar de afacere
                     </h3>
-                    <p className="text-airbnb-gray">
+                    <p className="text-mova-gray">
                       Gestionează afacerea, camerele și rezervările pe platforma noastră
                     </p>
                     <div className="w-full space-y-3">
-                      <Link href="/auth/login?redirect=/business-portal/onboarding">
+                      <Link href="/auth/login?role=local&redirect=/business-portal/onboarding">
                         <Button
                           size="lg"
                           variant="outline"
-                          className="w-full border-2 border-airbnb-red text-airbnb-red hover:bg-red-50 group-hover:shadow-airbnb-md transition-all"
+                          className="w-full border-2 border-mova-blue text-mova-blue hover:bg-blue-50 group-hover:shadow-airbnb-md transition-all"
                         >
                           Autentificare
                         </Button>
                       </Link>
-                      <Link href="/auth/login?redirect=/business-portal/onboarding&mode=signup">
+                      <Link href="/auth/login?role=local&redirect=/business-portal/onboarding&mode=signup">
                         <Button
                           size="lg"
                           className="w-full airbnb-button group-hover:shadow-airbnb-hover transition-all"
@@ -131,11 +159,11 @@ export default async function LandingPage() {
 
               {/* Login Link */}
               <div className="text-center pt-4">
-                <p className="text-airbnb-gray">
+                <p className="text-mova-gray">
                   Ai deja cont?{" "}
                   <Link
                     href="/auth/login"
-                    className="text-airbnb-red font-semibold hover:text-[#FF484D] underline"
+                    className="text-mova-blue font-semibold hover:text-[#2563EB] underline"
                   >
                     Autentifică-te
                   </Link>
@@ -149,10 +177,10 @@ export default async function LandingPage() {
       {/* Features Grid */}
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-airbnb-dark mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-mova-dark mb-4">
             Tot ce ai nevoie pentru călătoria perfectă
           </h2>
-          <p className="text-lg text-airbnb-gray max-w-2xl mx-auto">
+          <p className="text-lg text-mova-gray max-w-2xl mx-auto">
             De la planificare la rezervare, te ajutăm cu instrumente puternice
             și recomandări personalizate.
           </p>
@@ -183,13 +211,13 @@ export default async function LandingPage() {
               key={idx}
               className="airbnb-card p-8 shadow-airbnb hover:shadow-airbnb-hover transition-shadow text-center"
             >
-              <div className="h-16 w-16 rounded-airbnb-lg bg-red-50 flex items-center justify-center mx-auto mb-6">
-                <feature.icon className="h-8 w-8 text-airbnb-red" />
+              <div className="h-16 w-16 rounded-airbnb-lg bg-blue-50 flex items-center justify-center mx-auto mb-6">
+                <feature.icon className="h-8 w-8 text-mova-blue" />
               </div>
-              <h3 className="text-2xl font-bold text-airbnb-dark mb-3">
+              <h3 className="text-2xl font-bold text-mova-dark mb-3">
                 {feature.title}
               </h3>
-              <p className="text-airbnb-gray">{feature.description}</p>
+              <p className="text-mova-gray">{feature.description}</p>
             </div>
           ))}
         </div>
@@ -197,8 +225,8 @@ export default async function LandingPage() {
 
       {/* Footer */}
       <footer className="max-w-7xl mx-auto px-4 py-8 border-t border-gray-200">
-        <div className="text-center text-airbnb-gray">
-          <p>&copy; {new Date().getFullYear()} Travel App. Toate drepturile rezervate.</p>
+        <div className="text-center text-mova-gray">
+          <p>&copy; {new Date().getFullYear()} MOVA. Toate drepturile rezervate.</p>
         </div>
       </footer>
     </div>

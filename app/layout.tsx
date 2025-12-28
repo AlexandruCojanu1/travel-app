@@ -11,13 +11,13 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "Travel App - Your Premium Travel Companion",
+  title: "MOVA - Your Premium Travel Companion",
   description: "Mobile-first travel platform for discovering and booking amazing experiences",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Travel App",
+    title: "MOVA",
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -28,7 +28,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   interactiveWidget: "resizes-content",
-  themeColor: "#FF5A5F",
+  themeColor: "#3B82F6", // MOVA blue
 }
 
 export default function RootLayout({

@@ -65,9 +65,9 @@ export function GlobalSearch({
       >
         <div
           className={cn(
-            'relative flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 shadow-sm transition-shadow',
-            variant === 'floating' && 'shadow-lg',
-            'focus-within:border-airbnb-red focus-within:ring-2 focus-within:ring-airbnb-red/20'
+            'relative flex items-center gap-2 rounded-full border border-gray-200/50 bg-white/95 backdrop-blur-sm px-4 py-3 shadow-sm transition-all',
+            variant === 'floating' && 'shadow-airbnb-lg',
+            'focus-within:border-mova-blue focus-within:ring-2 focus-within:ring-mova-blue/20 focus-within:shadow-airbnb-md'
           )}
         >
           {/* Search Icon */}
@@ -78,7 +78,7 @@ export function GlobalSearch({
             type="text"
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
-            placeholder="Search places, activities..."
+            placeholder="Caută locuri, activități..."
             className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
           />
 
@@ -96,7 +96,7 @@ export function GlobalSearch({
           {/* Filter Button */}
           <button
             onClick={() => setIsFilterSheetOpen(true)}
-            className="flex-shrink-0 text-gray-400 hover:text-airbnb-red transition-colors"
+            className="flex-shrink-0 text-gray-400 hover:text-mova-blue transition-colors"
             aria-label="Open filters"
           >
             <Sliders className="h-5 w-5" />
