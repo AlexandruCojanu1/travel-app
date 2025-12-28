@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const createMessageSchema = z.object({
   conversation_id: z.string().uuid(),
   content: z.string().min(1).max(5000),

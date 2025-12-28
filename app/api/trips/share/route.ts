@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { randomBytes } from 'crypto'
 
+export const dynamic = 'force-dynamic'
+
 const shareTripSchema = z.object({
   trip_id: z.string().uuid(),
   access_level: z.enum(['view', 'edit']).default('view'),

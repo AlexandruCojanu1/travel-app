@@ -3,6 +3,8 @@ import { getStripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 import { getBookingDetails } from '@/services/booking/booking.service'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const createGroupBookingSchema = z.object({
   booking_id: z.string().uuid(),
   group_name: z.string().optional(),

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const bulkOperationSchema = z.object({
   business_id: z.string().uuid(),
   operation_type: z.enum(['price_update', 'availability_block', 'availability_unblock']),

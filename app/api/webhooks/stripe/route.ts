@@ -4,6 +4,8 @@ import Stripe from 'stripe'
 import { getStripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * Stripe Webhook Handler
  * Critical: This is the ONLY source of truth for payment confirmation

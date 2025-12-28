@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const createConversationSchema = z.object({
   type: z.enum(['booking', 'support', 'general']),
   business_id: z.string().uuid(),

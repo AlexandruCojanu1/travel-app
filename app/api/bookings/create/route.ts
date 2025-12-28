@@ -3,6 +3,8 @@ import { checkAvailability, getResourceDetails } from '@/services/booking/bookin
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const createBookingSchema = z.object({
     resource_id: z.string().uuid(),
     business_id: z.string().uuid(),

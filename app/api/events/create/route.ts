@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const createEventSchema = z.object({
   city_id: z.string().uuid(),
   business_id: z.string().uuid().optional(),

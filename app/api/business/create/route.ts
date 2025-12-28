@@ -4,6 +4,8 @@ import { businessSchema, type BusinessInput } from '@/lib/validations/business'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 
+export const dynamic = 'force-dynamic'
+
 // Map category to business_type enum
 const CATEGORY_TO_TYPE_MAP: Record<string, string> = {
   'Restaurant': 'restaurant',
