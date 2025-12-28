@@ -4,6 +4,8 @@ import Link from "next/link"
 import { MapPin, Calendar, Bookmark, ArrowRight, Building2, Users } from "lucide-react"
 import { Button } from "@/components/shared/ui/button"
 
+export const dynamic = 'force-dynamic'
+
 export default async function LandingPage() {
   // Check server-side session with error handling
   try {
