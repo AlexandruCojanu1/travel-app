@@ -8,8 +8,8 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-} from '@/components/ui/drawer'
-import { Button } from '@/components/ui/button'
+} from '@/components/shared/ui/drawer'
+import { Button } from '@/components/shared/ui/button'
 import { useTripStore } from '@/store/trip-store'
 import { format } from 'date-fns'
 import type { Business } from '@/services/business.service'

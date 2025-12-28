@@ -170,10 +170,10 @@ export default function BusinessPortalDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col min-h-screen">
+    <div className="min-h-screen bg-slate-50 w-full overflow-x-hidden">
+      <div className="flex flex-col md:flex-row">
+        {/* Sidebar Navigation - Hidden on mobile, shown on desktop */}
+        <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col min-h-screen flex-shrink-0">
           <div className="p-6 border-b border-slate-200">
             <h1 className="text-xl font-bold text-slate-900">Business Portal</h1>
             <p className="text-sm text-slate-600 mt-1">{selectedBusiness?.name}</p>
@@ -242,15 +242,15 @@ export default function BusinessPortalDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 py-8 px-4 md:px-8">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <main className="flex-1 py-4 md:py-8 px-4 md:px-8 w-full min-w-0">
+          <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
             {/* Mobile Header */}
-            <div className="md:hidden flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Business Portal</h1>
-                <p className="text-sm text-slate-600">{selectedBusiness?.name}</p>
+            <div className="md:hidden flex items-center justify-between mb-4 pb-4 border-b border-slate-200">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold text-slate-900 truncate">Business Portal</h1>
+                <p className="text-sm text-slate-600 truncate">{selectedBusiness?.name}</p>
               </div>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" className="ml-2 flex-shrink-0" asChild>
                 <Link href="/business-portal/onboarding">
                   <Plus className="h-4 w-4" />
                 </Link>
@@ -259,7 +259,7 @@ export default function BusinessPortalDashboard() {
 
             {/* Main Content Tabs */}
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-4 md:mb-6 h-auto">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" />
                   <span className="hidden sm:inline">Overview</span>

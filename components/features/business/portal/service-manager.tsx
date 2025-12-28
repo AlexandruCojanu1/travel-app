@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Plus, Edit, Trash2, Clock, Users } from "lucide-react"
 import { Button } from "@/components/shared/ui/button"
-import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
+import { cn } from "@/lib/utils"
+import { Clock, Edit, Plus, Trash2, Users } from "lucide-react"
+import { useEffect, useState } from "react"
 import { ServiceFormDialog } from "./service-form-dialog"
 
 interface Service {
@@ -50,14 +50,14 @@ export function ServiceManager({ businessId }: ServiceManagerProps) {
         .select('*')
         .eq('business_id', businessId)
         .order('created_at', { ascending: false })
-      
+
       if (allError) {
         console.error('Error loading all resources:', allError)
         setServices([])
         setIsLoading(false)
         return
       }
-      
+
       // Filter client-side
       const filteredData = (allData || []).filter((r: any) => r.resource_type === 'service')
       setServices(filteredData.map(parseServiceFromResource))

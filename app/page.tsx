@@ -25,10 +25,10 @@ export default async function LandingPage() {
           <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-700" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-20 md:py-32">
-          <div className="text-center space-y-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-20 lg:py-32">
+          <div className="text-center space-y-6 md:space-y-8">
             {/* Main Heading */}
-            <h1 className="text-5xl md:text-7xl font-bold text-slate-900 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-slate-900 leading-tight px-2">
               Plan your perfect trip to
               <br />
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -36,7 +36,7 @@ export default async function LandingPage() {
               </span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 max-w-3xl mx-auto px-2">
               Discover amazing destinations, plan perfect trips, and book
               unforgettable experiences with the world's most intuitive travel
               platform.
@@ -50,7 +50,7 @@ export default async function LandingPage() {
                 </p>
               </div>
               
-              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <div className="grid md:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto w-full">
                 {/* User CTA Card */}
                 <div className="group relative bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-blue-500">
                   <div className="flex flex-col items-center text-center space-y-4">

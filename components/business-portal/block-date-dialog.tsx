@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectItem } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/shared/ui/dialog"
+import { Button } from "@/components/shared/ui/button"
+import { Label } from "@/components/shared/ui/label"
+import { Input } from "@/components/shared/ui/input"
+import { Textarea } from "@/components/shared/ui/textarea"
+import { Select, SelectItem } from "@/components/shared/ui/select"
 import { format } from "date-fns"
 
 interface BlockDateDialogProps {

@@ -24,7 +24,18 @@ interface ActivePromotion {
   status: string
 }
 
-const PACKAGES = [
+type Package = {
+  id: 'silver' | 'gold' | 'platinum'
+  name: string
+  price: number
+  duration_days: number
+  icon: typeof TrendingUp
+  color: string
+  features: readonly string[]
+  popular?: boolean
+}
+
+const PACKAGES: Package[] = [
   {
     id: 'silver',
     name: 'Boost',
@@ -67,7 +78,7 @@ const PACKAGES = [
       'Analytics dashboard access',
     ],
   },
-] as const
+]
 
 export default function PromotePage() {
   const router = useRouter()
@@ -136,12 +147,22 @@ export default function PromotePage() {
 
     setIsProcessing(true)
     const packageData = PACKAGES.find(p => p.id === packageId)
-    if (!packageData) return
+    if (!packageData) {
+      setIsProcessing(false)
+      return
+    }
+
+    // Validate package type
+    if (packageId !== 'silver' && packageId !== 'gold' && packageId !== 'platinum') {
+      toast.error('Invalid package type')
+      setIsProcessing(false)
+      return
+    }
 
     try {
       const result = await createPromotion({
         business_id: selectedBusinessId,
-        package_type: packageId,
+        package_type: packageId as 'silver' | 'gold' | 'platinum',
         amount: packageData.price,
         duration_days: packageData.duration_days,
       })

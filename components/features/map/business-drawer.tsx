@@ -13,6 +13,7 @@ import {
 } from '@/components/shared/ui/drawer'
 import { Button } from '@/components/shared/ui/button'
 import { AddToTripDrawer } from '@/components/features/trip/add-to-trip-drawer'
+import { BookingDialog } from '@/components/features/booking/booking-dialog'
 import { useTripStore } from '@/store/trip-store'
 import type { MapBusiness } from '@/services/business/business.service'
 
@@ -25,16 +26,23 @@ interface BusinessDrawerProps {
 export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProps) {
   const router = useRouter()
   const [isAddToTripOpen, setIsAddToTripOpen] = useState(false)
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false)
   const { getDaysCount } = useTripStore()
 
   if (!business) return null
+
+  const isHotel = business.category === 'Hotel'
 
   const handleViewDetails = () => {
     router.push(`/business/${business.id}`)
   }
 
   const handleAddToPlan = () => {
-    setIsAddToTripOpen(true)
+    if (isHotel) {
+      setIsBookingDialogOpen(true)
+    } else {
+      setIsAddToTripOpen(true)
+    }
   }
 
   const handleSuccess = (dayIndex: number) => {
@@ -107,7 +115,7 @@ export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProp
                     className="flex-1 flex items-center justify-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
-                    Add to Plan
+                    {isHotel ? 'Book Now' : 'Add to Plan'}
                   </Button>
                   <Button
                     onClick={handleViewDetails}
@@ -123,13 +131,24 @@ export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProp
         </DrawerContent>
       </Drawer>
 
-      {/* Add to Trip Drawer */}
-      <AddToTripDrawer
-        business={business}
-        isOpen={isAddToTripOpen}
-        onOpenChange={setIsAddToTripOpen}
-        onSuccess={handleSuccess}
-      />
+      {/* Add to Trip Drawer (for non-hotels) */}
+      {!isHotel && (
+        <AddToTripDrawer
+          business={business}
+          isOpen={isAddToTripOpen}
+          onOpenChange={setIsAddToTripOpen}
+          onSuccess={handleSuccess}
+        />
+      )}
+
+      {/* Booking Dialog (for hotels) */}
+      {isHotel && (
+        <BookingDialog
+          business={business}
+          isOpen={isBookingDialogOpen}
+          onOpenChange={setIsBookingDialogOpen}
+        />
+      )}
     </>
   )
 }

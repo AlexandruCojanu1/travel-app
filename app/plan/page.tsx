@@ -67,7 +67,7 @@ export default function PlanPage() {
   const placesCount = items.length
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="w-full max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8 space-y-6 pb-8">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { QRCodeSVG } from 'qrcode.react'
-import { MapPin, Download, X, ArrowLeft, Calendar, Users } from 'lucide-react'
+import { MapPin, Download, X, ArrowLeft, Calendar, Users, Star } from 'lucide-react'
 import { getBookingDetails } from '@/services/booking/booking.service'
 import { Button } from '@/components/shared/ui/button'
+import { BookingChatButton } from '@/components/features/messaging/booking-chat-button'
 import { format } from 'date-fns'
 import type { BookingWithDetails } from '@/services/booking/booking.service'
 
@@ -109,16 +110,59 @@ export default function BookingDetailPage() {
   }
 
   const handleCancel = async () => {
-    // TODO: Implement cancel booking action
-    if (confirm('Are you sure you want to cancel this booking?')) {
-      console.log('Cancel booking:', booking.id)
-      // await cancelBooking(booking.id)
+    if (!confirm('Are you sure you want to cancel this booking?')) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ bookingId: booking.id }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        alert(result.error || 'Failed to cancel booking')
+        return
+      }
+
+      alert('Booking cancelled successfully')
+      router.push('/bookings')
+    } catch (err: any) {
+      console.error('Error cancelling booking:', err)
+      alert('Failed to cancel booking')
     }
   }
 
-  const handleDownloadInvoice = () => {
-    // TODO: Implement invoice download
-    console.log('Download invoice for:', booking.id)
+  const handleDownloadInvoice = async () => {
+    try {
+      const response = await fetch(`/api/bookings/invoice?bookingId=${booking.id}`, {
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        alert('Failed to generate invoice')
+        return
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `invoice-${booking.id.slice(0, 8)}.html`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (err: any) {
+      console.error('Error downloading invoice:', err)
+      alert('Failed to download invoice')
+    }
   }
 
   return (
@@ -233,7 +277,25 @@ export default function BookingDetailPage() {
             </div>
 
             {/* Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {booking.status === 'confirmed' && (
+                <Button
+                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
+                  onClick={() => router.push(`/bookings/${bookingId}/review`)}
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Write Review
+                </Button>
+              )}
+              
+              {booking.business && (
+                <BookingChatButton
+                  bookingId={bookingId}
+                  businessId={booking.business.id}
+                  businessName={booking.business.name}
+                />
+              )}
+              
               <Button
                 variant="outline"
                 className="w-full"

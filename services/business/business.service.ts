@@ -92,7 +92,29 @@ export async function getBusinessById(id: string): Promise<Business | null> {
       return null
     }
 
-    return data
+    if (!data) {
+      return null
+    }
+
+    // Extract coordinates from attributes if not available as direct columns
+    const attributes = (data as any).attributes || {}
+    const business: Business = {
+      id: data.id,
+      city_id: data.city_id,
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      address: data.address || attributes.address || attributes.address_line || null,
+      latitude: data.latitude ?? attributes.latitude ?? attributes.lat ?? null,
+      longitude: data.longitude ?? attributes.longitude ?? attributes.lng ?? null,
+      image_url: data.image_url || attributes.image_url || null,
+      rating: data.rating,
+      is_verified: data.is_verified,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+    }
+
+    return business
   } catch (error) {
     console.error('Unexpected error fetching business by ID:', error)
     return null

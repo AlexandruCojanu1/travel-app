@@ -7,9 +7,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Slider } from '@/components/ui/slider'
+} from '@/components/shared/ui/dialog'
+import { Button } from '@/components/shared/ui/button'
+import { Slider } from '@/components/shared/ui/slider'
 import { useTripStore } from '@/store/trip-store'
 import { useAppStore } from '@/store/app-store'
 import { getActiveCities } from '@/services/city.service'

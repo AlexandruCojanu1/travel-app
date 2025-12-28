@@ -1,0 +1,164 @@
+import { createClient } from '@/lib/supabase/server'
+import { getBookingDetails } from '@/services/booking/booking.service'
+import { format } from 'date-fns'
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function GET(request: NextRequest) {
+    try {
+        const searchParams = request.nextUrl.searchParams
+        const bookingId = searchParams.get('bookingId')
+
+        if (!bookingId) {
+            return NextResponse.json(
+                { success: false, error: 'Missing bookingId' },
+                { status: 400 }
+            )
+        }
+
+        const supabase = await createClient()
+
+        // Get authenticated user
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        if (userError || !user) {
+            return NextResponse.json(
+                { success: false, error: 'User not authenticated' },
+                { status: 401 }
+            )
+        }
+
+        // Get booking details
+        const bookingResult = await getBookingDetails(bookingId)
+
+        if (!bookingResult.success || !bookingResult.booking) {
+            return NextResponse.json(
+                { success: false, error: 'Booking not found' },
+                { status: 404 }
+            )
+        }
+
+        const booking = bookingResult.booking
+
+        // Verify booking belongs to user
+        if (booking.user_id !== user.id) {
+            return NextResponse.json(
+                { success: false, error: 'Unauthorized' },
+                { status: 403 }
+            )
+        }
+
+        // Generate invoice HTML
+        const start = new Date(booking.start_date)
+        const end = new Date(booking.end_date)
+        const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+
+        const invoiceHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Invoice - ${booking.business?.name || 'Booking'}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+            .header { border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 30px; }
+            .invoice-title { font-size: 32px; font-weight: bold; color: #1e40af; }
+            .invoice-number { color: #6b7280; margin-top: 10px; }
+            .section { margin-bottom: 30px; }
+            .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #1f2937; }
+            .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+            .total { font-size: 24px; font-weight: bold; color: #1e40af; margin-top: 20px; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; color: #6b7280; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="invoice-title">Invoice</div>
+            <div class="invoice-number">Booking ID: ${booking.id.slice(0, 8).toUpperCase()}</div>
+            <div style="margin-top: 10px;">Date: ${format(new Date(), 'MMMM d, yyyy')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Business Details</div>
+            <div class="row">
+              <span>Name:</span>
+              <span>${booking.business?.name || 'N/A'}</span>
+            </div>
+            ${booking.business?.category ? `
+            <div class="row">
+              <span>Category:</span>
+              <span>${booking.business.category}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="section">
+            <div class="section-title">Booking Details</div>
+            <div class="row">
+              <span>Check-in:</span>
+              <span>${format(start, 'MMMM d, yyyy')}</span>
+            </div>
+            <div class="row">
+              <span>Check-out:</span>
+              <span>${format(end, 'MMMM d, yyyy')}</span>
+            </div>
+            <div class="row">
+              <span>Nights:</span>
+              <span>${nights}</span>
+            </div>
+            <div class="row">
+              <span>Guests:</span>
+              <span>${booking.guest_count}</span>
+            </div>
+            ${booking.resource ? `
+            <div class="row">
+              <span>Room/Resource:</span>
+              <span>${booking.resource.name}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="section">
+            <div class="section-title">Payment Summary</div>
+            ${booking.resource ? `
+            <div class="row">
+              <span>Price per night:</span>
+              <span>${booking.resource.price_per_night.toFixed(2)} RON</span>
+            </div>
+            <div class="row">
+              <span>Nights:</span>
+              <span>${nights}</span>
+            </div>
+            ` : ''}
+            <div class="row total">
+              <span>Total Amount:</span>
+              <span>${booking.total_amount.toFixed(2)} RON</span>
+            </div>
+            <div class="row">
+              <span>Status:</span>
+              <span style="text-transform: capitalize;">${booking.status}</span>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for your booking!</p>
+            <p>This is an automated invoice generated by TravelPWA.</p>
+          </div>
+        </body>
+      </html>
+    `
+
+        return new NextResponse(invoiceHTML, {
+            headers: {
+                'Content-Type': 'text/html',
+                'Content-Disposition': `attachment; filename="invoice-${booking.id.slice(0, 8)}.html"`,
+            },
+        })
+    } catch (error: any) {
+        console.error('Error generating invoice:', error)
+        return NextResponse.json(
+            { success: false, error: error.message || 'Failed to generate invoice' },
+            { status: 500 }
+        )
+    }
+}
+

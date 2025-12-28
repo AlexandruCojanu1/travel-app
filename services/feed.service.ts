@@ -157,7 +157,7 @@ export async function getCityFeed(
         return {
           cityPosts: cityPosts || [],
           featuredBusinesses: fallbackBusinesses || [],
-          promotions: promotions || [],
+          promotions: [],
         }
       }
     }

@@ -50,7 +50,7 @@ export function GlobalSearch({
 
   const baseClasses =
     variant === 'floating'
-      ? 'fixed top-4 left-4 right-4 z-40 md:left-auto md:right-4 md:w-96'
+      ? 'w-full max-w-md mx-auto'
       : 'w-full'
 
   return (

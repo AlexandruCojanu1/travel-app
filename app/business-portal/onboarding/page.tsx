@@ -529,7 +529,7 @@ export default function BusinessOnboardingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12"
+          className="bg-white/90 backdrop-blur-sm rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 lg:p-8 xl:p-12 max-w-full overflow-hidden"
         >
           {/* Progress Indicator */}
           <div className="mb-8">
@@ -603,7 +603,7 @@ export default function BusinessOnboardingPage() {
                   <label className="block text-sm font-semibold text-slate-700 mb-3">
                     Categoria Business-ului *
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto overflow-x-hidden">
                     {BUSINESS_CATEGORIES.map((cat) => (
                       <button
                         key={cat.value}

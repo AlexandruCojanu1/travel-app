@@ -101,13 +101,12 @@ export async function POST(request: NextRequest) {
 
     // Hotel fields
     if (validated.star_rating) attributes.star_rating = validated.star_rating
-    if (validated.room_count) attributes.room_count = validated.room_count
     if (validated.check_in_time) attributes.check_in_time = validated.check_in_time
     if (validated.check_out_time) attributes.check_out_time = validated.check_out_time
+    if (validated.amenities) attributes.amenities = validated.amenities
 
     // Restaurant/Cafe fields
     if (validated.cuisine_type) attributes.cuisine_type = validated.cuisine_type
-    if (validated.dietary_tags) attributes.dietary_tags = validated.dietary_tags
     if (validated.price_level) attributes.price_level = validated.price_level
     if (validated.accepts_reservations !== undefined) attributes.accepts_reservations = validated.accepts_reservations
 

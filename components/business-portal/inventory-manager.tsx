@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shared/ui/tabs"
 import { RoomManager } from "./room-manager"
 import { MenuManager } from "./menu-manager"
 import { ServiceManager } from "./service-manager"

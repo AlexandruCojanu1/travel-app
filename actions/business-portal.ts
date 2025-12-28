@@ -308,3 +308,78 @@ export async function updateBookingStatus(bookingId: string, status: string) {
     return { success: false, error: error.message || 'Failed to update booking status' }
   }
 }
+
+export type CreatePromotionInput = {
+  business_id: string
+  package_type: 'silver' | 'gold' | 'platinum'
+  amount: number
+  duration_days: number
+}
+
+export type CreatePromotionResult = {
+  success: boolean
+  data?: { id: string }
+  error?: string
+}
+
+export async function createPromotion(input: CreatePromotionInput): Promise<CreatePromotionResult> {
+  try {
+    const supabase = await createClient()
+
+    // Get authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return { success: false, error: 'User not authenticated' }
+    }
+
+    // Verify user owns the business
+    const { data: business } = await supabase
+      .from('businesses')
+      .select('id')
+      .eq('id', input.business_id)
+      .eq('owner_user_id', user.id)
+      .single()
+
+    if (!business) {
+      return { success: false, error: 'Business not found or access denied' }
+    }
+
+    // Calculate valid dates
+    const validFrom = new Date()
+    const validUntil = new Date()
+    validUntil.setDate(validUntil.getDate() + input.duration_days)
+
+    // Create promotion
+    const { data: promotion, error } = await supabase
+      .from('promotions')
+      .insert({
+        business_id: input.business_id,
+        title: `${input.package_type.charAt(0).toUpperCase() + input.package_type.slice(1)} Package Promotion`,
+        description: `Promotion package: ${input.package_type}`,
+        package_type: input.package_type,
+        amount: input.amount,
+        status: 'pending_payment',
+        valid_from: validFrom.toISOString(),
+        valid_until: validUntil.toISOString(),
+        is_active: false, // Will be activated after payment
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      console.error('Error creating promotion:', error)
+      return { success: false, error: error.message }
+    }
+
+    if (!promotion) {
+      return { success: false, error: 'Failed to create promotion' }
+    }
+
+    revalidatePath('/business-portal/promote')
+    return { success: true, data: { id: promotion.id } }
+  } catch (error: any) {
+    console.error('Error in createPromotion:', error)
+    return { success: false, error: error.message || 'Failed to create promotion' }
+  }
+}

@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/shared/ui/button'
 import { AddToTripDrawer } from '@/components/features/trip/add-to-trip-drawer'
+import { BookingDialog } from '@/components/features/booking/booking-dialog'
 import { useTripStore } from '@/store/trip-store'
 import type { Business } from '@/services/business/business.service'
 
@@ -20,6 +21,7 @@ export function StickyActionBar({
   bottomNavHeight = 80,
 }: StickyActionBarProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false)
   const { getDaysCount } = useTripStore()
 
   // Determine action text based on business type
@@ -28,8 +30,7 @@ export function StickyActionBar({
 
   const handleAction = () => {
     if (isHotel) {
-      // TODO: Implement booking flow
-      console.log('Book Now clicked for:', business.id)
+      setIsBookingDialogOpen(true)
     } else {
       setIsDrawerOpen(true)
     }
@@ -86,6 +87,15 @@ export function StickyActionBar({
           isOpen={isDrawerOpen}
           onOpenChange={setIsDrawerOpen}
           onSuccess={handleSuccess}
+        />
+      )}
+
+      {/* Booking Dialog (for hotels) */}
+      {isHotel && (
+        <BookingDialog
+          business={business}
+          isOpen={isBookingDialogOpen}
+          onOpenChange={setIsBookingDialogOpen}
         />
       )}
     </>

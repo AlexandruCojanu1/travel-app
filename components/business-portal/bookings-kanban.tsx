@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { CheckCircle2, XCircle, MessageSquare, Calendar, User, Phone, Mail, Clock } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/shared/ui/button"
 import { cn } from "@/lib/utils"
 import { getBusinessBookings, updateBookingStatus } from "@/actions/business-portal"
 import { createClient } from "@/lib/supabase/client"

@@ -22,8 +22,8 @@ export function FeaturedCarousel({ businesses }: FeaturedCarouselProps) {
   }
 
   return (
-    <div className="relative -mx-4 md:-mx-6">
-      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 md:px-6 pb-4 no-scrollbar">
+    <div className="relative -mx-4 md:-mx-6 lg:-mx-8">
+      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 md:px-6 lg:px-8 pb-4 no-scrollbar">
         {businesses.map((business, index) => (
           <Link
             key={business.id}

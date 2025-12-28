@@ -8,9 +8,9 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
-import { Slider } from '@/components/ui/slider'
+} from '@/components/shared/ui/sheet'
+import { Button } from '@/components/shared/ui/button'
+import { Slider } from '@/components/shared/ui/slider'
 import { useSearchStore, type SortOption } from '@/store/search-store'
 import { cn } from '@/lib/utils'
 

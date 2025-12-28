@@ -218,13 +218,13 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {statsCards.map((card, index) => {
           const Icon = card.icon
           return (
-            <div key={index} className="bg-white rounded-xl p-6 border border-slate-200">
+            <div key={index} className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-slate-600">{card.title}</span>
                 <Icon className={`h-5 w-5 ${card.color}`} />
@@ -245,9 +245,9 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Bookings/Views Line Chart */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
+        <div className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0 overflow-hidden">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">
             Bookings Over Last 30 Days
           </h3>
@@ -270,7 +270,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
         </div>
 
         {/* Revenue Bar Chart */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
+        <div className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0 overflow-hidden">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">
             Revenue by Day
           </h3>
@@ -289,7 +289,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
 
       {/* Status Distribution Pie Chart */}
       {statusDistribution.length > 0 && (
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
+        <div className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0 overflow-hidden">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">
             Booking Status Distribution
           </h3>
@@ -316,7 +316,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
       )}
 
       {/* Recent Activity Feed */}
-      <div className="bg-white rounded-xl p-6 border border-slate-200">
+      <div className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0 overflow-hidden">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">
           Recent Activity
         </h3>

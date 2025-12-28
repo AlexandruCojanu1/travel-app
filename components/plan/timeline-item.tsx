@@ -4,7 +4,7 @@ import React, { useRef } from 'react'
 import { motion, useMotionValue } from 'framer-motion'
 import { Trash2, Bed, Utensils, Mountain, MapPin, GripVertical } from 'lucide-react'
 import { useTripStore, type TripItem } from '@/store/trip-store'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/shared/ui/button'
 import { cn } from '@/lib/utils'
 
 interface TimelineItemProps {

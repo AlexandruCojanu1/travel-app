@@ -249,8 +249,8 @@ export default function HomePage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="text-center max-w-md">
+      <div className="flex flex-col items-center justify-center py-12 px-4">
+        <div className="text-center max-w-md w-full">
           <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">⚠️</span>
           </div>
@@ -272,7 +272,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8 space-y-6">
       {/* Global Search Bar */}
       <div className="mt-4">
         <GlobalSearch variant="static" />

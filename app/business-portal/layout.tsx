@@ -32,17 +32,18 @@ export default function BusinessPortalLayout({
       
       {/* Business portal header */}
       <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 shadow-sm">
-        <div className="mx-auto w-full">
-          <div className="flex h-16 items-center justify-between px-4 md:px-6">
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-slate-900">Business Portal</h1>
+        <div className="mx-auto w-full max-w-screen-2xl">
+          <div className="flex h-14 md:h-16 items-center justify-between px-4 md:px-6">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+              <h1 className="text-lg md:text-xl font-bold text-slate-900 truncate">Business Portal</h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
               <Link
                 href="/home"
-                className="text-sm text-slate-600 hover:text-slate-900 font-medium"
+                className="text-xs md:text-sm text-slate-600 hover:text-slate-900 font-medium whitespace-nowrap"
               >
-                ← Back to App
+                <span className="hidden sm:inline">← Back to App</span>
+                <span className="sm:hidden">← Back</span>
               </Link>
             </div>
           </div>

@@ -10,8 +10,8 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-} from '@/components/ui/drawer'
-import { Button } from '@/components/ui/button'
+} from '@/components/shared/ui/drawer'
+import { Button } from '@/components/shared/ui/button'
 import { AddToTripDrawer } from '@/components/plan/add-to-trip-drawer'
 import { useTripStore } from '@/store/trip-store'
 import type { MapBusiness } from '@/services/business.service'

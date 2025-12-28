@@ -4,8 +4,8 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight, Camera } from 'lucide-react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent } from '@/components/shared/ui/dialog'
+import { Button } from '@/components/shared/ui/button'
 import { createClient } from '@/lib/supabase/client'
 
 export interface BusinessMedia {

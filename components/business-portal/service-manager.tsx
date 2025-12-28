@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Plus, Edit, Trash2, Clock, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/shared/ui/button"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { ServiceFormDialog } from "./service-form-dialog"

@@ -5,9 +5,10 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Plane, ChevronDown, MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar"
+import { Button } from "@/components/shared/ui/button"
 import { CitySelector } from "./city-selector"
+import { NotificationsBell } from "./notifications-bell"
 import { useAppStore } from "@/store/app-store"
 import { createClient } from "@/lib/supabase/client"
 
@@ -70,8 +71,8 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/75 border-b border-slate-200/50">
-        <div className="mx-auto w-full max-w-screen-xl">
-          <div className="flex h-16 items-center justify-between px-4 md:px-6">
+        <div className="mx-auto w-full max-w-screen-xl overflow-hidden">
+          <div className="flex h-14 md:h-16 items-center justify-between px-4 md:px-6 gap-2">
             {/* Left Side - Logo & City Selector */}
             <div className="flex items-center gap-3">
               {/* Logo */}
@@ -123,18 +124,21 @@ export function Header() {
             })}
           </nav>
 
-          {/* User Avatar - Always Visible */}
-          <Link href="/profile">
-            <Avatar className="h-9 w-9 ring-2 ring-slate-200 hover:ring-blue-400 transition-all cursor-pointer">
-              <AvatarImage 
-                src={avatarUrl || undefined} 
-                alt="User" 
-              />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-sm font-semibold">
-                {userInitials}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
+          {/* Right Side - Notifications & User Avatar */}
+          <div className="flex items-center gap-2">
+            <NotificationsBell />
+            <Link href="/profile">
+              <Avatar className="h-9 w-9 ring-2 ring-slate-200 hover:ring-blue-400 transition-all cursor-pointer">
+                <AvatarImage 
+                  src={avatarUrl || undefined} 
+                  alt="User" 
+                />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-sm font-semibold">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          </div>
         </div>
       </div>
     </header>

@@ -28,8 +28,10 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   return (
     <>
       <Header />
-      <main className="min-h-screen pb-20 md:pb-0">
-        {children}
+      <main className="min-h-screen pb-20 md:pb-0 w-full">
+        <div className="w-full">
+          {children}
+        </div>
       </main>
       <BottomNav />
     </>

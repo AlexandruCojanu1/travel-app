@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Star, Reply, Filter, SortAsc, SortDesc } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/shared/ui/button"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { format } from "date-fns"

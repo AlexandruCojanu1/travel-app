@@ -70,7 +70,7 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="space-y-4 pb-8">
+    <div className="w-full max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8 space-y-4 pb-8">
       <h1 className="text-3xl font-bold text-slate-900 mb-6">My Bookings</h1>
       {bookings.map((booking) => (
         <Link

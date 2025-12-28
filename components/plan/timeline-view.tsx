@@ -6,7 +6,7 @@ import { Plus } from 'lucide-react'
 import { DayNavigator } from './day-navigator'
 import { TimelineItem } from './timeline-item'
 import { useTripStore } from '@/store/trip-store'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/shared/ui/button'
 import type { TripItem } from '@/store/trip-store'
 
 export function TimelineView() {

@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/shared/ui/button'
 import { AddToTripDrawer } from '@/components/plan/add-to-trip-drawer'
 import { useTripStore } from '@/store/trip-store'
 import type { Business } from '@/services/business.service'

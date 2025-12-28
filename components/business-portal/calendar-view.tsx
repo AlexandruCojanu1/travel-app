@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { ChevronLeft, ChevronRight, Lock, DollarSign, Calendar as CalendarIcon, Grid, List, Clock } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/shared/ui/button"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, isToday, isPast } from "date-fns"

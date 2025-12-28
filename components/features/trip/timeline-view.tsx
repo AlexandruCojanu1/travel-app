@@ -2,18 +2,22 @@
 
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
-import { Plus } from 'lucide-react'
+import { Plus, Map, Share2 } from 'lucide-react'
 import { DayNavigator } from './day-navigator'
 import { TimelineItem } from './timeline-item'
+import { RouteMapView } from './route-map-view'
+import { ShareTripDialog } from './share-trip-dialog'
 import { useTripStore } from '@/store/trip-store'
 import { Button } from '@/components/shared/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs'
 import type { TripItem } from '@/store/trip-store'
 
 export function TimelineView() {
-  const { tripDetails, getItemsByDay, getDaysCount, reorderItems } = useTripStore()
+  const { tripDetails, tripId, getItemsByDay, getDaysCount, reorderItems } = useTripStore()
   const [selectedDayIndex, setSelectedDayIndex] = useState(0)
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null)
   const [localItems, setLocalItems] = useState<TripItem[]>([])
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
 
   if (!tripDetails) {
     return null
@@ -68,15 +72,35 @@ export function TimelineView() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="space-y-6">
       {/* Day Navigator */}
       <DayNavigator
         selectedDayIndex={selectedDayIndex}
         onDaySelect={setSelectedDayIndex}
+        daysCount={daysCount}
       />
 
-      {/* Timeline Content */}
-      <div className="p-6">
+      {/* Route Map and Timeline Tabs */}
+      <Tabs defaultValue="timeline" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="timeline" className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Timeline
+          </TabsTrigger>
+          <TabsTrigger value="map" className="flex items-center gap-2">
+            <Map className="h-4 w-4" />
+            Route Map
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="map" className="mt-4">
+          <RouteMapView dayIndex={selectedDayIndex} />
+        </TabsContent>
+
+        <TabsContent value="timeline" className="mt-4">
+          {/* Timeline Content */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6">
         <AnimatePresence mode="wait">
           {dayItems.length === 0 ? (
             <motion.div
@@ -101,8 +125,8 @@ export function TimelineView() {
                   variant="outline"
                   className="flex items-center gap-2 mx-auto"
                   onClick={() => {
-                    // TODO: Open map/search to add items
-                    console.log('Add activity clicked')
+                    // Navigate to explore page to add items
+                    window.location.href = '/explore'
                   }}
                 >
                   <Plus className="h-4 w-4" />
@@ -135,7 +159,18 @@ export function TimelineView() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {tripId && (
+        <ShareTripDialog
+          isOpen={isShareDialogOpen}
+          onOpenChange={setIsShareDialogOpen}
+          tripId={tripId}
+        />
+      )}
     </div>
   )
 }

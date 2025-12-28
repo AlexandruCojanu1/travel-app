@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { MapPin, Check, Loader2, Sparkles } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/shared/ui/dialog"
 import {
   Command,
   CommandEmpty,
@@ -10,7 +10,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from "@/components/shared/ui/command"
 import { toast as sonnerToast } from "sonner"
 import { useAppStore } from "@/store/app-store"
 import { getActiveCities } from "@/services/city.service"

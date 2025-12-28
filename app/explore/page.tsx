@@ -184,18 +184,22 @@ export default function ExplorePage() {
         </div>
       )}
 
-      {/* Global Search - Floating at top */}
+      {/* Global Search - Floating at top - Centered on desktop */}
       <div className="absolute top-4 left-4 right-4 z-40">
-        <GlobalSearch variant="floating" />
+        <div className="max-w-screen-xl mx-auto">
+          <GlobalSearch variant="floating" />
+        </div>
       </div>
 
-      {/* Quick Filters - Below search */}
+      {/* Quick Filters - Below search - Centered on desktop */}
       <div className="absolute top-20 left-4 right-4 z-40">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-3">
-          <QuickFilters
-            activeFilter={activeFilter}
-            onFilterChange={setActiveFilter}
-          />
+        <div className="max-w-screen-xl mx-auto">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-3">
+            <QuickFilters
+              activeFilter={activeFilter}
+              onFilterChange={setActiveFilter}
+            />
+          </div>
         </div>
       </div>
 

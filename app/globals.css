@@ -68,6 +68,17 @@
     color: hsl(var(--foreground));
     /* Remove rubber banding on body */
     overscroll-behavior-y: none;
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
+  /* Ensure all containers respect viewport width */
+  html {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
   
   /* Disable text selection on UI elements */

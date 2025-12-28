@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/shared/ui/dialog"
+import { Button } from "@/components/shared/ui/button"
+import { Label } from "@/components/shared/ui/label"
+import { Input } from "@/components/shared/ui/input"
 import { format } from "date-fns"
 import { Percent, DollarSign } from "lucide-react"
 
