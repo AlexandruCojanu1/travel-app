@@ -16,10 +16,11 @@ STRIPE_WEBHOOK_SECRET
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ```
 
-### 3. Maps (CRITICAL - pentru hartă)
+### 3. Maps (OPȚIONAL - aplicația folosește MapLibre cu style-uri gratuite)
 ```
 NEXT_PUBLIC_MAPBOX_TOKEN
 ```
+**Notă:** Aplicația folosește MapLibre GL (open-source) cu style-uri Carto (gratuite), deci **NU necesită token Mapbox**. Adaugă-l doar dacă vrei să folosești style-uri Mapbox premium.
 
 ### 4. Application URL (CRITICAL - pentru redirects și webhooks)
 ```
@@ -116,7 +117,7 @@ După adăugarea tuturor variabilelor, verifică:
 - [ ] `STRIPE_SECRET_KEY` - adăugat
 - [ ] `STRIPE_WEBHOOK_SECRET` - adăugat
 - [ ] `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - adăugat
-- [ ] `NEXT_PUBLIC_MAPBOX_TOKEN` - adăugat
+- [ ] `NEXT_PUBLIC_MAPBOX_TOKEN` - adăugat (OPȚIONAL - aplicația funcționează fără el)
 - [ ] `NEXT_PUBLIC_APP_URL` - adăugat
 - [ ] `WEATHER_API_KEY` - adăugat (opțional)
 - [ ] `NEXT_PUBLIC_GA_MEASUREMENT_ID` - adăugat (opțional)
