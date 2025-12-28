@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
+import { success, failure, handleApiError } from '@/lib/api-response'
+import { checkRateLimit, RateLimitConfigs } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +21,27 @@ const createReviewSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimitResult = await checkRateLimit(
+      request,
+      RateLimitConfigs.standard
+    )
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        failure('Rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED'),
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+          },
+        }
+      )
+    }
+
     const body = await request.json()
     const validated = createReviewSchema.parse(body)
 
@@ -26,8 +50,30 @@ export async function POST(request: NextRequest) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { success: false, error: 'User not authenticated' },
+        failure('User not authenticated', 'UNAUTHORIZED'),
         { status: 401 }
+      )
+    }
+
+    // Re-check with user ID
+    const userRateLimitResult = await checkRateLimit(
+      request,
+      RateLimitConfigs.standard,
+      user.id
+    )
+
+    if (!userRateLimitResult.success) {
+      return NextResponse.json(
+        failure('Rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED'),
+        {
+          status: 429,
+          headers: {
+            'Retry-After': userRateLimitResult.retryAfter?.toString() || '60',
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(userRateLimitResult.resetTime).toISOString(),
+          },
+        }
       )
     }
 
@@ -44,7 +90,7 @@ export async function POST(request: NextRequest) {
 
       if (bookingError || !booking) {
         return NextResponse.json(
-          { success: false, error: 'No confirmed booking found for this business' },
+          failure('No confirmed booking found for this business', 'NO_BOOKING'),
           { status: 403 }
         )
       }
@@ -61,7 +107,7 @@ export async function POST(request: NextRequest) {
 
       if (bookingError || !booking) {
         return NextResponse.json(
-          { success: false, error: 'You must have a confirmed booking to leave a review' },
+          failure('You must have a confirmed booking to leave a review', 'NO_BOOKING'),
           { status: 403 }
         )
       }
@@ -77,7 +123,7 @@ export async function POST(request: NextRequest) {
 
     if (existingReview) {
       return NextResponse.json(
-        { success: false, error: 'You have already reviewed this business' },
+        failure('You have already reviewed this business', 'DUPLICATE_REVIEW'),
         { status: 400 }
       )
     }
@@ -102,9 +148,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (reviewError) {
-      console.error('Error creating review:', reviewError)
+      logger.error('Error creating review', reviewError, { userId: user.id, businessId: validated.business_id })
       return NextResponse.json(
-        { success: false, error: reviewError.message },
+        failure(reviewError.message, 'REVIEW_CREATE_ERROR'),
         { status: 400 }
       )
     }
@@ -126,22 +172,28 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({
-      success: true,
-      reviewId: review.id,
-    })
-  } catch (error: any) {
-    console.error('Error in create review API:', error)
+    return NextResponse.json(
+      success({ reviewId: review.id }),
+      {
+        headers: {
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': userRateLimitResult.remaining.toString(),
+          'X-RateLimit-Reset': new Date(userRateLimitResult.resetTime).toISOString(),
+        },
+      }
+    )
+  } catch (error: unknown) {
+    logger.error('Error in create review API', error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid input data', details: error.errors },
+        failure('Invalid input data', 'VALIDATION_ERROR', error.errors),
         { status: 400 }
       )
     }
 
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create review' },
+      handleApiError(error),
       { status: 500 }
     )
   }

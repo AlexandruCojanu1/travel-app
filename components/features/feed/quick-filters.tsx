@@ -33,8 +33,8 @@ export function QuickFilters({ activeFilter, onFilterChange }: QuickFiltersProps
               className={cn(
                 "relative flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap transition-all duration-200",
                 isActive
-                  ? "bg-slate-900 text-white shadow-lg shadow-slate-900/25"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-airbnb-dark text-white shadow-airbnb-md"
+                  : "bg-airbnb-light-gray text-airbnb-dark hover:bg-gray-200"
               )}
               whileTap={{ scale: 0.95 }}
             >
@@ -44,7 +44,7 @@ export function QuickFilters({ activeFilter, onFilterChange }: QuickFiltersProps
               {isActive && (
                 <motion.div
                   layoutId="activeFilterIndicator"
-                  className="absolute inset-0 rounded-full bg-slate-900 -z-10"
+                  className="absolute inset-0 rounded-full bg-airbnb-dark -z-10"
                   initial={false}
                   transition={{
                     type: "spring",

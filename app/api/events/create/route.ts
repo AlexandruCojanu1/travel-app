@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
+import { success, failure, handleApiError } from '@/lib/api-response'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Validate date range
     if (new Date(validated.end_date) <= new Date(validated.start_date)) {
       return NextResponse.json(
-        { success: false, error: 'End date must be after start date' },
+        failure('End date must be after start date', 'INVALID_DATE_RANGE'),
         { status: 400 }
       )
     }
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { success: false, error: 'User not authenticated' },
+        failure('User not authenticated', 'UNAUTHORIZED'),
         { status: 401 }
       )
     }
@@ -56,29 +58,26 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (eventError) {
-      console.error('Error creating event:', eventError)
+      logger.error('Error creating event', eventError, { userId: user.id })
       return NextResponse.json(
-        { success: false, error: eventError.message },
+        failure(eventError.message, 'EVENT_CREATE_ERROR'),
         { status: 400 }
       )
     }
 
-    return NextResponse.json({
-      success: true,
-      eventId: event.id,
-    })
-  } catch (error: any) {
-    console.error('Error in create event API:', error)
+    return NextResponse.json(success({ eventId: event.id }))
+  } catch (error: unknown) {
+    logger.error('Error in create event API', error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid input data', details: error.errors },
+        failure('Invalid input data', 'VALIDATION_ERROR', error.errors),
         { status: 400 }
       )
     }
 
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create event' },
+      handleApiError(error),
       { status: 500 }
     )
   }

@@ -3,6 +3,9 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { businessSchema, type BusinessInput } from '@/lib/validations/business'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/logger'
+import { success, failure, handleApiError } from '@/lib/api-response'
+import { checkRateLimit, RateLimitConfigs } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +32,27 @@ const CATEGORY_TO_TYPE_MAP: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting - prevent abuse
+    const rateLimitResult = await checkRateLimit(
+      request,
+      RateLimitConfigs.moderate
+    )
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        failure('Rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED'),
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
+            'X-RateLimit-Limit': '20',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+          },
+        }
+      )
+    }
+
     const body = await request.json()
     const { data, userId } = body as { data: BusinessInput; userId?: string }
 
@@ -46,35 +70,35 @@ export async function POST(request: NextRequest) {
     const { data: { user: sessionUser }, error: userError } = await supabase.auth.getUser()
     
     if (userError) {
-      console.error('API: Auth error:', userError)
+      logger.error('API: Auth error', userError)
       authError = userError
     } else if (sessionUser) {
       user = sessionUser
-      console.log('API: User authenticated from session:', user.id)
+      logger.log('API: User authenticated from session', { userId: user.id })
     }
 
     // If userId is provided, verify it matches the session
     if (userId) {
       if (user && user.id === userId) {
-        console.log('API: Provided userId matches session:', userId)
+        logger.log('API: Provided userId matches session', { userId })
       } else if (!user) {
         // Session failed but userId provided - use it as fallback
-        user = { id: userId } as any
-        console.log('API: Using provided userId as fallback (session failed):', userId)
+        user = { id: userId } as { id: string }
+        logger.log('API: Using provided userId as fallback (session failed)', { userId })
       } else {
-        console.warn('API: Provided userId does not match session user')
+        logger.warn('API: Provided userId does not match session user', { providedUserId: userId, sessionUserId: user.id })
       }
     }
 
     if (!user) {
-      console.error('API: No user found - authError:', authError)
+      logger.error('API: No user found', authError)
       return NextResponse.json(
-        { success: false, error: 'User not authenticated. Please log in again.' },
+        failure('User not authenticated. Please log in again.', 'UNAUTHORIZED'),
         { status: 401 }
       )
     }
 
-    console.log('API: User authenticated:', user.id)
+    logger.log('API: User authenticated', { userId: user.id })
     
     // Note: getSession() may not work in API routes, but getUser() should be enough for RLS
     // RLS policy checks auth.uid() which is available if getUser() succeeds
@@ -82,12 +106,12 @@ export async function POST(request: NextRequest) {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (session) {
-        console.log('API: Session available for RLS:', session.user.id)
+        logger.log('API: Session available for RLS', { userId: session.user.id })
       } else {
-        console.warn('API: No session from getSession(), but user is authenticated. RLS should still work with auth.uid()')
+        logger.warn('API: No session from getSession(), but user is authenticated. RLS should still work with auth.uid()')
       }
     } catch (e) {
-      console.warn('API: Could not get session, but user is authenticated. Proceeding with insert.')
+      logger.warn('API: Could not get session, but user is authenticated. Proceeding with insert.', { error: e })
     }
 
     // Map category to type enum
@@ -95,7 +119,7 @@ export async function POST(request: NextRequest) {
     const businessType = CATEGORY_TO_TYPE_MAP[validated.category] || 'restaurant'
     
     if (!CATEGORY_TO_TYPE_MAP[validated.category]) {
-      console.warn(`API: Category "${validated.category}" not in map, using default type "restaurant"`)
+      logger.warn('API: Category not in map, using default type', { category: validated.category })
     }
 
     // Prepare attributes JSONB with type-specific fields
@@ -190,18 +214,18 @@ export async function POST(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         serviceRoleKey
       )
-      console.log('API: Using service role client for insert (bypassing RLS)')
+      logger.log('API: Using service role client for insert (bypassing RLS)')
     } else {
-      console.warn('API: Service role key not found, using regular client (RLS may fail)')
-      console.warn('API: Add SUPABASE_SERVICE_ROLE_KEY to .env.local to bypass RLS')
+      logger.warn('API: Service role key not found, using regular client (RLS may fail)')
+      logger.warn('API: Add SUPABASE_SERVICE_ROLE_KEY to .env.local to bypass RLS')
     }
     
     // Log the data being inserted for debugging
-    console.log('API: Inserting business data:', {
+    logger.log('API: Inserting business data', {
       city_id: businessData.city_id,
       name: businessData.name,
       category: businessData.category,
-      owner_user_id: businessData.owner_user_id, // Now directly in businessData
+      owner_user_id: businessData.owner_user_id,
       hasAttributes: !!businessData.attributes,
       attributesKeys: businessData.attributes ? Object.keys(businessData.attributes) : [],
       usingServiceRole: !!serviceRoleKey
@@ -214,16 +238,16 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('API: Error creating business:', error)
+      logger.error('API: Error creating business', error, { userId: user.id })
       return NextResponse.json(
-        { success: false, error: error.message },
+        failure(error.message, 'BUSINESS_CREATE_ERROR'),
         { status: 400 }
       )
     }
 
     if (!business) {
       return NextResponse.json(
-        { success: false, error: 'Failed to create business' },
+        failure('Failed to create business', 'BUSINESS_CREATE_ERROR'),
         { status: 500 }
       )
     }
@@ -231,11 +255,20 @@ export async function POST(request: NextRequest) {
     revalidatePath('/business-portal/dashboard')
     revalidatePath('/explore')
 
-    return NextResponse.json({ success: true, businessId: business.id })
-  } catch (error: any) {
-    console.error('API: Error in create business:', error)
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create business' },
+      success({ businessId: business.id }),
+      {
+        headers: {
+          'X-RateLimit-Limit': '20',
+          'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+          'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+        },
+      }
+    )
+  } catch (error: unknown) {
+    logger.error('API: Error in create business', error)
+    return NextResponse.json(
+      handleApiError(error),
       { status: 500 }
     )
   }

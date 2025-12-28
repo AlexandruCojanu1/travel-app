@@ -70,14 +70,14 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/75 border-b border-slate-200/50">
+      <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
         <div className="mx-auto w-full max-w-screen-xl overflow-hidden">
-          <div className="flex h-14 md:h-16 items-center justify-between px-4 md:px-6 gap-2">
+          <div className="flex h-16 md:h-20 items-center justify-between px-4 md:px-8 gap-4">
             {/* Left Side - Logo & City Selector */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {/* Logo */}
               <Link href="/home" className="flex items-center gap-2 group">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/25 transition-transform group-hover:scale-105">
+                <div className="flex h-10 w-10 items-center justify-center rounded-airbnb bg-airbnb-red shadow-airbnb transition-transform group-hover:scale-105">
                   <Plane className="h-5 w-5 text-white" strokeWidth={2.5} />
                 </div>
               </Link>
@@ -85,16 +85,16 @@ export function Header() {
               {/* City Selector Trigger */}
               <button
                 onClick={openCitySelector}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors group"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-airbnb hover:bg-airbnb-light-gray transition-colors group"
               >
-                <MapPin className="h-4 w-4 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                <MapPin className="h-4 w-4 text-airbnb-gray group-hover:text-airbnb-red transition-colors" />
                 <span 
-                  className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors"
+                  className="text-sm font-semibold text-airbnb-dark group-hover:text-airbnb-red transition-colors"
                   suppressHydrationWarning
                 >
                   {mounted ? (currentCity?.name || "Select City") : "Select City"}
                 </span>
-                <ChevronDown className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                <ChevronDown className="h-4 w-4 text-airbnb-gray group-hover:text-airbnb-red transition-colors" />
               </button>
             </div>
 
@@ -108,16 +108,13 @@ export function Header() {
                   <Button
                     variant="ghost"
                     className={cn(
-                      "relative px-4 py-2 text-sm font-medium transition-colors",
+                      "relative px-5 py-2.5 text-sm font-semibold transition-colors rounded-airbnb",
                       isActive
-                        ? "text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        ? "text-airbnb-red bg-airbnb-light-gray hover:bg-gray-100"
+                        : "text-airbnb-gray hover:text-airbnb-dark hover:bg-airbnb-light-gray"
                     )}
                   >
                     {link.label}
-                    {isActive && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full" />
-                    )}
                   </Button>
                 </Link>
               )
@@ -125,15 +122,15 @@ export function Header() {
           </nav>
 
           {/* Right Side - Notifications & User Avatar */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <NotificationsBell />
             <Link href="/profile">
-              <Avatar className="h-9 w-9 ring-2 ring-slate-200 hover:ring-blue-400 transition-all cursor-pointer">
+              <Avatar className="h-10 w-10 ring-2 ring-gray-200 hover:ring-airbnb-red transition-all cursor-pointer rounded-airbnb">
                 <AvatarImage 
                   src={avatarUrl || undefined} 
                   alt="User" 
                 />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-sm font-semibold">
+                <AvatarFallback className="bg-airbnb-red text-white text-sm font-semibold">
                   {userInitials}
                 </AvatarFallback>
               </Avatar>

@@ -44,7 +44,7 @@ export default function BookingsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-slate-600">Loading bookings...</div>
+        <div className="text-airbnb-gray">Loading bookings...</div>
       </div>
     )
   }
@@ -53,14 +53,14 @@ export default function BookingsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="text-center max-w-md">
-          <Calendar className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">No Bookings Yet</h2>
-          <p className="text-slate-600 mb-6">
+          <Calendar className="h-16 w-16 text-airbnb-gray mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-airbnb-dark mb-2">No Bookings Yet</h2>
+          <p className="text-airbnb-gray mb-6">
             Start exploring and book your first experience!
           </p>
           <Link
             href="/explore"
-            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+            className="airbnb-button inline-block px-6 py-3"
           >
             Explore Now
           </Link>
@@ -71,12 +71,12 @@ export default function BookingsPage() {
 
   return (
     <div className="w-full max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8 space-y-4 pb-8">
-      <h1 className="text-3xl font-bold text-slate-900 mb-6">My Bookings</h1>
+      <h1 className="text-3xl font-bold text-airbnb-dark mb-6">My Bookings</h1>
       {bookings.map((booking) => (
         <Link
           key={booking.id}
           href={`/bookings/${booking.id}`}
-          className="block bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow"
+          className="block airbnb-card p-6"
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -88,15 +88,15 @@ export default function BookingsPage() {
                 ) : (
                   <Clock className="h-5 w-5 text-yellow-600" />
                 )}
-                <span className="text-sm font-semibold text-slate-900 capitalize">
+                <span className="text-sm font-semibold text-airbnb-dark capitalize">
                   {booking.status}
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">
+              <h3 className="text-lg font-bold text-airbnb-dark mb-2">
                 Booking #{booking.id.slice(0, 8)}
               </h3>
               {booking.start_date && booking.end_date && (
-                <div className="flex items-center gap-2 text-slate-600 mb-2">
+                <div className="flex items-center gap-2 text-airbnb-gray mb-2">
                   <Calendar className="h-4 w-4" />
                   <span className="text-sm">
                     {format(new Date(booking.start_date), "MMM d")} -{" "}
@@ -105,7 +105,7 @@ export default function BookingsPage() {
                 </div>
               )}
               {booking.total_amount && (
-                <p className="text-lg font-bold text-slate-900">
+                <p className="text-lg font-bold text-airbnb-dark">
                   {booking.total_amount.toLocaleString()} RON
                 </p>
               )}

@@ -4,9 +4,9 @@ import React, { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/shared/ui/button'
-import { AddToTripDrawer } from '@/components/plan/add-to-trip-drawer'
+import { AddToTripDrawer } from '@/components/features/trip/add-to-trip-drawer'
 import { useTripStore } from '@/store/trip-store'
-import type { Business } from '@/services/business.service'
+import type { Business } from '@/services/business/business.service'
 
 interface StickyActionBarProps {
   business: Business

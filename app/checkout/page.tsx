@@ -88,8 +88,8 @@ function CheckoutContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading checkout...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-airbnb-red mx-auto mb-4" />
+          <p className="text-airbnb-gray">Loading checkout...</p>
         </div>
       </div>
     )
@@ -98,19 +98,19 @@ function CheckoutContent() {
   if (error || !booking) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-red-200 p-6">
+        <div className="max-w-md w-full airbnb-card border-red-200 p-6">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-airbnb-dark mb-2">
                 Unable to Load Checkout
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-airbnb-gray mb-4">
                 {error || 'Booking not found'}
               </p>
               <button
                 onClick={() => router.push('/bookings')}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-airbnb-red hover:underline font-semibold"
               >
                 Go to Bookings →
               </button>
@@ -124,8 +124,8 @@ function CheckoutContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-airbnb-dark mb-2">Checkout</h1>
+        <p className="text-airbnb-gray">
           Complete your payment to confirm your booking
         </p>
       </div>
@@ -160,8 +160,8 @@ export default function CheckoutPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading checkout...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-airbnb-red mx-auto mb-4" />
+          <p className="text-airbnb-gray">Loading checkout...</p>
         </div>
       </div>
     }>

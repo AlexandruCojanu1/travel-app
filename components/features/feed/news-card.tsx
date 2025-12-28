@@ -18,10 +18,10 @@ export function NewsCard({ post }: NewsCardProps) {
   return (
     <Link
       href={`/post/${post.id}`}
-      className="flex gap-4 bg-white rounded-xl p-4 hover:shadow-md transition-shadow group"
+      className="flex gap-4 airbnb-card p-5 group"
     >
       {/* Image - Left Side (Square) */}
-      <div className="relative flex-none w-24 h-24 rounded-lg overflow-hidden bg-slate-100">
+      <div className="relative flex-none w-24 h-24 rounded-airbnb overflow-hidden bg-airbnb-light-gray">
         {post.image_url ? (
           <Image
             src={post.image_url}
@@ -41,25 +41,25 @@ export function NewsCard({ post }: NewsCardProps) {
       <div className="flex-1 min-w-0">
         {/* Category Badge */}
         {post.category && (
-          <span className="inline-block px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 text-xs font-medium mb-2">
+          <span className="inline-block px-2.5 py-1 rounded-airbnb bg-airbnb-light-gray text-airbnb-dark text-xs font-semibold mb-2">
             {post.category}
           </span>
         )}
 
         {/* Title */}
-        <h3 className="font-semibold text-slate-900 line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">
+        <h3 className="font-semibold text-airbnb-dark line-clamp-2 mb-2 group-hover:text-airbnb-red transition-colors text-base">
           {post.title}
         </h3>
 
         {/* Excerpt */}
         {post.excerpt && (
-          <p className="text-sm text-slate-600 line-clamp-2 mb-2">
+          <p className="text-sm text-airbnb-gray line-clamp-2 mb-3">
             {post.excerpt}
           </p>
         )}
 
         {/* Metadata */}
-        <div className="flex items-center gap-3 text-xs text-slate-500">
+        <div className="flex items-center gap-3 text-xs text-airbnb-gray">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
             <span>{timeAgo}</span>

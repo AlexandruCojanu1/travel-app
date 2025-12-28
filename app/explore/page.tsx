@@ -12,6 +12,7 @@ import { GlobalSearch } from "@/components/features/map/search/global-search"
 import { QuickFilters } from "@/components/features/feed/quick-filters"
 import { searchBusinesses, getBusinessesForMap, type MapBusiness } from "@/services/business/business.service"
 import { Button } from "@/components/shared/ui/button"
+import { logger } from "@/lib/logger"
 
 export default function ExplorePage() {
   const { currentCity, openCitySelector } = useAppStore()
@@ -85,7 +86,7 @@ export default function ExplorePage() {
           lng: currentCity.longitude,
         })
       } catch (error) {
-        console.error("Error loading businesses:", error)
+        logger.error("Error loading businesses", error)
       } finally {
         setIsLoading(false)
       }
@@ -143,7 +144,7 @@ export default function ExplorePage() {
       const data = await getBusinessesForMap(currentCity.id, category)
       setBusinesses(data)
     } catch (error) {
-      console.error("Error searching area:", error)
+      logger.error("Error searching area", error)
     } finally {
       setIsLoading(false)
     }
@@ -154,18 +155,18 @@ export default function ExplorePage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4">
         <div className="text-center max-w-md">
-          <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/25">
+          <div className="h-20 w-20 rounded-airbnb-lg bg-airbnb-red flex items-center justify-center mx-auto mb-6 shadow-airbnb-lg">
             <MapPin className="h-10 w-10 text-white" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-3">
+          <h3 className="text-2xl font-bold text-airbnb-dark mb-3">
             Choose Your Destination
           </h3>
-          <p className="text-slate-600 mb-6">
+          <p className="text-airbnb-gray mb-6">
             Select a city to explore amazing places and experiences on the map
           </p>
           <button
             onClick={openCitySelector}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+            className="airbnb-button px-8 py-4"
           >
             Select City
           </button>
@@ -178,9 +179,9 @@ export default function ExplorePage() {
     <div className="relative">
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-          <span className="text-sm font-medium text-slate-700">Loading...</span>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white px-4 py-2 rounded-full shadow-airbnb-md flex items-center gap-2 border border-gray-200">
+          <Loader2 className="h-4 w-4 animate-spin text-airbnb-red" />
+          <span className="text-sm font-semibold text-airbnb-dark">Loading...</span>
         </div>
       )}
 
@@ -194,7 +195,7 @@ export default function ExplorePage() {
       {/* Quick Filters - Below search - Centered on desktop */}
       <div className="absolute top-20 left-4 right-4 z-40">
         <div className="max-w-screen-xl mx-auto">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-3">
+          <div className="bg-white rounded-airbnb-lg shadow-airbnb-md p-3 border border-gray-200">
             <QuickFilters
               activeFilter={activeFilter}
               onFilterChange={setActiveFilter}
@@ -209,7 +210,7 @@ export default function ExplorePage() {
           <Button
             onClick={handleSearchArea}
             size="sm"
-            className="bg-slate-900 text-white hover:bg-slate-800 shadow-xl px-6 py-5 rounded-full font-semibold"
+            className="bg-airbnb-dark text-white hover:bg-[#1F1F1F] shadow-airbnb-lg px-6 py-5 rounded-full font-semibold"
           >
             <Navigation className="h-4 w-4 mr-2" />
             Search this area
@@ -265,10 +266,10 @@ export default function ExplorePage() {
           <Button
             onClick={() => setShowTransit(!showTransit)}
             className={`
-              shadow-lg px-4 py-2 rounded-full font-semibold flex items-center gap-2
+              shadow-airbnb-md px-4 py-2 rounded-full font-semibold flex items-center gap-2
               ${showTransit 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                : 'bg-white text-slate-700 hover:bg-slate-50 border-2 border-slate-200'
+                ? 'bg-airbnb-red text-white hover:bg-[#FF484D]' 
+                : 'bg-white text-airbnb-dark hover:bg-airbnb-light-gray border-2 border-gray-300'
               }
             `}
           >
@@ -289,7 +290,7 @@ export default function ExplorePage() {
       >
         <Button
           onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
-          className="bg-slate-900 text-white hover:bg-slate-800 shadow-lg px-6 py-3 rounded-full font-semibold flex items-center gap-2"
+          className="bg-airbnb-dark text-white hover:bg-[#1F1F1F] shadow-airbnb-md px-6 py-3 rounded-full font-semibold flex items-center gap-2"
         >
           <AnimatePresence mode="wait">
             {viewMode === 'map' ? (

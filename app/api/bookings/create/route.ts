@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { checkAvailability, getResourceDetails } from '@/services/booking/booking.service'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
+import { success, failure, handleApiError } from '@/lib/api-response'
+import { checkRateLimit, RateLimitConfigs } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +18,28 @@ const createBookingSchema = z.object({
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting - check before processing
+        const rateLimitResult = await checkRateLimit(
+            request,
+            RateLimitConfigs.payment,
+            undefined // Will use IP if not authenticated yet
+        )
+
+        if (!rateLimitResult.success) {
+            return NextResponse.json(
+                failure('Rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED'),
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
+                        'X-RateLimit-Limit': '10',
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+                    },
+                }
+            )
+        }
+
         const body = await request.json()
 
         // Validate input
@@ -28,8 +53,30 @@ export async function POST(request: NextRequest) {
 
         if (userError || !user) {
             return NextResponse.json(
-                { success: false, error: 'User not authenticated' },
+                failure('User not authenticated', 'UNAUTHORIZED'),
                 { status: 401 }
+            )
+        }
+
+        // Re-check rate limit with user ID (more accurate)
+        const userRateLimitResult = await checkRateLimit(
+            request,
+            RateLimitConfigs.payment,
+            user.id
+        )
+
+        if (!userRateLimitResult.success) {
+            return NextResponse.json(
+                failure('Rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED'),
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': userRateLimitResult.retryAfter?.toString() || '60',
+                        'X-RateLimit-Limit': '10',
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': new Date(userRateLimitResult.resetTime).toISOString(),
+                    },
+                }
             )
         }
 
@@ -42,7 +89,7 @@ export async function POST(request: NextRequest) {
 
         if (!availability.available) {
             return NextResponse.json(
-                { success: false, error: availability.error || 'Resource not available' },
+                failure(availability.error || 'Resource not available', 'UNAVAILABLE'),
                 { status: 400 }
             )
         }
@@ -52,7 +99,7 @@ export async function POST(request: NextRequest) {
 
         if (!resourceResult.success || !resourceResult.resource) {
             return NextResponse.json(
-                { success: false, error: 'Resource not found' },
+                failure('Resource not found', 'NOT_FOUND'),
                 { status: 404 }
             )
         }
@@ -85,38 +132,39 @@ export async function POST(request: NextRequest) {
             .single()
 
         if (bookingError) {
-            console.error('Error creating booking:', bookingError)
+            logger.error('Error creating booking', bookingError, { userId: user.id, resourceId: validated.resource_id })
             return NextResponse.json(
-                { success: false, error: bookingError.message },
+                failure(bookingError.message, 'BOOKING_ERROR'),
                 { status: 400 }
             )
         }
 
         if (!booking) {
             return NextResponse.json(
-                { success: false, error: 'Failed to create booking' },
+                failure('Failed to create booking', 'BOOKING_ERROR'),
                 { status: 500 }
             )
         }
 
         // Step 4: Return booking ID for checkout
-        return NextResponse.json({
-            success: true,
-            bookingId: booking.id,
-            totalAmount,
-        })
-    } catch (error: any) {
-        console.error('Error in create booking API:', error)
+        return NextResponse.json(
+            success({
+                bookingId: booking.id,
+                totalAmount,
+            })
+        )
+    } catch (error: unknown) {
+        logger.error('Error in create booking API', error)
 
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                { success: false, error: 'Invalid input data', details: error.errors },
+                failure('Invalid input data', 'VALIDATION_ERROR', error.errors),
                 { status: 400 }
             )
         }
 
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to create booking' },
+            handleApiError(error),
             { status: 500 }
         )
     }

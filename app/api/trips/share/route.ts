@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { randomBytes } from 'crypto'
+import { logger } from '@/lib/logger'
+import { success, failure, handleApiError } from '@/lib/api-response'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { success: false, error: 'User not authenticated' },
+        failure('User not authenticated', 'UNAUTHORIZED'),
         { status: 401 }
       )
     }
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     if (tripError || !trip) {
       return NextResponse.json(
-        { success: false, error: 'Trip not found or access denied' },
+        failure('Trip not found or access denied', 'FORBIDDEN'),
         { status: 403 }
       )
     }
@@ -60,33 +62,32 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (shareError) {
-      console.error('Error creating share:', shareError)
+      logger.error('Error creating share', shareError, { userId: user.id, tripId: validated.trip_id })
       return NextResponse.json(
-        { success: false, error: shareError.message },
+        failure(shareError.message, 'SHARE_CREATE_ERROR'),
         { status: 400 }
       )
     }
 
     const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/trips/shared/${shareToken}`
 
-    return NextResponse.json({
-      success: true,
+    return NextResponse.json(success({
       shareId: share.id,
       shareToken: share.share_token,
       shareUrl,
-    })
-  } catch (error: any) {
-    console.error('Error in share trip API:', error)
+    }))
+  } catch (error: unknown) {
+    logger.error('Error in share trip API', error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid input data', details: error.errors },
+        failure('Invalid input data', 'VALIDATION_ERROR', error.errors),
         { status: 400 }
       )
     }
 
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to share trip' },
+      handleApiError(error),
       { status: 500 }
     )
   }

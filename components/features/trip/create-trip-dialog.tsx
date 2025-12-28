@@ -133,7 +133,7 @@ export function CreateTripDialog({
                       })
                     }
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-airbnb focus:ring-2 focus:ring-airbnb-red focus:border-airbnb-red"
                 >
                   <option value="">Select a city...</option>
                   {cities.map((city) => (
@@ -145,7 +145,7 @@ export function CreateTripDialog({
                 <button
                   type="button"
                   onClick={openCitySelector}
-                  className="mt-2 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  className="mt-2 text-sm text-airbnb-red hover:underline flex items-center gap-1"
                 >
                   <MapPin className="h-3 w-3" />
                   Browse all cities
@@ -165,7 +165,7 @@ export function CreateTripDialog({
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                       min={today}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-airbnb focus:ring-2 focus:ring-airbnb-red focus:border-airbnb-red"
                     />
                   </div>
                 </div>
@@ -181,7 +181,7 @@ export function CreateTripDialog({
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       min={startDate || today}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-airbnb focus:ring-2 focus:ring-airbnb-red focus:border-airbnb-red"
                     />
                   </div>
                 </div>
@@ -216,8 +216,8 @@ export function CreateTripDialog({
                 </div>
               </div>
 
-              <div className="bg-blue-50 rounded-lg p-4">
-                <p className="text-sm text-blue-900">
+              <div className="bg-airbnb-light-red rounded-airbnb p-4">
+                <p className="text-sm text-airbnb-dark">
                   <strong>Tip:</strong> This is your total budget for the trip. You can adjust individual item costs later.
                 </p>
               </div>
@@ -227,17 +227,17 @@ export function CreateTripDialog({
           {/* Step 3: Review */}
           {step === 3 && (
             <div className="space-y-4">
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <div className="bg-airbnb-light-gray rounded-airbnb p-4 space-y-3">
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Destination</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="text-xs text-airbnb-gray mb-1">Destination</p>
+                  <p className="font-semibold text-airbnb-dark">
                     {selectedCity?.name}, {selectedCity?.country}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Dates</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="text-xs text-airbnb-gray mb-1">Dates</p>
+                  <p className="font-semibold text-airbnb-dark">
                     {startDate && new Date(startDate).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -253,8 +253,8 @@ export function CreateTripDialog({
                 </div>
 
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Budget</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="text-xs text-airbnb-gray mb-1">Budget</p>
+                  <p className="font-semibold text-airbnb-dark">
                     {budget[0].toLocaleString()} RON
                   </p>
                 </div>
@@ -268,7 +268,7 @@ export function CreateTripDialog({
               <div
                 key={s}
                 className={`h-2 w-2 rounded-full transition-colors ${
-                  s <= step ? 'bg-blue-600' : 'bg-gray-300'
+                  s <= step ? 'bg-airbnb-red' : 'bg-gray-300'
                 }`}
               />
             ))}
@@ -293,7 +293,7 @@ export function CreateTripDialog({
               <Button
                 onClick={handleNext}
                 disabled={!canProceedStep1}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                className="flex items-center gap-2 airbnb-button"
               >
                 Next
                 <ArrowRight className="h-4 w-4" />

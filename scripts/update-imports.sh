@@ -5,7 +5,7 @@
 
 echo "Updating import paths..."
 
-# Update component imports
+# Update component imports (old paths to new paths)
 find . -type f \( -name "*.tsx" -o -name "*.ts" \) ! -path "./node_modules/*" ! -path "./.next/*" -exec sed -i '' \
   -e 's|@/components/auth/|@/components/features/auth/|g' \
   -e 's|@/components/business-portal/|@/components/features/business/portal/|g' \
@@ -34,4 +34,3 @@ find . -type f \( -name "*.tsx" -o -name "*.ts" \) ! -path "./node_modules/*" ! 
 
 echo "Import paths updated!"
 echo "Please run 'npm run build' to check for errors."
-

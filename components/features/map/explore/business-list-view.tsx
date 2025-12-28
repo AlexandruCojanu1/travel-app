@@ -11,10 +11,10 @@ export function BusinessListView({ businesses, onBusinessClick }: BusinessListVi
       {businesses.map((business) => (
         <div 
           key={business.id} 
-          className="p-4 bg-white rounded-lg border border-slate-200 cursor-pointer hover:shadow-md transition-shadow"
+          className="p-5 airbnb-card cursor-pointer"
           onClick={() => onBusinessClick?.(business)}
         >
-          <h3 className="font-semibold text-slate-900">{business.name}</h3>
+          <h3 className="font-semibold text-airbnb-dark text-base">{business.name}</h3>
         </div>
       ))}
     </div>

@@ -28,7 +28,7 @@ export function FeaturedCarousel({ businesses }: FeaturedCarouselProps) {
           <Link
             key={business.id}
             href={`/business/${business.id}`}
-            className="relative flex-none w-[85vw] md:w-[400px] h-[280px] md:h-[320px] rounded-2xl overflow-hidden snap-center group cursor-pointer"
+            className="relative flex-none w-[85vw] md:w-[400px] h-[280px] md:h-[320px] rounded-airbnb-lg overflow-hidden snap-center group cursor-pointer airbnb-card"
           >
             {/* Background Image */}
             <div className="absolute inset-0">
@@ -50,9 +50,9 @@ export function FeaturedCarousel({ businesses }: FeaturedCarouselProps) {
 
             {/* Verified Badge */}
             {business.is_verified && (
-              <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm flex items-center gap-1.5 shadow-lg">
-                <TrendingUp className="h-3.5 w-3.5 text-blue-600" />
-                <span className="text-xs font-semibold text-slate-900">Verified</span>
+              <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-sm flex items-center gap-1.5 shadow-airbnb">
+                <TrendingUp className="h-3.5 w-3.5 text-airbnb-red" />
+                <span className="text-xs font-semibold text-airbnb-dark">Verified</span>
               </div>
             )}
 
@@ -107,7 +107,7 @@ export function FeaturedCarousel({ businesses }: FeaturedCarouselProps) {
             </div>
 
             {/* Hover Effect Border */}
-            <div className="absolute inset-0 rounded-2xl ring-2 ring-transparent group-hover:ring-white/50 transition-all duration-300" />
+            <div className="absolute inset-0 rounded-airbnb-lg ring-2 ring-transparent group-hover:ring-white/50 transition-all duration-300" />
           </Link>
         ))}
       </div>

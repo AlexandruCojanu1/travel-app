@@ -15,6 +15,8 @@ import { useSearchStore } from "@/store/search-store"
 import { getCityById } from "@/services/auth/city.service"
 import { Calendar, MapPin, Sparkles } from "lucide-react"
 import { format } from "date-fns"
+// Removed server-side ownership service import - using client-side check instead
+import { logger } from "@/lib/logger"
 
 export default function HomePage() {
   const router = useRouter()
@@ -38,27 +40,14 @@ export default function HomePage() {
         return
       }
 
-      // Check if user owns any businesses
-      // Try to query with owner_id, but handle gracefully if column doesn't exist or RLS blocks it
+      // Check if user has businesses using client-side query
       const { data: businesses, error } = await supabase
         .from('businesses')
         .select('id')
-        .eq('owner_id', user.id)
+        .eq('owner_user_id', user.id)
         .limit(1)
-
-      if (error) {
-        // If error is 400 (bad request) or column doesn't exist, just assume false
-        if (error.code === 'PGRST116' || error.code === '42703' || error.message?.includes('column') || error.message?.includes('owner_id')) {
-          console.warn('Business ownership check failed (column may not exist or RLS issue):', error.message)
-          setIsBusinessOwner(false)
-          return
-        }
-        console.error('Error checking business ownership:', error)
-        setIsBusinessOwner(false)
-        return
-      }
-
-      setIsBusinessOwner((businesses?.length || 0) > 0)
+      
+      setIsBusinessOwner(!error && businesses && businesses.length > 0)
     }
 
     checkBusinessOwner()
@@ -77,7 +66,7 @@ export default function HomePage() {
             const context = await getHomeContext(user.id)
             setHomeContext(context)
           } catch (error) {
-            console.error('Error loading home context:', error)
+            logger.error('Error loading home context', error)
           }
         }
         return
@@ -99,39 +88,27 @@ export default function HomePage() {
         // Only redirect to onboarding if user hasn't completed it
         // Check both homeCityId and role to ensure onboarding is complete
         if (!context.homeCityId || !context.role) {
-          console.log('Home: Onboarding incomplete, redirecting to onboarding')
+          logger.log('Home: Onboarding incomplete, redirecting to onboarding')
           router.push('/onboarding')
           return
         }
 
         // Check if user has businesses - if yes, redirect to business portal
-        console.log('Home: Checking if user has businesses for user:', user.id)
         try {
-          // Use the existing getUserBusinesses function which handles RLS and missing columns
-          const businessesResult = await getUserBusinesses()
+          const supabaseClient = createClient()
+          const { data: businesses, error: businessError } = await supabaseClient
+            .from('businesses')
+            .select('id')
+            .eq('owner_user_id', user.id)
+            .limit(1)
           
-          console.log('Home: Business check result:', {
-            success: businessesResult.success,
-            businessesCount: businessesResult.businesses?.length || 0,
-            error: businessesResult.error,
-            userId: user.id,
-            businesses: businessesResult.businesses
-          })
-          
-          // Log full result for debugging
-          console.log('Home: Full businessesResult:', JSON.stringify(businessesResult, null, 2))
-
-          // If we successfully found businesses, redirect to business portal
-          if (businessesResult.success && businessesResult.businesses && businessesResult.businesses.length > 0) {
-            console.log('Home: User has', businessesResult.businesses.length, 'business(es), redirecting to business portal')
+          if (!businessError && businesses && businesses.length > 0) {
+            logger.log('Home: User has businesses, redirecting to business portal', { userId: user.id })
             window.location.href = '/business-portal/dashboard'
             return
-          } else {
-            console.log('Home: No businesses found for user, continuing normally')
           }
         } catch (error) {
-          // If check fails completely, log it but continue normally
-          console.warn('Home: Exception checking businesses:', error)
+          logger.warn('Home: Exception checking businesses', { error, userId: user.id })
         }
 
         // Onboarding is complete - load user's home city into global store
@@ -145,7 +122,7 @@ export default function HomePage() {
           }
         }
       } catch (error) {
-        console.error('Home: Error loading home context:', error)
+        logger.error('Home: Error loading home context', error)
         // On error, try to get profile directly with better error handling
         const supabase = createClient()
         const { data: profile, error: profileError } = await supabase
@@ -155,7 +132,7 @@ export default function HomePage() {
           .single()
         
         if (profileError) {
-          console.error('Home: Profile fetch error:', profileError)
+          logger.error('Home: Profile fetch error', profileError, { userId: user.id })
           // If it's an RLS error, don't redirect - just show error
           // User might have completed onboarding but RLS is blocking access
           if (profileError.code === 'PGRST116') {
@@ -163,7 +140,7 @@ export default function HomePage() {
             router.push('/onboarding')
           } else {
             // RLS error - log it but don't redirect
-            console.warn('Home: RLS error detected, but not redirecting to onboarding')
+            logger.warn('Home: RLS error detected, but not redirecting to onboarding', { code: profileError.code })
             setError('Unable to load profile. Please check RLS policies.')
           }
         } else if (!profile || !profile.home_city_id || !profile.role) {
@@ -195,7 +172,7 @@ export default function HomePage() {
         const feed = await getCityFeed(currentCity.id, activeFilter)
         setFeedData(feed)
       } catch (err) {
-        console.error('Error loading feed:', err)
+        logger.error('Error loading feed', err)
         setError('Failed to load feed. Please try again.')
       } finally {
         setIsLoading(false)
@@ -285,12 +262,12 @@ export default function HomePage() {
           <span>{currentDate}</span>
         </div>
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
+          <h1 className="text-3xl md:text-4xl font-bold text-airbnb-dark">
             {currentCity.name}
           </h1>
-          <div className="flex items-center gap-2 text-slate-600 mt-1">
+          <div className="flex items-center gap-2 text-airbnb-gray mt-2">
             <MapPin className="h-4 w-4" />
-            <span>
+            <span className="text-base">
               {currentCity.state_province
                 ? `${currentCity.state_province}, ${currentCity.country}`
                 : currentCity.country}
@@ -300,15 +277,15 @@ export default function HomePage() {
       </div>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-6 md:p-8 text-white">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="bg-gradient-to-br from-airbnb-red to-[#FF7A7F] rounded-airbnb-lg p-8 md:p-10 text-white shadow-airbnb-md">
+        <div className="flex items-center gap-2 mb-3">
           <Sparkles className="h-5 w-5" />
-          <span className="text-blue-100 font-medium">{getGreeting()}</span>
+          <span className="text-white/90 font-semibold">{getGreeting()}</span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold mb-2">
+        <h2 className="text-3xl md:text-4xl font-bold mb-3">
           Discover What's New
         </h2>
-        <p className="text-blue-50 max-w-2xl">
+        <p className="text-white/90 max-w-2xl text-lg">
           Explore the latest events, top-rated places, and exclusive deals in your city
         </p>
       </div>
@@ -323,10 +300,10 @@ export default function HomePage() {
 
       {/* Featured Section - "Don't Miss" */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-slate-900">Don't Miss</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-airbnb-dark">Don't Miss</h2>
           {feedData.featuredBusinesses.length > 0 && (
-            <button className="text-blue-600 text-sm font-semibold hover:text-blue-700 transition-colors">
+            <button className="text-airbnb-red text-sm font-semibold hover:underline transition-colors">
               View All
             </button>
           )}
@@ -351,10 +328,10 @@ export default function HomePage() {
 
       {/* News/Events Section - "Happening Nearby" */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-slate-900">Happening Nearby</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-airbnb-dark">Happening Nearby</h2>
           {feedData.cityPosts.length > 0 && (
-            <button className="text-blue-600 text-sm font-semibold hover:text-blue-700 transition-colors">
+            <button className="text-airbnb-red text-sm font-semibold hover:underline transition-colors">
               View All
             </button>
           )}
@@ -367,21 +344,21 @@ export default function HomePage() {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-xl p-12 text-center">
-            <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-              <Calendar className="h-8 w-8 text-slate-400" />
+          <div className="airbnb-card p-12 text-center">
+            <div className="h-16 w-16 rounded-full bg-airbnb-light-gray flex items-center justify-center mx-auto mb-4">
+              <Calendar className="h-8 w-8 text-airbnb-gray" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">
+            <h3 className="font-semibold text-airbnb-dark mb-2 text-lg">
               No news or events yet
             </h3>
-            <p className="text-slate-600 text-sm">
+            <p className="text-airbnb-gray text-sm">
               Be the first to share something happening in your city
             </p>
             {/* Only show Create Post button for business owners */}
             {isBusinessOwner && (
-              <button className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors">
-                Create Post
-              </button>
+            <button className="mt-4 airbnb-button">
+              Create Post
+            </button>
             )}
           </div>
         )}
@@ -390,9 +367,9 @@ export default function HomePage() {
       {/* Promotions Section (if available) */}
       {feedData.promotions.length > 0 && (
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-900">Special Offers</h2>
-            <button className="text-blue-600 text-sm font-semibold hover:text-blue-700 transition-colors">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-airbnb-dark">Special Offers</h2>
+            <button className="text-airbnb-red text-sm font-semibold hover:underline transition-colors">
               View All
             </button>
           </div>

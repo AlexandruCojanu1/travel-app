@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { businessSchema, type BusinessInput } from '@/lib/validations/business'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
+import { BusinessOwnershipService } from '@/services/business/ownership.service'
+import { logger } from '@/lib/logger'
 
 export type ActionResult = { success: boolean; error?: string; businessId?: string }
 
@@ -53,7 +55,7 @@ export async function createBusiness(data: BusinessInput, userId?: string): Prom
     
     // If userId is provided from client, use it directly (client already verified auth)
     if (userId) {
-      console.log('createBusiness: Using provided userId from client:', userId)
+      logger.log('createBusiness: Using provided userId from client', { userId })
       // Verify the user exists by querying the database (using service role if needed)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -62,27 +64,27 @@ export async function createBusiness(data: BusinessInput, userId?: string): Prom
         .single()
       
       if (!profileError && profileData) {
-        user = { id: userId } as any
-        console.log('createBusiness: User verified via database query:', userId)
+        user = { id: userId } as { id: string }
+        logger.log('createBusiness: User verified via database query', { userId })
       } else {
-        console.error('createBusiness: Provided userId not found in database:', {
+        logger.warn('createBusiness: Provided userId not found in database', {
           error: profileError?.message,
           userId
         })
         // Still try to use userId even if query fails (might be RLS issue)
-        user = { id: userId } as any
-        console.log('createBusiness: Using userId despite query error (might be RLS):', userId)
+        user = { id: userId } as { id: string }
+        logger.log('createBusiness: Using userId despite query error (might be RLS)', { userId })
       }
     }
     
     // If no userId provided, try to get from session
     if (!user) {
-      console.log('createBusiness: No userId provided, trying session...')
+      logger.log('createBusiness: No userId provided, trying session')
       const authResult = await supabase.auth.getUser()
       user = authResult.data.user
       userError = authResult.error
       
-      console.log('createBusiness: Session auth result:', {
+      logger.log('createBusiness: Session auth result', {
         hasUser: !!user,
         userId: user?.id,
         error: userError?.message
@@ -90,11 +92,11 @@ export async function createBusiness(data: BusinessInput, userId?: string): Prom
     }
     
     if (!user) {
-      console.error('createBusiness: No user found - neither from userId nor session')
+      logger.error('createBusiness: No user found - neither from userId nor session')
       return { success: false, error: 'User not authenticated. Please log in again.' }
     }
     
-    console.log('createBusiness: User authenticated successfully:', user.id)
+    logger.log('createBusiness: User authenticated successfully', { userId: user.id })
 
     // Map category to type enum
     const businessType = CATEGORY_TO_TYPE_MAP[validated.category] || null
@@ -160,7 +162,7 @@ export async function createBusiness(data: BusinessInput, userId?: string): Prom
       .single()
 
     if (error) {
-      console.error('Error creating business:', error)
+      logger.error('Error creating business', error, { userId: user.id })
       return { success: false, error: error.message }
     }
 
@@ -172,9 +174,9 @@ export async function createBusiness(data: BusinessInput, userId?: string): Prom
     revalidatePath('/explore')
 
     return { success: true, businessId: business.id }
-  } catch (error: any) {
-    console.error('Error in createBusiness:', error)
-    return { success: false, error: error.message || 'Failed to create business' }
+  } catch (error: unknown) {
+    logger.error('Error in createBusiness', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to create business' }
   }
 }
 
@@ -189,22 +191,13 @@ export async function getUserBusinesses(): Promise<GetUserBusinessesResult> {
       return { success: false, error: 'User not authenticated' }
     }
 
-    // Fetch user's businesses
-    const { data: businesses, error } = await supabase
-      .from('businesses')
-      .select('*')
-      .eq('owner_user_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching businesses:', error)
-      return { success: false, error: error.message }
-    }
-
-    return { success: true, businesses: businesses || [] }
-  } catch (error: any) {
-    console.error('Error in getUserBusinesses:', error)
-    return { success: false, error: error.message || 'Failed to fetch businesses' }
+    // Use centralized ownership service
+    const businesses = await BusinessOwnershipService.getUserBusinessesServer(user.id)
+    
+    return { success: true, businesses }
+  } catch (error: unknown) {
+    logger.error('Error in getUserBusinesses', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to fetch businesses' }
   }
 }
 
@@ -219,15 +212,9 @@ export async function getBusinessBookings(businessId: string) {
       return { success: false, error: 'User not authenticated', bookings: [] }
     }
 
-    // Verify user owns this business
-    const { data: business } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('id', businessId)
-      .eq('owner_user_id', user.id)
-      .single()
-
-    if (!business) {
+    // Verify user owns this business using centralized service
+    const isOwner = await BusinessOwnershipService.isOwnerServer(businessId, user.id)
+    if (!isOwner) {
       return { success: false, error: 'Business not found or access denied', bookings: [] }
     }
 
@@ -251,14 +238,14 @@ export async function getBusinessBookings(businessId: string) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching bookings:', error)
+      logger.error('Error fetching bookings', error, { businessId, userId: user.id })
       return { success: false, error: error.message, bookings: [] }
     }
 
     return { success: true, bookings: bookings || [] }
-  } catch (error: any) {
-    console.error('Error in getBusinessBookings:', error)
-    return { success: false, error: error.message || 'Failed to fetch bookings', bookings: [] }
+  } catch (error: unknown) {
+    logger.error('Error in getBusinessBookings', error, { businessId })
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to fetch bookings', bookings: [] }
   }
 }
 
@@ -273,21 +260,21 @@ export async function updateBookingStatus(bookingId: string, status: string) {
       return { success: false, error: 'User not authenticated' }
     }
 
-    // Verify user owns the business for this booking
-    const { data: booking } = await supabase
+    // Get booking to find business_id
+    const { data: booking, error: bookingError } = await supabase
       .from('bookings')
-      .select(`
-        id,
-        business_id,
-        businesses!inner (
-          owner_user_id
-        )
-      `)
+      .select('id, business_id')
       .eq('id', bookingId)
       .single()
 
-    if (!booking || (booking.businesses as any)?.owner_user_id !== user.id) {
-      return { success: false, error: 'Booking not found or access denied' }
+    if (bookingError || !booking) {
+      return { success: false, error: 'Booking not found' }
+    }
+
+    // Verify user owns the business using centralized service
+    const isOwner = await BusinessOwnershipService.isOwnerServer(booking.business_id, user.id)
+    if (!isOwner) {
+      return { success: false, error: 'Access denied: User does not own this business' }
     }
 
     // Update booking status
@@ -297,15 +284,15 @@ export async function updateBookingStatus(bookingId: string, status: string) {
       .eq('id', bookingId)
 
     if (error) {
-      console.error('Error updating booking status:', error)
+      logger.error('Error updating booking status', error, { bookingId, userId: user.id })
       return { success: false, error: error.message }
     }
 
     revalidatePath('/business-portal/dashboard')
     return { success: true }
-  } catch (error: any) {
-    console.error('Error in updateBookingStatus:', error)
-    return { success: false, error: error.message || 'Failed to update booking status' }
+  } catch (error: unknown) {
+    logger.error('Error in updateBookingStatus', error, { bookingId })
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to update booking status' }
   }
 }
 
@@ -333,15 +320,9 @@ export async function createPromotion(input: CreatePromotionInput): Promise<Crea
       return { success: false, error: 'User not authenticated' }
     }
 
-    // Verify user owns the business
-    const { data: business } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('id', input.business_id)
-      .eq('owner_user_id', user.id)
-      .single()
-
-    if (!business) {
+    // Verify user owns the business using centralized service
+    const isOwner = await BusinessOwnershipService.isOwnerServer(input.business_id, user.id)
+    if (!isOwner) {
       return { success: false, error: 'Business not found or access denied' }
     }
 
@@ -368,7 +349,7 @@ export async function createPromotion(input: CreatePromotionInput): Promise<Crea
       .single()
 
     if (error) {
-      console.error('Error creating promotion:', error)
+      logger.error('Error creating promotion', error, { businessId: input.business_id, userId: user.id })
       return { success: false, error: error.message }
     }
 
@@ -378,8 +359,8 @@ export async function createPromotion(input: CreatePromotionInput): Promise<Crea
 
     revalidatePath('/business-portal/promote')
     return { success: true, data: { id: promotion.id } }
-  } catch (error: any) {
-    console.error('Error in createPromotion:', error)
-    return { success: false, error: error.message || 'Failed to create promotion' }
+  } catch (error: unknown) {
+    logger.error('Error in createPromotion', error, { businessId: input.business_id })
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to create promotion' }
   }
 }

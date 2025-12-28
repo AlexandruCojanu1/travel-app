@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
+import { success, failure, handleApiError } from '@/lib/api-response'
+import { checkRateLimit, RateLimitConfigs } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +15,27 @@ const createConversationSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimitResult = await checkRateLimit(
+      request,
+      RateLimitConfigs.standard
+    )
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        failure('Rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED'),
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+          },
+        }
+      )
+    }
+
     const body = await request.json()
     const validated = createConversationSchema.parse(body)
 
@@ -20,8 +44,30 @@ export async function POST(request: NextRequest) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { success: false, error: 'User not authenticated' },
+        failure('User not authenticated', 'UNAUTHORIZED'),
         { status: 401 }
+      )
+    }
+
+    // Re-check with user ID
+    const userRateLimitResult = await checkRateLimit(
+      request,
+      RateLimitConfigs.standard,
+      user.id
+    )
+
+    if (!userRateLimitResult.success) {
+      return NextResponse.json(
+        failure('Rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED'),
+        {
+          status: 429,
+          headers: {
+            'Retry-After': userRateLimitResult.retryAfter?.toString() || '60',
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(userRateLimitResult.resetTime).toISOString(),
+          },
+        }
       )
     }
 
@@ -34,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     if (businessError || !business) {
       return NextResponse.json(
-        { success: false, error: 'Business not found' },
+        failure('Business not found', 'NOT_FOUND'),
         { status: 404 }
       )
     }
@@ -54,11 +100,10 @@ export async function POST(request: NextRequest) {
     const { data: existing } = await query.single()
 
     if (existing) {
-      return NextResponse.json({
-        success: true,
+      return NextResponse.json(success({
         conversationId: existing.id,
         isNew: false,
-      })
+      }))
     }
 
     // Create conversation
@@ -75,30 +120,38 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (convError) {
-      console.error('Error creating conversation:', convError)
+      logger.error('Error creating conversation', convError, { userId: user.id, businessId: validated.business_id })
       return NextResponse.json(
-        { success: false, error: convError.message },
-        { status: 400 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      conversationId: conversation.id,
-      isNew: true,
-    })
-  } catch (error: any) {
-    console.error('Error in create conversation API:', error)
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid input data', details: error.errors },
+        failure(convError.message, 'CONVERSATION_CREATE_ERROR'),
         { status: 400 }
       )
     }
 
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create conversation' },
+      success({
+        conversationId: conversation.id,
+        isNew: true,
+      }),
+      {
+        headers: {
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': userRateLimitResult.remaining.toString(),
+          'X-RateLimit-Reset': new Date(userRateLimitResult.resetTime).toISOString(),
+        },
+      }
+    )
+  } catch (error: unknown) {
+    logger.error('Error in create conversation API', error)
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        failure('Invalid input data', 'VALIDATION_ERROR', error.errors),
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(
+      handleApiError(error),
       { status: 500 }
     )
   }

@@ -67,7 +67,7 @@ export function GlobalSearch({
           className={cn(
             'relative flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 shadow-sm transition-shadow',
             variant === 'floating' && 'shadow-lg',
-            'focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20'
+            'focus-within:border-airbnb-red focus-within:ring-2 focus-within:ring-airbnb-red/20'
           )}
         >
           {/* Search Icon */}
@@ -96,7 +96,7 @@ export function GlobalSearch({
           {/* Filter Button */}
           <button
             onClick={() => setIsFilterSheetOpen(true)}
-            className="flex-shrink-0 text-gray-400 hover:text-blue-600 transition-colors"
+            className="flex-shrink-0 text-gray-400 hover:text-airbnb-red transition-colors"
             aria-label="Open filters"
           >
             <Sliders className="h-5 w-5" />

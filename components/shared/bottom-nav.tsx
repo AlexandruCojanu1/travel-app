@@ -65,7 +65,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 block md:hidden safe-area-bottom">
-      <div className="backdrop-blur-xl bg-white/85 border-t border-slate-200/50">
+      <div className="bg-white border-t border-gray-200 shadow-airbnb-lg">
         <div className="mx-auto max-w-screen-xl">
           <div className="flex items-center justify-around px-2 py-2 safe-area-x">
             {navItems.map((item) => {
@@ -81,7 +81,7 @@ export function BottomNav() {
                   {isActive && (
                     <motion.div
                       layoutId="bottomNavIndicator"
-                      className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10"
+                      className="absolute inset-0 rounded-airbnb bg-airbnb-light-gray"
                       initial={false}
                       transition={{
                         type: "spring",
@@ -98,8 +98,8 @@ export function BottomNav() {
                         className={cn(
                           "transition-colors duration-200",
                           isActive
-                            ? "text-blue-600"
-                            : "text-slate-500 group-hover:text-slate-700"
+                            ? "text-airbnb-red"
+                            : "text-airbnb-gray group-hover:text-airbnb-dark"
                         )}
                       >
                         <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
@@ -110,16 +110,16 @@ export function BottomNav() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white"
+                          className="absolute -top-1 -right-1 h-3 w-3 bg-airbnb-red rounded-full border-2 border-white"
                         />
                       )}
                     </div>
                     <span
                       className={cn(
-                        "text-xs font-medium transition-colors duration-200",
+                        "text-xs font-semibold transition-colors duration-200",
                         isActive
-                          ? "text-blue-600"
-                          : "text-slate-500 group-hover:text-slate-700"
+                          ? "text-airbnb-red"
+                          : "text-airbnb-gray group-hover:text-airbnb-dark"
                       )}
                     >
                       {item.label}

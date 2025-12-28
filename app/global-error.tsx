@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect } from "react"
+import { logger } from '@/lib/logger'
+
 export default function GlobalError({
   error,
   reset,
@@ -7,24 +10,31 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    // Log critical errors
+    logger.error('Global application error', error, { 
+      digest: error.digest,
+      level: 'fatal',
+    })
+  }, [error])
   return (
     <html>
       <body>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-white px-4">
           <div className="max-w-md w-full text-center space-y-6">
-            <div className="h-20 w-20 rounded-2xl bg-red-100 flex items-center justify-center mx-auto">
+            <div className="h-20 w-20 rounded-airbnb-lg bg-red-50 flex items-center justify-center mx-auto">
               <span className="text-4xl">⚠️</span>
             </div>
             
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-slate-900">
+              <h1 className="text-3xl font-bold text-airbnb-dark">
                 Application Error
               </h1>
-              <p className="text-slate-600">
+              <p className="text-airbnb-gray">
                 A critical error occurred. Please refresh the page.
               </p>
               {error.digest && (
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-airbnb-gray mt-2">
                   Error ID: {error.digest}
                 </p>
               )}
@@ -32,7 +42,7 @@ export default function GlobalError({
 
             <button
               onClick={reset}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+              className="airbnb-button px-6 py-3"
             >
               Try Again
             </button>

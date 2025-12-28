@@ -21,7 +21,7 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
         <div className="relative">
           {Icon && (
             <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-              <Icon className="h-5 w-5 text-slate-400" />
+              <Icon className="h-5 w-5 text-airbnb-gray" />
             </div>
           )}
           <input
@@ -37,11 +37,11 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
               props.onBlur?.(e)
             }}
             className={cn(
-              "w-full px-4 py-4 rounded-xl border-2 bg-white/50 backdrop-blur-sm transition-all",
+              "w-full px-4 py-4 rounded-airbnb-lg border-2 bg-white transition-all",
               Icon && "pl-12",
               error
                 ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+                : "border-gray-300 focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20",
               className
             )}
           />
@@ -59,8 +59,8 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
               isFocused || hasValue
                 ? error
                   ? "text-red-600"
-                  : "text-blue-600"
-                : "text-slate-400"
+                  : "text-airbnb-red"
+                : "text-airbnb-gray"
             )}
           >
             {label}

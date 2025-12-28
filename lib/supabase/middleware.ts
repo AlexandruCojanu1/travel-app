@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { BusinessOwnershipService } from '@/services/business/ownership.service'
+import { logger } from '@/lib/logger'
 
 /**
  * Creates a Supabase client for middleware
@@ -9,7 +11,7 @@ export async function updateSession(request: NextRequest) {
     try {
         // Validate environment variables
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-            console.error('Middleware: Missing Supabase environment variables')
+            logger.error('Middleware: Missing Supabase environment variables')
             return NextResponse.next({ request })
         }
 
@@ -50,7 +52,7 @@ export async function updateSession(request: NextRequest) {
         user = userData
     } catch (error) {
         // If getUser() fails, continue without user (will be handled below)
-        console.warn('Middleware: Failed to get user:', error)
+        logger.warn('Middleware: Failed to get user', { error })
     }
 
     const pathname = request.nextUrl.pathname
@@ -85,23 +87,13 @@ export async function updateSession(request: NextRequest) {
     // If user is authenticated and trying to access login/signup, redirect to home
     if (user && pathname.startsWith('/auth/login')) {
         const url = request.nextUrl.clone()
-        // Check if user has businesses (with error handling)
+        // Check if user has businesses using centralized service
         try {
-            const { data: businesses, error: businessesError } = await supabase
-                .from('businesses')
-                .select('id')
-                .eq('owner_user_id', user.id)
-                .limit(1)
-            
-            // If query succeeds and has businesses, redirect to business dashboard
-            if (!businessesError && businesses && businesses.length > 0) {
-                url.pathname = '/business-portal/dashboard'
-            } else {
-                url.pathname = '/home'
-            }
+            const hasBusinesses = await BusinessOwnershipService.userHasBusinessesServer(user.id)
+            url.pathname = hasBusinesses ? '/business-portal/dashboard' : '/home'
         } catch (error) {
-            // If query fails, default to home page
-            console.warn('Middleware: Failed to check businesses:', error)
+            // If check fails, default to home page
+            logger.warn('Middleware: Failed to check businesses', { error, userId: user.id })
             url.pathname = '/home'
         }
         return NextResponse.redirect(url)
@@ -123,7 +115,7 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse
     } catch (error) {
         // If middleware fails completely, log error and continue with default response
-        console.error('Middleware error:', error)
+        logger.error('Middleware error', error)
         return NextResponse.next({ request })
     }
 }

@@ -12,30 +12,23 @@ A premium, responsive Progressive Web App (PWA) built with Next.js 14+, designed
 - **Map Integration**: Interactive maps with business locations and public transport (GTFS)
 - **Feed System**: City-based content feed with posts, promotions, and featured businesses
 
-### Responsive Design
-- **Mobile-First Approach**: Optimized for mobile devices with touch-friendly interactions
-- **Desktop Adaptation**: Gracefully scales to desktop screens with centered content
-- **Hybrid Navigation**: 
-  - Bottom navigation bar on mobile devices
-  - Top navigation bar integrated in header on desktop
-
-### Premium UI/UX
-- **Glassmorphism Effects**: Modern backdrop-blur effects on navigation components
-- **Smooth Animations**: Framer Motion powered transitions
-- **Typography**: Inter font family with antialiased rendering
-- **iOS Optimization**: Prevents rubber-banding scroll behavior
+### Design System
+- **Airbnb-Inspired Design**: Clean, modern UI with coral red accent (#FF5A5F)
+- **Mobile-First**: Optimized for mobile devices with touch-friendly interactions
+- **Responsive**: Gracefully scales to desktop screens
+- **Hybrid Navigation**: Bottom nav on mobile, top nav on desktop
 
 ## 📦 Tech Stack
 
 - **Framework**: Next.js 14+ (App Router)
 - **Language**: TypeScript (Strict Mode)
-- **Styling**: Tailwind CSS (Mobile-First)
+- **Styling**: Tailwind CSS (Mobile-First) with Airbnb design tokens
 - **Components**: Shadcn/UI (Radix primitives)
 - **Icons**: Lucide React
 - **Animations**: Framer Motion
 - **Database**: Supabase (PostgreSQL)
 - **State Management**: Zustand
-- **Maps**: MapLibre GL JS + react-map-gl
+- **Maps**: MapLibre GL JS + react-map-gl (free, open-source with CartoDB Voyager style)
 - **Forms**: React Hook Form + Zod
 - **Payments**: Stripe
 - **Charts**: Recharts
@@ -59,12 +52,12 @@ Create a `.env.local` file in the root directory:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 STRIPE_SECRET_KEY=your_stripe_secret_key
 STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
-NEXT_PUBLIC_GA_MEASUREMENT_ID=your_ga_id
 ```
+
+**Note:** The map uses **MapLibre GL JS** (free, open-source) with **CartoDB Voyager** style (free). No Mapbox token is required.
 
 3. **Database Setup**
 Run the SQL scripts in `database/` folder in your Supabase SQL Editor:
@@ -72,22 +65,15 @@ Run the SQL scripts in `database/` folder in your Supabase SQL Editor:
 - `extend-business-schema.sql` - Business schema extensions
 - `add-promotion-fields.sql` - Promotions table updates
 
-4. **Update Import Paths** ⚠️
-After cloning, run the import update script:
-```bash
-bash scripts/update-imports.sh
-```
-
-5. **Run Development Server**
+4. **Run Development Server**
 ```bash
 npm run dev
 ```
 
-6. **Open Your Browser**
+5. **Open Your Browser**
 Navigate to [http://localhost:3000](http://localhost:3000)
 
 ### Build for Production
-
 ```bash
 npm run build
 npm start
@@ -111,101 +97,47 @@ npm start
   /profile                # User profile
 
 /components
-  /features               # Feature-based components
-    /auth                 # Authentication & profile
-    /business             # Business components
-      /portal            # Business owner dashboard
-      /public             # Public business view
-    /booking              # Booking & checkout
-      /checkout           # Checkout flow
-    /trip                 # Trip planning
-    /feed                 # Feed & content
-    /map                  # Map & exploration
-      /explore            # Explore page
-      /search             # Search components
-  /shared                 # Shared global components
-    /ui                   # Shadcn/UI atomic components
+  /features               # Feature-based components (auth, business, booking, trip, feed, map, etc.)
+  /shared                 # Shared global components & UI primitives
 
 /actions                  # Next.js Server Actions (by domain)
-  auth.ts                 # Authentication actions
-  business-portal.ts     # Business portal actions
-  create-booking.ts       # Booking creation
-  create-payment-intent.ts # Payment processing
-  profile.ts             # Profile actions
-  user.ts                # User actions
-
 /services                 # Business logic layer (by domain)
-  /auth                  # Auth-related services
-    profile.service.ts   # Profile operations
-    city.service.ts      # City operations
-  /business              # Business services
-    business.service.ts  # Business CRUD
-  /booking               # Booking services
-    booking.service.ts   # Booking operations
-  /trip                  # Trip services
-    trip.service.ts      # Trip CRUD
-  /feed                  # Feed services
-    feed.service.ts      # Feed aggregation
-  /map                   # Map services
-    gtfs.service.ts      # Public transport data
-
 /store                    # Zustand state management
-  app-store.ts           # Global app state
-  search-store.ts        # Search state
-  trip-store.ts          # Trip state
-
-/lib
-  /supabase              # Supabase clients
-    client.ts            # Browser client
-    server.ts            # Server client
-    middleware.ts        # Session middleware
-  /validations           # Zod schemas
-    auth.ts              # Auth validation
-    business.ts          # Business validation
-  utils.ts               # Utility functions
-  stripe.ts              # Stripe configuration
-
-/types
-  database.types.ts       # Supabase generated types
-
+/lib                      # Core libraries & utilities
+/types                    # TypeScript types
 /database                 # SQL scripts
-  /scripts               # Utility scripts
-    /test                # Test/debug scripts
-  *.sql                  # Schema & migration scripts
-
-/public
-  /gtfs                  # GTFS public transport data
-  /icons                 # App icons
-  manifest.json          # PWA manifest
 ```
+
+## 🎨 Design System
+
+### Colors (Airbnb-Inspired)
+- **Primary Red**: `#FF5A5F` (airbnb-red)
+- **Dark Text**: `#2B2B2B` (airbnb-dark)
+- **Gray Text**: `#737373` (airbnb-gray)
+- **Light Background**: `#F5F5F5` (airbnb-light-gray)
+
+### Border Radius
+- **Default**: `12px` (rounded-airbnb)
+- **Large**: `16px` (rounded-airbnb-lg)
+
+### Shadows
+- **Default**: `shadow-airbnb` - Subtle shadow for cards
+- **Hover**: `shadow-airbnb-hover` - Enhanced shadow on hover
+- **Medium**: `shadow-airbnb-md` - Medium shadow
+- **Large**: `shadow-airbnb-lg` - Large shadow
+
+### Utilities
+- `.airbnb-card` - Card styling with rounded corners and shadow
+- `.airbnb-button` - Primary button with Airbnb red background
 
 ## 🏗️ Architecture
 
-This project follows a **feature-based architecture** with clear separation of concerns:
-
+Feature-based architecture with clear separation:
 - **Features**: Self-contained modules (auth, business, booking, trip, feed, map)
 - **Shared**: Reusable components and utilities
 - **Core**: Configuration, types, and infrastructure
 
 See `ARCHITECTURE.md` for detailed architecture documentation.
-
-## 🎨 Design System
-
-### Breakpoints
-- **Mobile**: Default (< 768px)
-- **Tablet**: `md:` (768px+)
-- **Desktop**: `lg:` (1024px+)
-- **Max Width**: 1280px (xl)
-
-### Colors
-- **Primary**: Blue-600 to Purple-600 gradient
-- **Background**: Slate-50 (light gray)
-- **Glass Effects**: White/85 opacity with backdrop blur
-
-### Navigation Behavior
-- **Mobile**: Sticky bottom navigation bar (5 tabs)
-- **Desktop**: Top navigation links in header, bottom nav hidden
-- **Touch Targets**: Minimum 44px height for accessibility
 
 ## 🔧 Key Features
 
@@ -260,8 +192,6 @@ See `database/*.sql` files for complete schema definitions.
 
 ## 🐛 Troubleshooting
 
-### Common Issues
-
 **Cities not loading:**
 - Run `database/romanian-cities.sql` in Supabase
 - Check RLS policies on `cities` table
@@ -269,26 +199,21 @@ See `database/*.sql` files for complete schema definitions.
 **Authentication errors:**
 - Verify Supabase environment variables
 - Check RLS policies on `profiles` table
-- See `database/scripts/test/fix-profile-rls-simple.sql`
 
 **Business dashboard not accessible:**
 - Ensure `owner_user_id` is set on businesses
 - Check business portal RLS policies
 
 **Map not displaying:**
-- Verify `NEXT_PUBLIC_MAPBOX_TOKEN` is set
 - Check browser console for errors
+- Verify network connectivity (map tiles are loaded from CartoDB CDN)
+- Map uses free MapLibre GL JS - no token required
 
-**Import errors after reorganization:**
-- Run `bash scripts/update-imports.sh`
-- Or manually update imports (see `REFACTORING.md`)
-
-## 📚 Documentation
+## 📚 Additional Documentation
 
 - **ARCHITECTURE.md** - Detailed architecture overview
-- **REFACTORING.md** - Import path migration guide
 - **database/README.md** - Database scripts documentation
-- **docs/archive/** - Legacy documentation (archived)
+- **services/README.md** - Services documentation
 
 ## 🎯 Design Principles
 

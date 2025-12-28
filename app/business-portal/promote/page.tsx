@@ -203,7 +203,7 @@ export default function PromotePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-airbnb-red" />
       </div>
     )
   }
@@ -212,11 +212,11 @@ export default function PromotePage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <Star className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          <Star className="h-16 w-16 text-airbnb-gray mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-airbnb-dark mb-2">
             No Business Found
           </h2>
-          <p className="text-slate-600 mb-6">
+          <p className="text-airbnb-gray mb-6">
             Create a business first to promote it
           </p>
           <Button asChild>
@@ -230,28 +230,28 @@ export default function PromotePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4">
+    <div className="min-h-screen bg-white py-8 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="text-4xl font-bold text-airbnb-dark mb-2">
             Promote Your Business
           </h1>
-          <p className="text-slate-600 text-lg">
+          <p className="text-airbnb-gray text-lg">
             Boost your visibility and reach more customers
           </p>
         </div>
 
         {/* Business Selector */}
         {businesses.length > 1 && (
-          <div className="bg-white rounded-xl p-6 border border-slate-200">
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
+          <div className="airbnb-card p-6">
+            <label className="block text-sm font-semibold text-airbnb-dark mb-2">
               Select Business
             </label>
             <select
               value={selectedBusinessId || ''}
               onChange={(e) => setSelectedBusinessId(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500"
+              className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20"
             >
               {businesses.map((business) => (
                 <option key={business.id} value={business.id}>
@@ -264,8 +264,8 @@ export default function PromotePage() {
 
         {/* Active Promotions */}
         {activePromotions.length > 0 && (
-          <div className="bg-white rounded-xl p-6 border border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900 mb-4">
+          <div className="airbnb-card p-6">
+            <h2 className="text-xl font-semibold text-airbnb-dark mb-4">
               Active Promotions
             </h2>
             <div className="space-y-3">
@@ -275,22 +275,22 @@ export default function PromotePage() {
                 return (
                   <div
                     key={promotion.id}
-                    className="flex items-center justify-between p-4 rounded-lg border-2 border-slate-200 bg-slate-50"
+                    className="flex items-center justify-between p-4 rounded-airbnb border-2 border-gray-200 bg-airbnb-light-gray"
                   >
                     <div className="flex items-center gap-4">
                       {packageData && (
                         <>
                           <div className={cn(
-                            "h-12 w-12 rounded-lg bg-gradient-to-br flex items-center justify-center",
+                            "h-12 w-12 rounded-airbnb bg-gradient-to-br flex items-center justify-center",
                             packageData.color
                           )}>
                             {packageData.icon && <packageData.icon className="h-6 w-6 text-white" />}
                           </div>
                           <div>
-                            <div className="font-semibold text-slate-900">
+                            <div className="font-semibold text-airbnb-dark">
                               {packageData.name} Package
                             </div>
-                            <div className="text-sm text-slate-600">
+                            <div className="text-sm text-airbnb-gray">
                               {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} remaining
                             </div>
                           </div>
@@ -298,7 +298,7 @@ export default function PromotePage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-600">
+                      <span className="text-sm text-airbnb-gray">
                         Valid until: {new Date(promotion.valid_until).toLocaleDateString()}
                       </span>
                       {promotion.status === 'pending_payment' && (
@@ -324,8 +324,8 @@ export default function PromotePage() {
                 className={cn(
                   "relative bg-white rounded-2xl border-2 p-8 transition-all hover:shadow-xl",
                   pkg.popular
-                    ? "border-yellow-400 shadow-lg scale-105"
-                    : "border-slate-200 hover:border-blue-300"
+                    ? "border-yellow-400 shadow-airbnb-lg scale-105"
+                    : "border-gray-200 hover:border-airbnb-red/50"
                 )}
               >
                 {pkg.popular && (
@@ -343,16 +343,16 @@ export default function PromotePage() {
                   )}>
                     <Icon className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                  <h3 className="text-2xl font-bold text-airbnb-dark mb-2">
                     {pkg.name}
                   </h3>
                   <div className="mb-4">
-                    <span className="text-4xl font-bold text-slate-900">
+                    <span className="text-4xl font-bold text-airbnb-dark">
                       {pkg.price}
                     </span>
-                    <span className="text-slate-600 ml-2">RON</span>
+                    <span className="text-airbnb-gray ml-2">RON</span>
                   </div>
-                  <div className="text-sm text-slate-600">
+                  <div className="text-sm text-airbnb-gray">
                     {pkg.duration_days} {pkg.duration_days === 1 ? 'day' : 'days'}
                   </div>
                 </div>
@@ -361,7 +361,7 @@ export default function PromotePage() {
                   {pkg.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-slate-700">{feature}</span>
+                      <span className="text-sm text-airbnb-dark">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -391,71 +391,71 @@ export default function PromotePage() {
         </div>
 
         {/* Comparison Table */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">
+        <div className="airbnb-card p-6">
+          <h2 className="text-xl font-semibold text-airbnb-dark mb-4">
             Compare Packages
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Feature</th>
+                <tr className="border-b border-gray-200">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-airbnb-dark">Feature</th>
                   {PACKAGES.map((pkg) => (
-                    <th key={pkg.id} className="px-4 py-3 text-center text-sm font-semibold text-slate-700">
+                    <th key={pkg.id} className="px-4 py-3 text-center text-sm font-semibold text-airbnb-dark">
                       {pkg.name}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-gray-200">
                 <tr>
-                  <td className="px-4 py-3 text-sm text-slate-700">Duration</td>
+                  <td className="px-4 py-3 text-sm text-airbnb-gray">Duration</td>
                   {PACKAGES.map((pkg) => (
-                    <td key={pkg.id} className="px-4 py-3 text-center text-sm text-slate-900">
+                    <td key={pkg.id} className="px-4 py-3 text-center text-sm text-airbnb-dark">
                       {pkg.duration_days} days
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-sm text-slate-700">Price</td>
+                  <td className="px-4 py-3 text-sm text-airbnb-gray">Price</td>
                   {PACKAGES.map((pkg) => (
-                    <td key={pkg.id} className="px-4 py-3 text-center text-sm font-semibold text-slate-900">
+                    <td key={pkg.id} className="px-4 py-3 text-center text-sm font-semibold text-airbnb-dark">
                       {pkg.price} RON
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-sm text-slate-700">Search Boost</td>
+                  <td className="px-4 py-3 text-sm text-airbnb-gray">Search Boost</td>
                   {PACKAGES.map((pkg) => (
                     <td key={pkg.id} className="px-4 py-3 text-center">
                       {pkg.id !== 'silver' ? (
                         <Check className="h-5 w-5 text-green-600 mx-auto" />
                       ) : (
-                        <X className="h-5 w-5 text-slate-300 mx-auto" />
+                        <X className="h-5 w-5 text-gray-300 mx-auto" />
                       )}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-sm text-slate-700">Homepage Carousel</td>
+                  <td className="px-4 py-3 text-sm text-airbnb-gray">Homepage Carousel</td>
                   {PACKAGES.map((pkg) => (
                     <td key={pkg.id} className="px-4 py-3 text-center">
                       {pkg.id === 'gold' || pkg.id === 'platinum' ? (
                         <Check className="h-5 w-5 text-green-600 mx-auto" />
                       ) : (
-                        <X className="h-5 w-5 text-slate-300 mx-auto" />
+                        <X className="h-5 w-5 text-gray-300 mx-auto" />
                       )}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-sm text-slate-700">Push Notifications</td>
+                  <td className="px-4 py-3 text-sm text-airbnb-gray">Push Notifications</td>
                   {PACKAGES.map((pkg) => (
                     <td key={pkg.id} className="px-4 py-3 text-center">
                       {pkg.id === 'platinum' ? (
                         <Check className="h-5 w-5 text-green-600 mx-auto" />
                       ) : (
-                        <X className="h-5 w-5 text-slate-300 mx-auto" />
+                        <X className="h-5 w-5 text-gray-300 mx-auto" />
                       )}
                     </td>
                   ))}

@@ -13,7 +13,7 @@ import {
 } from "@/components/shared/ui/command"
 import { toast as sonnerToast } from "sonner"
 import { useAppStore } from "@/store/app-store"
-import { getActiveCities } from "@/services/city.service"
+import { getActiveCities } from "@/services/auth/city.service"
 import { updateLastVisitedCity } from "@/actions/user"
 import { cn } from "@/lib/utils"
 
@@ -94,12 +94,12 @@ export function CitySelector() {
           </DialogHeader>
           <Command className="rounded-lg border-none">
             <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <div className="h-10 w-10 rounded-airbnb-lg bg-airbnb-red flex items-center justify-center flex-shrink-0">
                 <MapPin className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Where to next?</h2>
-                <p className="text-sm text-slate-600">Select a city to explore</p>
+                <h2 className="text-lg font-bold text-airbnb-dark">Where to next?</h2>
+                <p className="text-sm text-airbnb-gray">Select a city to explore</p>
               </div>
             </div>
 
@@ -112,10 +112,10 @@ export function CitySelector() {
               <CommandEmpty>
                 {isLoading ? (
                   <div className="flex items-center justify-center py-6">
-                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                    <Loader2 className="h-6 w-6 animate-spin text-airbnb-red" />
                   </div>
                 ) : (
-                  <div className="py-6 text-center text-sm text-slate-600">
+                  <div className="py-6 text-center text-sm text-airbnb-gray">
                     No cities found.
                   </div>
                 )}
@@ -132,20 +132,20 @@ export function CitySelector() {
                         className="cursor-pointer"
                       >
                         <div className="flex items-center gap-3 flex-1">
-                          <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <MapPin className="h-5 w-5 text-blue-600" />
+                          <div className="h-10 w-10 rounded-airbnb bg-red-50 flex items-center justify-center flex-shrink-0">
+                            <MapPin className="h-5 w-5 text-airbnb-red" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-slate-900">
+                            <div className="font-semibold text-airbnb-dark">
                               {currentCity.name}
                             </div>
-                            <div className="text-xs text-slate-600 truncate">
+                            <div className="text-xs text-airbnb-gray truncate">
                               {currentCity.state_province
                                 ? `${currentCity.state_province}, ${currentCity.country}`
                                 : currentCity.country}
                             </div>
                           </div>
-                          <Check className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                          <Check className="h-5 w-5 text-airbnb-red flex-shrink-0" />
                         </div>
                       </CommandItem>
                     </CommandGroup>
@@ -164,14 +164,14 @@ export function CitySelector() {
                           className="cursor-pointer"
                         >
                           <div className="flex items-center gap-3 flex-1">
-                            <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                              <MapPin className="h-5 w-5 text-slate-600" />
+                            <div className="h-10 w-10 rounded-airbnb bg-airbnb-light-gray flex items-center justify-center flex-shrink-0">
+                              <MapPin className="h-5 w-5 text-airbnb-gray" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium text-slate-900">
+                              <div className="font-medium text-airbnb-dark">
                                 {city.name}
                               </div>
-                              <div className="text-xs text-slate-600 truncate">
+                              <div className="text-xs text-airbnb-gray truncate">
                                 {city.state_province
                                   ? `${city.state_province}, ${city.country}`
                                   : city.country}
@@ -196,14 +196,14 @@ export function CitySelector() {
                             className="cursor-pointer"
                           >
                             <div className="flex items-center gap-3 flex-1">
-                              <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                                <MapPin className="h-5 w-5 text-slate-600" />
+                              <div className="h-10 w-10 rounded-airbnb bg-airbnb-light-gray flex items-center justify-center flex-shrink-0">
+                                <MapPin className="h-5 w-5 text-airbnb-gray" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium text-slate-900">
+                                <div className="font-medium text-airbnb-dark">
                                   {city.name}
                                 </div>
-                                <div className="text-xs text-slate-600 truncate">
+                                <div className="text-xs text-airbnb-gray truncate">
                                   {city.state_province
                                     ? `${city.state_province}, ${city.country}`
                                     : city.country}
@@ -218,8 +218,8 @@ export function CitySelector() {
               )}
             </CommandList>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50">
-              <p className="text-xs text-slate-600 flex items-center gap-2">
+            <div className="p-4 border-t border-gray-200 bg-airbnb-light-gray">
+              <p className="text-xs text-airbnb-gray flex items-center gap-2">
                 <Sparkles className="h-3 w-3" />
                 <span>Content will update based on your selected city</span>
               </p>
@@ -233,7 +233,7 @@ export function CitySelector() {
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
           <div className={`
             px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium
-            ${toast.type === 'success' ? 'bg-green-600' : 'bg-blue-600'}
+            ${toast.type === 'success' ? 'bg-green-600' : 'bg-airbnb-red'}
           `}>
             {toast.message}
           </div>

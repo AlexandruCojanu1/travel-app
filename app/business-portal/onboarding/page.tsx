@@ -508,7 +508,7 @@ export default function BusinessOnboardingPage() {
   if (isChecking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-airbnb-red" />
       </div>
     )
   }
@@ -516,10 +516,10 @@ export default function BusinessOnboardingPage() {
   const initialMapCenter = userCity || { lat: 45.9432, lng: 24.9668 } // Default to Romania center
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden p-4">
-      {/* Animated Background */}
+    <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden p-4">
+      {/* Subtle Background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-airbnb-red/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-700" />
       </div>
 
@@ -534,16 +534,16 @@ export default function BusinessOnboardingPage() {
           {/* Progress Indicator */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-slate-600">
+              <span className="text-sm font-semibold text-airbnb-gray">
                 Pasul {step} din 5
               </span>
-              <span className="text-sm font-semibold text-slate-600">
+              <span className="text-sm font-semibold text-airbnb-gray">
                 {Math.round((step / 5) * 100)}%
               </span>
             </div>
-            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-airbnb-light-gray rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-blue-600 to-purple-600"
+                className="h-full bg-airbnb-red"
                 initial={{ width: 0 }}
                 animate={{ width: `${(step / 5) * 100}%` }}
                 transition={{ duration: 0.3 }}
@@ -575,7 +575,7 @@ export default function BusinessOnboardingPage() {
 
                 {/* Business Name */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                     Numele Business-ului *
                   </label>
                   <input
@@ -615,13 +615,13 @@ export default function BusinessOnboardingPage() {
                         className={cn(
                           "p-4 rounded-xl border-2 transition-all text-left",
                           formData.category === cat.value
-                            ? "border-blue-500 bg-blue-50 shadow-md"
+                            ? "border-airbnb-red bg-airbnb-light-red shadow-airbnb-md"
                             : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm"
                         )}
                       >
                         <div className="text-2xl mb-2">{cat.icon}</div>
-                        <div className="font-semibold text-slate-900 text-sm">{cat.label}</div>
-                        <div className="text-xs text-slate-500 mt-1">{cat.description}</div>
+                        <div className="font-semibold text-airbnb-dark text-sm">{cat.label}</div>
+                        <div className="text-xs text-airbnb-gray mt-1">{cat.description}</div>
                       </button>
                     ))}
                   </div>
@@ -632,7 +632,7 @@ export default function BusinessOnboardingPage() {
 
                 {/* Tagline */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                     Tagline (Descriere scurtă) <span className="text-xs text-slate-500">(Max 100 caractere)</span>
                   </label>
                   <input
@@ -645,7 +645,7 @@ export default function BusinessOnboardingPage() {
                     }}
                     placeholder="e.g., Cea mai bună experiență culinară din oraș"
                     maxLength={100}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                   />
                   <p className="mt-1 text-xs text-slate-500">
                     {formData.tagline?.length || 0}/100 caractere
@@ -654,7 +654,7 @@ export default function BusinessOnboardingPage() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                     Descriere Detaliată *
                   </label>
                   <textarea
@@ -674,7 +674,7 @@ export default function BusinessOnboardingPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         <Phone className="inline h-4 w-4 mr-1" />
                         Telefon (Opțional)
                       </label>
@@ -685,11 +685,11 @@ export default function BusinessOnboardingPage() {
                           setFormData((prev) => ({ ...prev, phone: e.target.value }))
                         }
                         placeholder="+40 123 456 789"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         <Mail className="inline h-4 w-4 mr-1" />
                         Email Public (Opțional)
                       </label>
@@ -700,13 +700,13 @@ export default function BusinessOnboardingPage() {
                           setFormData((prev) => ({ ...prev, email: e.target.value }))
                         }
                         placeholder="contact@example.com"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                       <Globe className="inline h-4 w-4 mr-1" />
                       Website (Opțional)
                     </label>
@@ -717,7 +717,7 @@ export default function BusinessOnboardingPage() {
                         setFormData((prev) => ({ ...prev, website: e.target.value }))
                       }
                       placeholder="https://example.com"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                     />
                   </div>
                 </div>
@@ -728,7 +728,7 @@ export default function BusinessOnboardingPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         <Facebook className="inline h-4 w-4 mr-1" />
                         Facebook (Opțional)
                       </label>
@@ -742,11 +742,11 @@ export default function BusinessOnboardingPage() {
                           }))
                         }
                         placeholder="https://facebook.com/..."
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         <Instagram className="inline h-4 w-4 mr-1" />
                         Instagram (Opțional)
                       </label>
@@ -760,11 +760,11 @@ export default function BusinessOnboardingPage() {
                           }))
                         }
                         placeholder="https://instagram.com/..."
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         TikTok (Opțional)
                       </label>
                       <input
@@ -777,7 +777,7 @@ export default function BusinessOnboardingPage() {
                           }))
                         }
                         placeholder="https://tiktok.com/@..."
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                       />
                     </div>
                   </div>
@@ -789,7 +789,7 @@ export default function BusinessOnboardingPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Logo URL (Opțional)
                       </label>
                       <input
@@ -799,11 +799,11 @@ export default function BusinessOnboardingPage() {
                           setFormData((prev) => ({ ...prev, logo_url: e.target.value }))
                         }
                         placeholder="https://example.com/logo.png"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Cover Image URL (Opțional)
                       </label>
                       <input
@@ -813,7 +813,7 @@ export default function BusinessOnboardingPage() {
                           setFormData((prev) => ({ ...prev, cover_image_url: e.target.value }))
                         }
                         placeholder="https://example.com/cover.jpg"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                       />
                     </div>
                   </div>
@@ -824,7 +824,7 @@ export default function BusinessOnboardingPage() {
                   <h3 className="text-lg font-semibold text-slate-900 border-b pb-2">Program de Funcționare</h3>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                       Tip Program
                     </label>
                     <select
@@ -838,7 +838,7 @@ export default function BusinessOnboardingPage() {
                           }
                         }))
                       }
-                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                     >
                       <option value="">Selectează tip program</option>
                       <option value="24/7">24/7</option>
@@ -850,7 +850,7 @@ export default function BusinessOnboardingPage() {
 
                   {formData.operating_hours?.type && formData.operating_hours.type !== '24/7' && formData.operating_hours.type !== 'by_appointment' && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Orare Specifice
                       </label>
                       {['Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă', 'Duminică'].map((day) => (
@@ -983,7 +983,7 @@ export default function BusinessOnboardingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                       <Car className="inline h-4 w-4 mr-1" />
                       Parcare
                     </label>
@@ -995,7 +995,7 @@ export default function BusinessOnboardingPage() {
                           facilities: { ...prev.facilities, parking: e.target.value as any }
                         }))
                       }
-                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                     >
                       <option value="">Selectează opțiune</option>
                       <option value="None">Fără parcare</option>
@@ -1031,7 +1031,7 @@ export default function BusinessOnboardingPage() {
                 <div className="space-y-6">
                   {/* City Selection */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                       Oraș *
                     </label>
                     <CitySelect
@@ -1046,7 +1046,7 @@ export default function BusinessOnboardingPage() {
 
                   {/* Interactive Map */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                       Indică Locația pe Hartă *
                     </label>
                     <div className="h-64 md:h-96 rounded-xl overflow-hidden border-2 border-slate-200">
@@ -1090,7 +1090,7 @@ export default function BusinessOnboardingPage() {
 
                   {/* Address Line */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                       Adresă (Opțional)
                     </label>
                     <input
@@ -1100,7 +1100,7 @@ export default function BusinessOnboardingPage() {
                         setFormData((prev) => ({ ...prev, address_line: e.target.value }))
                       }
                       placeholder="e.g., Strada Principală 123"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-airbnb-red focus:ring-2 focus:ring-airbnb-red/20 transition-all"
                     />
                   </div>
                 </div>
@@ -1132,7 +1132,7 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Hotel' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Clasificare Stele
                       </label>
                       <div className="flex gap-2">
@@ -1161,7 +1161,7 @@ export default function BusinessOnboardingPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                           <Clock className="inline h-4 w-4 mr-1" />
                           Ora Check-in
                         </label>
@@ -1175,7 +1175,7 @@ export default function BusinessOnboardingPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                           <Clock className="inline h-4 w-4 mr-1" />
                           Ora Check-out
                         </label>
@@ -1191,7 +1191,7 @@ export default function BusinessOnboardingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Facilități
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -1223,7 +1223,7 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Restaurant' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Tip Bucătărie
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1250,7 +1250,7 @@ export default function BusinessOnboardingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Nivel Preț
                       </label>
                       <div className="flex gap-3">
@@ -1292,7 +1292,7 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Cafe' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Specialitate
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -1319,7 +1319,7 @@ export default function BusinessOnboardingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Nivel Preț
                       </label>
                       <div className="flex gap-3">
@@ -1342,7 +1342,7 @@ export default function BusinessOnboardingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Link Meniu (Opțional)
                       </label>
                       <input
@@ -1362,7 +1362,7 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Nature' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Nivel Dificultate
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1386,7 +1386,7 @@ export default function BusinessOnboardingPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                           Lungime (km)
                         </label>
                         <input
@@ -1402,7 +1402,7 @@ export default function BusinessOnboardingPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                           Elevație (m)
                         </label>
                         <input
@@ -1417,7 +1417,7 @@ export default function BusinessOnboardingPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                           Durată (ore)
                         </label>
                         <input
@@ -1435,7 +1435,7 @@ export default function BusinessOnboardingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Condiții Traseu (Opțional)
                       </label>
                       <textarea
@@ -1455,7 +1455,7 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Spa' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                         Servicii Spa
                       </label>
                       <p className="text-sm text-slate-600 mb-4">
@@ -1576,7 +1576,7 @@ export default function BusinessOnboardingPage() {
                 <div className="space-y-6">
                   {/* Primary Image */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                       URL Imagine Principală *
                     </label>
                     <input
@@ -1613,7 +1613,7 @@ export default function BusinessOnboardingPage() {
 
                   {/* Additional Images */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-airbnb-dark mb-2">
                       Imagini Adiționale (Opțional)
                     </label>
                     <div className="space-y-3">

@@ -189,7 +189,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
       change: "3 new today",
       trend: "neutral" as const,
       icon: Calendar,
-      color: "text-blue-600"
+      color: "text-airbnb-red"
     },
     {
       title: "Profile Views",
@@ -212,7 +212,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-slate-600">Loading overview...</div>
+        <div className="text-airbnb-gray">Loading overview...</div>
       </div>
     )
   }
@@ -224,18 +224,18 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
         {statsCards.map((card, index) => {
           const Icon = card.icon
           return (
-            <div key={index} className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0">
+            <div key={index} className="airbnb-card p-4 md:p-6 min-w-0">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-600">{card.title}</span>
+                <span className="text-sm text-airbnb-gray">{card.title}</span>
                 <Icon className={`h-5 w-5 ${card.color}`} />
               </div>
-              <div className="text-3xl font-bold text-slate-900 mb-1">
+              <div className="text-3xl font-bold text-airbnb-dark mb-1">
                 {card.value}
               </div>
               <div className={cn(
                 "text-sm font-medium",
                 card.trend === "up" ? "text-green-600" :
-                card.trend === "down" ? "text-red-600" : "text-slate-600"
+                card.trend === "down" ? "text-red-600" : "text-airbnb-gray"
               )}>
                 {card.change}
               </div>
@@ -247,8 +247,8 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Bookings/Views Line Chart */}
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0 overflow-hidden">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+        <div className="airbnb-card p-4 md:p-6 min-w-0 overflow-hidden">
+          <h3 className="text-lg font-semibold text-airbnb-dark mb-4">
             Bookings Over Last 30 Days
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -270,8 +270,8 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
         </div>
 
         {/* Revenue Bar Chart */}
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0 overflow-hidden">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+        <div className="airbnb-card p-4 md:p-6 min-w-0 overflow-hidden">
+          <h3 className="text-lg font-semibold text-airbnb-dark mb-4">
             Revenue by Day
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -289,8 +289,8 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
 
       {/* Status Distribution Pie Chart */}
       {statusDistribution.length > 0 && (
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0 overflow-hidden">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+        <div className="airbnb-card p-4 md:p-6 min-w-0 overflow-hidden">
+          <h3 className="text-lg font-semibold text-airbnb-dark mb-4">
             Booking Status Distribution
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -321,18 +321,18 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
           Recent Activity
         </h3>
         <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
-            <Calendar className="h-5 w-5 text-blue-600" />
+          <div className="flex items-center gap-3 p-3 rounded-airbnb bg-airbnb-light-gray">
+            <Calendar className="h-5 w-5 text-airbnb-red" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-900">New booking received</p>
-              <p className="text-xs text-slate-600">2 hours ago</p>
+              <p className="text-sm font-medium text-airbnb-dark">New booking received</p>
+              <p className="text-xs text-airbnb-gray">2 hours ago</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
+          <div className="flex items-center gap-3 p-3 rounded-airbnb bg-airbnb-light-gray">
             <Star className="h-5 w-5 text-yellow-600" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-900">New review received</p>
-              <p className="text-xs text-slate-600">5 hours ago</p>
+              <p className="text-sm font-medium text-airbnb-dark">New review received</p>
+              <p className="text-xs text-airbnb-gray">5 hours ago</p>
             </div>
           </div>
         </div>

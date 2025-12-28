@@ -4,26 +4,41 @@
 
 @layer base {
   :root {
+    /* Airbnb-inspired color palette */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 17%; /* #2B2B2B - dark gray text */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --popover-foreground: 0 0% 17%;
+    
+    /* Airbnb primary color - Coral Red */
+    --primary: 4 90% 58%; /* #FF5A5F - Airbnb coral */
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Light gray */
+    --secondary: 0 0% 96%; /* #F5F5F5 */
+    --secondary-foreground: 0 0% 17%;
+    
+    /* Muted - Medium gray */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%; /* #737373 */
+    
+    /* Accent - Slightly darker gray */
+    --accent: 0 0% 98%;
+    --accent-foreground: 0 0% 17%;
+    
+    /* Destructive - Keep red but softer */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders - Very light gray */
+    --border: 0 0% 90%; /* #E5E5E5 */
+    --input: 0 0% 90%;
+    --ring: 4 90% 58%; /* Airbnb coral for focus */
+    
+    /* Border radius - Airbnb uses rounded corners */
+    --radius: 0.75rem; /* 12px - more rounded */
   }
 
   .dark {
@@ -64,14 +79,17 @@
   }
   
   body {
-    @apply bg-slate-50;
+    @apply bg-white;
     color: hsl(var(--foreground));
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     /* Remove rubber banding on body */
     overscroll-behavior-y: none;
     /* Prevent horizontal scroll */
     overflow-x: hidden;
     width: 100%;
     max-width: 100vw;
+    /* Airbnb uses smooth scrolling */
+    scroll-behavior: smooth;
   }
   
   /* Ensure all containers respect viewport width */
@@ -115,13 +133,25 @@
     scrollbar-width: none; /* Firefox */
   }
 
-  /* Glassmorphism utilities */
-  .glass {
-    @apply backdrop-blur-xl bg-white/85 border border-slate-200/50;
+  /* Airbnb-style utilities */
+  .airbnb-card {
+    @apply bg-white rounded-airbnb shadow-airbnb border border-gray-200;
+    transition: all 0.2s ease;
   }
 
-  .glass-dark {
-    @apply backdrop-blur-xl bg-slate-900/85 border border-slate-700/50;
+  .airbnb-card:hover {
+    @apply shadow-airbnb-hover;
+    transform: translateY(-2px);
+  }
+
+  .airbnb-button {
+    @apply bg-airbnb-red text-white font-semibold rounded-airbnb px-6 py-3;
+    @apply hover:bg-[#FF484D] transition-colors duration-200;
+  }
+
+  .airbnb-button-outline {
+    @apply border-2 border-gray-300 text-gray-700 font-semibold rounded-airbnb px-6 py-3;
+    @apply hover:border-gray-400 hover:bg-gray-50 transition-all duration-200;
   }
 
   /* Safe Area Insets for iPhone Home Bar and Notch */

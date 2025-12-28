@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui
 import { Button } from '@/components/shared/ui/button'
 import { getBusinessById, type Business } from '@/services/business/business.service'
 import { createClient } from '@/lib/supabase/client'
+// Removed server-side ownership service import - using client-side check instead
+import { logger } from '@/lib/logger'
 import type { Review } from '@/components/features/business/public/review-card'
 
 interface BusinessResource {
@@ -49,23 +51,20 @@ export default function BusinessDetailPage() {
         // Check if user is authenticated and is the owner
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          const { data: businessCheck } = await supabase
+          // Check ownership using client-side query
+          const { data: business, error: businessError } = await supabase
             .from('businesses')
-            .select('owner_user_id, owner_id')
+            .select('owner_user_id')
             .eq('id', businessId)
             .single()
           
-          if (businessCheck) {
-            const isOwnerCheck = businessCheck.owner_user_id === user.id || 
-                                 businessCheck.owner_id === user.id
-            setIsOwner(isOwnerCheck)
-          }
+          setIsOwner(!businessError && business?.owner_user_id === user.id)
         }
 
         // Fetch business
         const businessData = await getBusinessById(businessId)
         if (!businessData) {
-          console.error('Business not found')
+          logger.error('Business not found', undefined, { businessId })
           return
         }
         setBusiness(businessData)
@@ -134,7 +133,7 @@ export default function BusinessDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-airbnb-red" />
       </div>
     )
   }
@@ -142,10 +141,10 @@ export default function BusinessDetailPage() {
   if (!business) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-airbnb-dark mb-2">
           Business Not Found
         </h2>
-        <p className="text-gray-600">The business you're looking for doesn't exist.</p>
+        <p className="text-airbnb-gray">The business you're looking for doesn't exist.</p>
       </div>
     )
   }
@@ -168,20 +167,20 @@ export default function BusinessDetailPage() {
         <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
           {/* Owner Actions Bar */}
           {isOwner && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
+            <div className="mb-6 p-5 airbnb-card border-2 border-airbnb-red/20">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-airbnb bg-airbnb-red flex items-center justify-center shadow-airbnb-md">
                     <Settings className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900">Business Owner Dashboard</h3>
-                    <p className="text-sm text-slate-600">Manage your business, bookings, and promotions</p>
+                    <h3 className="font-semibold text-airbnb-dark text-base">Business Owner Dashboard</h3>
+                    <p className="text-sm text-airbnb-gray">Manage your business, bookings, and promotions</p>
                   </div>
                 </div>
                 <Button
                   onClick={() => router.push('/business-portal/dashboard')}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="airbnb-button"
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Open Dashboard
@@ -206,10 +205,10 @@ export default function BusinessDetailPage() {
               {/* Description */}
               {business.description && (
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  <h3 className="text-xl font-bold text-airbnb-dark mb-3">
                     Description
                   </h3>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-airbnb-gray leading-relaxed">
                     {business.description}
                   </p>
                 </div>
@@ -218,12 +217,12 @@ export default function BusinessDetailPage() {
               {/* Address */}
               {business.address && (
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  <h3 className="text-xl font-bold text-airbnb-dark mb-3">
                     Location
                   </h3>
                   <div className="flex items-start gap-2">
-                    <MapPin className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-gray-700">{business.address}</p>
+                    <MapPin className="h-5 w-5 text-airbnb-gray mt-0.5 flex-shrink-0" />
+                    <p className="text-airbnb-dark">{business.address}</p>
                   </div>
                 </div>
               )}
@@ -231,10 +230,10 @@ export default function BusinessDetailPage() {
               {/* Map Preview */}
               {business.latitude && business.longitude && (
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  <h3 className="text-xl font-bold text-airbnb-dark mb-3">
                     Map
                   </h3>
-                  <div className="relative w-full h-64 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                  <div className="relative w-full h-64 rounded-airbnb-lg overflow-hidden bg-airbnb-light-gray border border-gray-200">
                     <iframe
                       src={`https://www.openstreetmap.org/export/embed.html?bbox=${business.longitude - 0.01},${business.latitude - 0.01},${business.longitude + 0.01},${business.latitude + 0.01}&layer=mapnik&marker=${business.latitude},${business.longitude}`}
                       width="100%"
@@ -250,7 +249,7 @@ export default function BusinessDetailPage() {
 
               {/* Dynamic Attributes */}
               <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                <h3 className="text-xl font-bold text-airbnb-dark mb-4">
                   Details
                 </h3>
                 <AttributeGrid business={business} attributes={attributes} />

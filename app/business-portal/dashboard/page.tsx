@@ -142,7 +142,7 @@ export default function BusinessPortalDashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-airbnb-red" />
       </div>
     )
   }
@@ -151,11 +151,11 @@ export default function BusinessPortalDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <Building2 className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          <Building2 className="h-16 w-16 text-airbnb-gray mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-airbnb-dark mb-2">
             No Business Found
           </h2>
-          <p className="text-slate-600 mb-6">
+          <p className="text-airbnb-gray mb-6">
             Create your first business to get started
           </p>
           <Button asChild>
@@ -170,52 +170,52 @@ export default function BusinessPortalDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 w-full overflow-x-hidden">
+    <div className="min-h-screen bg-airbnb-light-gray w-full overflow-x-hidden">
       <div className="flex flex-col md:flex-row">
         {/* Sidebar Navigation - Hidden on mobile, shown on desktop */}
-        <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col min-h-screen flex-shrink-0">
-          <div className="p-6 border-b border-slate-200">
-            <h1 className="text-xl font-bold text-slate-900">Business Portal</h1>
-            <p className="text-sm text-slate-600 mt-1">{selectedBusiness?.name}</p>
+        <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col min-h-screen flex-shrink-0">
+          <div className="p-6 border-b border-gray-200">
+            <h1 className="text-xl font-bold text-airbnb-dark">Business Portal</h1>
+            <p className="text-sm text-airbnb-gray mt-1">{selectedBusiness?.name}</p>
           </div>
           <nav className="flex-1 p-4 space-y-2">
             <Link
               href="#overview"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+              className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-airbnb-light-gray text-airbnb-dark transition-colors"
             >
               <LayoutDashboard className="h-5 w-5" />
               <span className="font-medium">Overview</span>
             </Link>
             <Link
               href="#bookings"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+              className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-airbnb-light-gray text-airbnb-dark transition-colors"
             >
               <Calendar className="h-5 w-5" />
               <span className="font-medium">Bookings</span>
             </Link>
             <Link
               href="#reviews"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+              className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-airbnb-light-gray text-airbnb-dark transition-colors"
             >
               <Star className="h-5 w-5" />
               <span className="font-medium">Reviews</span>
             </Link>
             <Link
               href="#resources"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+              className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-airbnb-light-gray text-airbnb-dark transition-colors"
             >
               <Package className="h-5 w-5" />
               <span className="font-medium">Inventory</span>
             </Link>
             <Link
               href="/business-portal/promote"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+              className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-airbnb-light-gray text-airbnb-dark transition-colors"
             >
               <TrendingUp className="h-5 w-5" />
               <span className="font-medium">Promote</span>
             </Link>
           </nav>
-          <div className="p-4 border-t border-slate-200">
+          <div className="p-4 border-t border-gray-200">
             {businesses.length > 1 && (
               <select
                 value={selectedBusiness?.id || ''}
@@ -223,7 +223,7 @@ export default function BusinessPortalDashboard() {
                   const business = businesses.find((b) => b.id === e.target.value)
                   if (business) setSelectedBusiness(business)
                 }}
-                className="w-full h-10 px-4 rounded-lg border border-slate-200 bg-white text-sm"
+                className="w-full h-10 px-4 rounded-airbnb border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-airbnb-red focus:border-airbnb-red"
               >
                 {businesses.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -245,10 +245,10 @@ export default function BusinessPortalDashboard() {
         <main className="flex-1 py-4 md:py-8 px-4 md:px-8 w-full min-w-0">
           <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
             {/* Mobile Header */}
-            <div className="md:hidden flex items-center justify-between mb-4 pb-4 border-b border-slate-200">
+            <div className="md:hidden flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-slate-900 truncate">Business Portal</h1>
-                <p className="text-sm text-slate-600 truncate">{selectedBusiness?.name}</p>
+                <h1 className="text-xl font-bold text-airbnb-dark truncate">Business Portal</h1>
+                <p className="text-sm text-airbnb-gray truncate">{selectedBusiness?.name}</p>
               </div>
               <Button variant="outline" size="sm" className="ml-2 flex-shrink-0" asChild>
                 <Link href="/business-portal/onboarding">

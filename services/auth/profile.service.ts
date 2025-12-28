@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/logger'
 import type { Database } from '@/types/database.types'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -63,7 +64,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
       
       // If profile doesn't exist (PGRST116 = no rows returned), try to create it
       if (profileError.code === 'PGRST116') {
-        console.log('getUserProfile: Profile not found, attempting to create...')
+        logger.log('getUserProfile: Profile not found, attempting to create', { userId })
         
         // Get user email from auth (we already have authUser from above)
         if (!authUser) {
@@ -81,19 +82,21 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
           .single()
         
         if (createError || !newProfile) {
-          console.error('getUserProfile: Failed to create profile:', createError)
+          logger.error('getUserProfile: Failed to create profile', createError, { userId })
           throw new Error(`Profile not found and could not be created: ${createError?.message || 'Unknown error'}`)
         }
         
-        console.log('getUserProfile: Profile created successfully')
+        logger.log('getUserProfile: Profile created successfully', { userId })
         profile = newProfile
       } else {
         // Other error (like 406 - RLS issue)
         // For 406, it might be an RLS policy issue
         if (profileError.code === 'PGRST301' || profileError.message?.includes('406') || profileError.code === '42501') {
-          console.error('getUserProfile: RLS policy issue detected. User ID:', userId, 'Auth UID:', authUser?.id)
-          console.error('getUserProfile: This usually means RLS policies are blocking access')
-          console.error('getUserProfile: Please ensure RLS policies allow users to view their own profile')
+          logger.error('getUserProfile: RLS policy issue detected', profileError, {
+            userId,
+            authUid: authUser?.id,
+            code: profileError.code,
+          })
           throw new Error(`Access denied by RLS policies. Please check that you can view your own profile. (Code: ${profileError.code})`)
         }
         throw new Error(`Failed to fetch profile: ${profileError.message} (Code: ${profileError.code})`)
@@ -104,7 +107,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
       throw new Error('Profile data is null')
     }
 
-    console.log('getUserProfile: Profile fetched successfully')
+    logger.log('getUserProfile: Profile fetched successfully', { userId })
 
     // Fetch preferences
     const { data: preferences, error: prefsError } = await supabase
@@ -115,9 +118,9 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
 
     // Don't throw if preferences don't exist yet (can be null)
     if (prefsError && prefsError.code !== 'PGRST116') {
-      console.error('getUserProfile: Error fetching preferences:', prefsError)
+      logger.error('getUserProfile: Error fetching preferences', prefsError, { userId })
     } else {
-      console.log('getUserProfile: Preferences fetched:', preferences ? 'found' : 'not found')
+      logger.log('getUserProfile: Preferences fetched', { userId, found: !!preferences })
     }
 
     // Fetch stats in parallel - handle errors gracefully
@@ -141,16 +144,16 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
     const savedPlacesCount = savedResult.status === 'fulfilled' ? (savedResult.value.count || 0) : 0
 
     if (tripsResult.status === 'rejected') {
-      console.error('getUserProfile: Error fetching trips:', tripsResult.reason)
+      logger.error('getUserProfile: Error fetching trips', tripsResult.reason, { userId })
     }
     if (reviewsResult.status === 'rejected') {
-      console.error('getUserProfile: Error fetching reviews:', reviewsResult.reason)
+      logger.error('getUserProfile: Error fetching reviews', reviewsResult.reason, { userId })
     }
     if (savedResult.status === 'rejected') {
-      console.error('getUserProfile: Error fetching saved businesses:', savedResult.reason)
+      logger.error('getUserProfile: Error fetching saved businesses', savedResult.reason, { userId })
     }
 
-    console.log('getUserProfile: Stats fetched:', { tripsCount, reviewsCount, savedPlacesCount })
+    logger.log('getUserProfile: Stats fetched', { userId, tripsCount, reviewsCount, savedPlacesCount })
 
     return {
       profile,
@@ -162,7 +165,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
       },
     }
   } catch (error) {
-    console.error('getUserProfile: Error:', error)
+    logger.error('getUserProfile: Error', error, { userId })
     throw error
   }
 }

@@ -56,8 +56,8 @@ export default function BookingDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-gray-600">Loading booking details...</p>
+          <div className="h-8 w-8 animate-spin border-4 border-airbnb-red border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-airbnb-gray">Loading booking details...</p>
         </div>
       </div>
     )
@@ -66,11 +66,11 @@ export default function BookingDetailPage() {
   if (error || !booking) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-red-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <div className="max-w-md w-full airbnb-card border-red-200 p-6">
+          <h3 className="text-lg font-semibold text-airbnb-dark mb-2">
             Booking Not Found
           </h3>
-          <p className="text-sm text-gray-600 mb-4">{error}</p>
+          <p className="text-sm text-airbnb-gray mb-4">{error}</p>
           <Button onClick={() => router.push('/bookings')} variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Bookings

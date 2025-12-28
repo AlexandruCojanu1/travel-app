@@ -171,17 +171,17 @@ export default function OnboardingPage() {
   if (isChecking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-airbnb-red" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden p-4">
-      {/* Animated Background */}
+    <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden p-4">
+      {/* Subtle Background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-700" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-airbnb-red/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-airbnb-red/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 w-full max-w-2xl">
@@ -191,17 +191,17 @@ export default function OnboardingPage() {
             <div
               className={cn(
                 "h-2 w-24 rounded-full transition-colors",
-                step >= 1 ? "bg-blue-600" : "bg-slate-200"
+                step >= 1 ? "bg-airbnb-red" : "bg-airbnb-light-gray"
               )}
             />
             <div
               className={cn(
                 "h-2 w-24 rounded-full transition-colors",
-                step >= 2 ? "bg-blue-600" : "bg-slate-200"
+                step >= 2 ? "bg-airbnb-red" : "bg-airbnb-light-gray"
               )}
             />
           </div>
-          <p className="text-center text-sm text-slate-600 mt-3">
+          <p className="text-center text-sm text-airbnb-gray mt-3">
             Step {step} of 2
           </p>
         </div>
@@ -213,19 +213,19 @@ export default function OnboardingPage() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
-          className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8 md:p-12"
+          className="bg-white rounded-airbnb-lg shadow-airbnb-lg border border-gray-200 p-8 md:p-12"
         >
           {step === 1 ? (
             <>
               {/* Step 1: City Selection */}
               <div className="text-center mb-8">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-xl shadow-blue-500/25 mx-auto mb-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-airbnb-lg bg-airbnb-red shadow-airbnb-lg mx-auto mb-4">
                   <MapPin className="h-8 w-8 text-white" strokeWidth={2.5} />
                 </div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold text-airbnb-dark mb-2">
                   Where are you from?
                 </h1>
-                <p className="text-slate-600 text-lg">
+                <p className="text-airbnb-gray text-lg">
                   Select your home city to personalize your experience
                 </p>
               </div>
@@ -244,7 +244,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="w-full h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-2 group"
+                  className="airbnb-button w-full h-14 flex items-center justify-center gap-2 group"
                 >
                   <span>Continue</span>
                   <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -274,8 +274,8 @@ export default function OnboardingPage() {
                   className={cn(
                     "w-full p-6 rounded-2xl border-2 transition-all text-left group",
                     formData.role === "tourist"
-                      ? "border-blue-500 bg-blue-50 shadow-lg"
-                      : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-md"
+                      ? "border-airbnb-red bg-airbnb-light-red shadow-airbnb-md"
+                      : "border-gray-300 bg-white hover:border-airbnb-red/50 hover:shadow-airbnb"
                   )}
                 >
                   <div className="flex items-start gap-4">
@@ -283,8 +283,8 @@ export default function OnboardingPage() {
                       className={cn(
                         "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
                         formData.role === "tourist"
-                          ? "bg-blue-600"
-                          : "bg-slate-100 group-hover:bg-blue-100"
+                          ? "bg-airbnb-red"
+                          : "bg-airbnb-light-gray group-hover:bg-airbnb-light-red"
                       )}
                     >
                       <Compass
@@ -292,7 +292,7 @@ export default function OnboardingPage() {
                           "h-6 w-6",
                           formData.role === "tourist"
                             ? "text-white"
-                            : "text-slate-600 group-hover:text-blue-600"
+                            : "text-airbnb-gray group-hover:text-airbnb-red"
                         )}
                       />
                     </div>
@@ -300,18 +300,18 @@ export default function OnboardingPage() {
                       <h3
                         className={cn(
                           "text-xl font-bold mb-1",
-                          formData.role === "tourist" ? "text-blue-900" : "text-slate-900"
+                          formData.role === "tourist" ? "text-airbnb-dark" : "text-airbnb-dark"
                         )}
                       >
                         Tourist / Traveler
                       </h3>
-                      <p className="text-slate-600 text-sm">
+                      <p className="text-airbnb-gray text-sm">
                         I'm planning trips and exploring new destinations around the world
                       </p>
                     </div>
                     {formData.role === "tourist" && (
                       <svg
-                        className="h-6 w-6 text-blue-600 flex-shrink-0"
+                        className="h-6 w-6 text-airbnb-red flex-shrink-0"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -332,8 +332,8 @@ export default function OnboardingPage() {
                   className={cn(
                     "w-full p-6 rounded-2xl border-2 transition-all text-left group",
                     formData.role === "local"
-                      ? "border-purple-500 bg-purple-50 shadow-lg"
-                      : "border-slate-200 bg-white hover:border-purple-300 hover:shadow-md"
+                      ? "border-purple-500 bg-purple-50 shadow-airbnb-md"
+                      : "border-gray-300 bg-white hover:border-purple-300 hover:shadow-airbnb"
                   )}
                 >
                   <div className="flex items-start gap-4">
@@ -342,7 +342,7 @@ export default function OnboardingPage() {
                         "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
                         formData.role === "local"
                           ? "bg-purple-600"
-                          : "bg-slate-100 group-hover:bg-purple-100"
+                          : "bg-airbnb-light-gray group-hover:bg-purple-100"
                       )}
                     >
                       <Home
@@ -350,7 +350,7 @@ export default function OnboardingPage() {
                           "h-6 w-6",
                           formData.role === "local"
                             ? "text-white"
-                            : "text-slate-600 group-hover:text-purple-600"
+                            : "text-airbnb-gray group-hover:text-purple-600"
                         )}
                       />
                     </div>
@@ -358,12 +358,12 @@ export default function OnboardingPage() {
                       <h3
                         className={cn(
                           "text-xl font-bold mb-1",
-                          formData.role === "local" ? "text-purple-900" : "text-slate-900"
+                          formData.role === "local" ? "text-purple-900" : "text-airbnb-dark"
                         )}
                       >
                         Local / Guide
                       </h3>
-                      <p className="text-slate-600 text-sm">
+                      <p className="text-airbnb-gray text-sm">
                         I want to share my city's best spots and help travelers discover authentic experiences
                       </p>
                     </div>
@@ -401,7 +401,7 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={handleBack}
                   disabled={isPending}
-                  className="flex-1 h-14 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50"
+                  className="flex-1 h-14 bg-airbnb-light-gray text-airbnb-dark font-semibold rounded-airbnb-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
                   Back
                 </button>

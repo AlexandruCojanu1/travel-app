@@ -159,7 +159,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-airbnb-gray hover:text-airbnb-dark"
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -209,7 +209,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-airbnb-gray hover:text-airbnb-dark"
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -219,7 +219,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
       </AnimatePresence>
 
       {errors.submit && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div className="p-3 bg-red-50 border border-red-200 rounded-airbnb">
           <p className="text-sm text-red-600">{errors.submit}</p>
         </div>
       )}
@@ -228,7 +228,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
         type="submit"
         disabled={isPending}
         className={cn(
-          "w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+          "w-full h-12 bg-airbnb-red text-white font-semibold rounded-airbnb-lg shadow-airbnb-md hover:bg-[#FF484D] hover:shadow-airbnb-lg transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
         )}
       >
         {isPending ? (
@@ -249,12 +249,12 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login' }: AuthFo
             setErrors({})
             setFormData({ email: '', password: '', fullName: '' })
           }}
-          className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+          className="text-sm text-airbnb-gray hover:text-airbnb-dark transition-colors"
         >
           {mode === 'login' ? (
-            <>Don't have an account? <span className="font-semibold text-blue-600">Sign up</span></>
+            <>Don't have an account? <span className="font-semibold text-airbnb-red">Sign up</span></>
           ) : (
-            <>Already have an account? <span className="font-semibold text-blue-600">Sign in</span></>
+            <>Already have an account? <span className="font-semibold text-airbnb-red">Sign in</span></>
           )}
         </button>
       </div>

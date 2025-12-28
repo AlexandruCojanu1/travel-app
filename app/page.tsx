@@ -24,60 +24,59 @@ export default async function LandingPage() {
 
   // If guest, render landing page
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-airbnb-light-gray">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-700" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-airbnb-red/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-airbnb-red/5 rounded-full blur-3xl animate-pulse delay-700" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-20 lg:py-32">
           <div className="text-center space-y-6 md:space-y-8">
             {/* Main Heading */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-slate-900 leading-tight px-2">
-              Plan your perfect trip to
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-airbnb-dark leading-tight px-2">
+              Planifică-ți călătoria perfectă în
               <br />
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="text-airbnb-red">
                 România
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 max-w-3xl mx-auto px-2">
-              Discover amazing destinations, plan perfect trips, and book
-              unforgettable experiences with the world's most intuitive travel
-              platform.
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-airbnb-gray max-w-3xl mx-auto px-2">
+              Descoperă destinații uimitoare, planifică călătorii perfecte și rezervă
+              experiențe de neuitat cu cea mai intuitivă platformă de călătorii.
             </p>
 
             {/* Dual CTA Section - Users vs Businesses */}
             <div className="pt-8 space-y-6">
               <div className="text-center">
-                <p className="text-lg font-semibold text-slate-700 mb-6">
-                  I am a...
+                <p className="text-lg font-semibold text-airbnb-dark mb-6">
+                  Sunt...
                 </p>
               </div>
               
               <div className="grid md:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto w-full">
                 {/* User CTA Card */}
-                <div className="group relative bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-blue-500">
+                <div className="group relative airbnb-card p-8 shadow-airbnb hover:shadow-airbnb-hover transition-all border-2 border-transparent hover:border-airbnb-red/30">
                   <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Users className="h-8 w-8 text-blue-600" />
+                    <div className="h-16 w-16 rounded-airbnb-lg bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Users className="h-8 w-8 text-airbnb-red" />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900">
-                      Traveler
+                    <h3 className="text-2xl font-bold text-airbnb-dark">
+                      Călător
                     </h3>
-                    <p className="text-slate-600">
-                      Explore destinations, plan trips, and book amazing experiences
+                    <p className="text-airbnb-gray">
+                      Explorează destinații, planifică călătorii și rezervă experiențe uimitoare
                     </p>
                     <div className="w-full space-y-3">
                       <Link href="/auth/login">
                         <Button
                           size="lg"
-                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white group-hover:shadow-lg transition-all"
+                          className="w-full airbnb-button group-hover:shadow-airbnb-hover transition-all"
                         >
-                          Get Started
+                          Începe acum
                           <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </Link>
@@ -85,9 +84,9 @@ export default async function LandingPage() {
                         <Button
                           size="lg"
                           variant="outline"
-                          className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                          className="w-full border-2 border-airbnb-red text-airbnb-red hover:bg-red-50"
                         >
-                          Create Account
+                          Creează cont
                         </Button>
                       </Link>
                     </div>
@@ -95,33 +94,33 @@ export default async function LandingPage() {
                 </div>
 
                 {/* Business CTA Card */}
-                <div className="group relative bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-purple-500">
+                <div className="group relative airbnb-card p-8 shadow-airbnb hover:shadow-airbnb-hover transition-all border-2 border-transparent hover:border-airbnb-red/30">
                   <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-200 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Building2 className="h-8 w-8 text-purple-600" />
+                    <div className="h-16 w-16 rounded-airbnb-lg bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Building2 className="h-8 w-8 text-airbnb-red" />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900">
-                      Business Owner
+                    <h3 className="text-2xl font-bold text-airbnb-dark">
+                      Proprietar de afacere
                     </h3>
-                    <p className="text-slate-600">
-                      Manage your business, rooms, and bookings on our platform
+                    <p className="text-airbnb-gray">
+                      Gestionează afacerea, camerele și rezervările pe platforma noastră
                     </p>
                     <div className="w-full space-y-3">
                       <Link href="/auth/login?redirect=/business-portal/onboarding">
                         <Button
                           size="lg"
                           variant="outline"
-                          className="w-full border-2 border-purple-600 text-purple-600 hover:bg-purple-50 group-hover:shadow-lg transition-all"
+                          className="w-full border-2 border-airbnb-red text-airbnb-red hover:bg-red-50 group-hover:shadow-airbnb-md transition-all"
                         >
-                          Login
+                          Autentificare
                         </Button>
                       </Link>
                       <Link href="/auth/login?redirect=/business-portal/onboarding&mode=signup">
                         <Button
                           size="lg"
-                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white group-hover:shadow-lg transition-all"
+                          className="w-full airbnb-button group-hover:shadow-airbnb-hover transition-all"
                         >
-                          Create Business Account
+                          Creează cont afacere
                           <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </Link>
@@ -132,13 +131,13 @@ export default async function LandingPage() {
 
               {/* Login Link */}
               <div className="text-center pt-4">
-                <p className="text-slate-600">
-                  Already have an account?{" "}
+                <p className="text-airbnb-gray">
+                  Ai deja cont?{" "}
                   <Link
                     href="/auth/login"
-                    className="text-blue-600 font-semibold hover:text-blue-700 underline"
+                    className="text-airbnb-red font-semibold hover:text-[#FF484D] underline"
                   >
-                    Login
+                    Autentifică-te
                   </Link>
                 </p>
               </div>
@@ -150,12 +149,12 @@ export default async function LandingPage() {
       {/* Features Grid */}
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Everything You Need for the Perfect Trip
+          <h2 className="text-3xl md:text-4xl font-bold text-airbnb-dark mb-4">
+            Tot ce ai nevoie pentru călătoria perfectă
           </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            From planning to booking, we've got you covered with powerful tools
-            and personalized recommendations.
+          <p className="text-lg text-airbnb-gray max-w-2xl mx-auto">
+            De la planificare la rezervare, te ajutăm cu instrumente puternice
+            și recomandări personalizate.
           </p>
         </div>
 
@@ -163,53 +162,43 @@ export default async function LandingPage() {
           {[
             {
               icon: MapPin,
-              title: "Explore",
+              title: "Explorează",
               description:
-                "Discover amazing destinations, local businesses, and hidden gems with our interactive map and curated recommendations.",
-              iconBg: "bg-gradient-to-br from-blue-100 to-blue-200",
-              iconColor: "text-blue-600",
+                "Descoperă destinații uimitoare, afaceri locale și locuri ascunse cu harta noastră interactivă și recomandările noastre.",
             },
             {
               icon: Calendar,
-              title: "Plan",
+              title: "Planifică",
               description:
-                "Build your perfect itinerary with drag-and-drop planning. Auto-save your trips and access them anywhere.",
-              iconBg: "bg-gradient-to-br from-purple-100 to-purple-200",
-              iconColor: "text-purple-600",
+                "Construiește-ți itinerariul perfect cu planificare drag-and-drop. Salvează automat călătoriile și accesează-le oriunde.",
             },
             {
               icon: Bookmark,
-              title: "Book",
+              title: "Rezervă",
               description:
-                "Seamlessly book hotels, activities, and experiences. Get digital tickets and manage all your bookings in one place.",
-              iconBg: "bg-gradient-to-br from-pink-100 to-pink-200",
-              iconColor: "text-pink-600",
+                "Rezervă fără probleme hoteluri, activități și experiențe. Primește bilete digitale și gestionează toate rezervările într-un singur loc.",
             },
           ].map((feature, idx) => (
             <div
               key={idx}
-              className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-white/50 text-center"
+              className="airbnb-card p-8 shadow-airbnb hover:shadow-airbnb-hover transition-shadow text-center"
             >
-              <div
-                className={`h-16 w-16 rounded-2xl ${feature.iconBg} flex items-center justify-center mx-auto mb-6`}
-              >
-                <feature.icon
-                  className={`h-8 w-8 ${feature.iconColor}`}
-                />
+              <div className="h-16 w-16 rounded-airbnb-lg bg-red-50 flex items-center justify-center mx-auto mb-6">
+                <feature.icon className="h-8 w-8 text-airbnb-red" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3">
+              <h3 className="text-2xl font-bold text-airbnb-dark mb-3">
                 {feature.title}
               </h3>
-              <p className="text-slate-600">{feature.description}</p>
+              <p className="text-airbnb-gray">{feature.description}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="max-w-7xl mx-auto px-4 py-8 border-t border-slate-200/50">
-        <div className="text-center text-slate-600">
-          <p>&copy; {new Date().getFullYear()} Travel App. All rights reserved.</p>
+      <footer className="max-w-7xl mx-auto px-4 py-8 border-t border-gray-200">
+        <div className="text-center text-airbnb-gray">
+          <p>&copy; {new Date().getFullYear()} Travel App. Toate drepturile rezervate.</p>
         </div>
       </footer>
     </div>

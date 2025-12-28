@@ -34,19 +34,19 @@ export default function PlanPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <div className="text-center max-w-md">
-          <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/25">
+          <div className="h-24 w-24 rounded-airbnb-lg bg-airbnb-red flex items-center justify-center mx-auto mb-6 shadow-airbnb-lg">
             <Sparkles className="h-12 w-12 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-900 mb-3">
+          <h2 className="text-3xl font-bold text-airbnb-dark mb-3">
             Start Planning Your Trip
           </h2>
-          <p className="text-slate-600 mb-8">
+          <p className="text-airbnb-gray mb-8">
             Create your perfect itinerary, set a budget, and track your spending all in one place.
           </p>
           <Button
             onClick={() => setIsCreateDialogOpen(true)}
             size="lg"
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8 py-6 text-lg font-semibold"
+            className="airbnb-button px-8 py-6 text-lg"
           >
             <Plus className="h-5 w-5 mr-2" />
             Start a New Trip
@@ -106,45 +106,45 @@ export default function PlanPage() {
 
       {/* Budget Meter Hero Widget */}
       {budget && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="airbnb-card p-6">
           <BudgetMeter />
         </div>
       )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
-            <MapPin className="h-5 w-5 text-blue-600" />
-            <span className="text-sm font-medium text-gray-600">Places</span>
+            <MapPin className="h-5 w-5 text-airbnb-red" />
+            <span className="text-sm font-medium text-airbnb-gray">Places</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{placesCount}</p>
+          <p className="text-2xl font-bold text-airbnb-dark">{placesCount}</p>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="h-5 w-5 text-purple-600" />
-            <span className="text-sm font-medium text-gray-600">Days</span>
+            <span className="text-sm font-medium text-airbnb-gray">Days</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{daysCount}</p>
+          <p className="text-2xl font-bold text-airbnb-dark">{daysCount}</p>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
-            <span className="text-sm font-medium text-gray-600">Spent</span>
+            <span className="text-sm font-medium text-airbnb-gray">Spent</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-2xl font-bold text-airbnb-dark">
             {spent.toFixed(0)} {budget?.currency || 'RON'}
           </p>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-5 w-5 text-orange-600" />
-            <span className="text-sm font-medium text-gray-600">Remaining</span>
+            <span className="text-sm font-medium text-airbnb-gray">Remaining</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-2xl font-bold text-airbnb-dark">
             {budget
               ? (budget.total - spent).toFixed(0)
               : 0}{" "}
@@ -174,18 +174,18 @@ export default function PlanPage() {
 
       {/* Timeline View */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Itinerary</h2>
+        <h2 className="text-xl font-bold text-airbnb-dark mb-4">Itinerary</h2>
         <TimelineView />
       </div>
 
       {/* Edit Budget Dialog (Simple) */}
       {isEditBudgetOpen && budget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Budget</h3>
+          <div className="bg-white rounded-airbnb-lg p-6 max-w-md w-full mx-4 shadow-airbnb-lg border border-gray-200">
+            <h3 className="text-lg font-bold text-airbnb-dark mb-4">Edit Budget</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-airbnb-dark mb-2">
                   Budget: {budget.total.toLocaleString()} {budget.currency}
                 </label>
                 <input
@@ -195,7 +195,7 @@ export default function PlanPage() {
                   step="100"
                   value={budget.total}
                   onChange={(e) => updateBudget(Number(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-airbnb focus:ring-2 focus:ring-airbnb-red focus:border-airbnb-red"
                 />
               </div>
               <div className="flex items-center justify-end gap-3">
@@ -207,7 +207,7 @@ export default function PlanPage() {
                 </Button>
                 <Button
                   onClick={() => setIsEditBudgetOpen(false)}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="airbnb-button"
                 >
                   Save
                 </Button>

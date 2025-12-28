@@ -78,7 +78,7 @@ export function TimelineItem({
       {/* Center: Connector Line & Node */}
       <div className="flex flex-col items-center w-6 flex-shrink-0">
         {/* Node (Dot) */}
-        <div className="w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-md z-10" />
+        <div className="w-4 h-4 rounded-full bg-airbnb-red border-4 border-white shadow-airbnb-md z-10" />
 
         {/* Vertical Line */}
         {!isLast && (
@@ -89,7 +89,7 @@ export function TimelineItem({
       {/* Right: Content Card */}
       <div className="flex-1 pb-6">
         <motion.div
-          className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-4 relative"
+          className="airbnb-card p-4 relative"
           style={{ y }}
           drag="y"
           dragConstraints={{ top: -1000, bottom: 1000 }}
@@ -123,11 +123,11 @@ export function TimelineItem({
           {/* Header */}
           <div className="flex items-start justify-between mb-2 pl-6">
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-1">
+              <h3 className="font-bold text-airbnb-dark text-base mb-1 line-clamp-1">
                 {item.business_name || 'Business'}
               </h3>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <div className="text-gray-400">{categoryIcon}</div>
+              <div className="flex items-center gap-2 text-sm text-airbnb-gray">
+                <div className="text-airbnb-gray">{categoryIcon}</div>
                 <span>{item.business_category || 'Activity'}</span>
               </div>
             </div>
@@ -148,7 +148,7 @@ export function TimelineItem({
 
           {/* Footer: Cost Badge */}
           <div className="flex items-center justify-end mt-3 pl-6">
-            <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-semibold">
+            <span className="px-3 py-1 bg-airbnb-light-red text-airbnb-red rounded-full text-sm font-semibold">
               {item.estimated_cost.toFixed(0)} {budget?.currency || 'RON'}
             </span>
           </div>

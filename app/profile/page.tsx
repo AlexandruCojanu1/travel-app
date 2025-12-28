@@ -57,13 +57,13 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-2xl p-8">
-          <div className="flex flex-col items-center text-center">
-            <Skeleton className="h-24 w-24 rounded-full mb-4" />
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-32 mb-4" />
-          </div>
-          <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-100">
+          <div className="airbnb-card p-8">
+            <div className="flex flex-col items-center text-center">
+              <Skeleton className="h-24 w-24 rounded-full mb-4" />
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-32 mb-4" />
+            </div>
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
             {[1, 2, 3].map((i) => (
               <div key={i} className="text-center">
                 <Skeleton className="h-10 w-10 rounded-lg mx-auto mb-2" />
@@ -84,13 +84,13 @@ export default function ProfilePage() {
           <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">⚠️</span>
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">
+          <h3 className="text-xl font-bold text-airbnb-dark mb-2">
             Something went wrong
           </h3>
-          <p className="text-slate-600 mb-6">{error}</p>
+          <p className="text-airbnb-gray mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+            className="airbnb-button px-6 py-3"
           >
             Try Again
           </button>
@@ -106,75 +106,75 @@ export default function ProfilePage() {
 
       {/* Menu List */}
       <div className="space-y-3">
-        <h2 className="text-lg font-bold text-slate-900 px-2">Quick Actions</h2>
+        <h2 className="text-lg font-bold text-airbnb-dark px-2">Quick Actions</h2>
 
         {/* Saved Places */}
         <Link
           href="/profile/saved"
-          className="flex items-center justify-between bg-white rounded-xl p-4 hover:shadow-md transition-shadow group"
+          className="flex items-center justify-between airbnb-card p-5 group"
         >
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-purple-100 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-airbnb bg-purple-50 flex items-center justify-center">
               <Bookmark className="h-6 w-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+              <h3 className="font-semibold text-airbnb-dark group-hover:text-airbnb-red transition-colors text-base">
                 Saved Places
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-airbnb-gray">
                 {profileData.stats.savedPlacesCount} saved
               </p>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+          <ChevronRight className="h-5 w-5 text-airbnb-gray group-hover:text-airbnb-red transition-colors" />
         </Link>
 
         {/* Account Settings */}
         <Link
           href="/profile/settings"
-          className="flex items-center justify-between bg-white rounded-xl p-4 hover:shadow-md transition-shadow group"
+          className="flex items-center justify-between airbnb-card p-5 group"
         >
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center">
-              <Settings className="h-6 w-6 text-blue-600" />
+            <div className="h-12 w-12 rounded-airbnb bg-airbnb-light-gray flex items-center justify-center">
+              <Settings className="h-6 w-6 text-airbnb-red" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+              <h3 className="font-semibold text-airbnb-dark group-hover:text-airbnb-red transition-colors text-base">
                 Account Settings
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-airbnb-gray">
                 Manage your account details
               </p>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+          <ChevronRight className="h-5 w-5 text-airbnb-gray group-hover:text-airbnb-red transition-colors" />
         </Link>
 
         {/* Help & Support */}
         <Link
           href="/profile/help"
-          className="flex items-center justify-between bg-white rounded-xl p-4 hover:shadow-md transition-shadow group"
+          className="flex items-center justify-between airbnb-card p-5 group"
         >
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-airbnb bg-green-50 flex items-center justify-center">
               <HelpCircle className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+              <h3 className="font-semibold text-airbnb-dark group-hover:text-airbnb-red transition-colors text-base">
                 Help & Support
               </h3>
-              <p className="text-sm text-slate-600">Get help when you need it</p>
+              <p className="text-sm text-airbnb-gray">Get help when you need it</p>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+          <ChevronRight className="h-5 w-5 text-airbnb-gray group-hover:text-airbnb-red transition-colors" />
         </Link>
       </div>
 
       {/* Travel Preferences */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-2">
-          <h2 className="text-lg font-bold text-slate-900">Travel Preferences</h2>
-          <button className="text-blue-600 text-sm font-semibold hover:text-blue-700 transition-colors flex items-center gap-1">
+          <h2 className="text-lg font-bold text-airbnb-dark">Travel Preferences</h2>
+          <button className="text-airbnb-red text-sm font-semibold hover:underline transition-colors flex items-center gap-1">
             <Edit className="h-4 w-4" />
             Edit
           </button>
@@ -190,7 +190,7 @@ export default function ProfilePage() {
 
       {/* App Version */}
       <div className="text-center py-4">
-        <p className="text-xs text-slate-400">TravelPWA v1.0.0</p>
+        <p className="text-xs text-airbnb-gray">TravelPWA v1.0.0</p>
       </div>
     </div>
   )

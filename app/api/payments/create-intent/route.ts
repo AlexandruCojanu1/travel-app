@@ -2,17 +2,41 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 import { getBookingDetails } from '@/services/booking/booking.service'
+import { logger } from '@/lib/logger'
+import { success, failure, handleApiError } from '@/lib/api-response'
+import { checkRateLimit, RateLimitConfigs } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting - critical for payment endpoints
+    const rateLimitResult = await checkRateLimit(
+      request,
+      RateLimitConfigs.payment
+    )
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        failure('Rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED'),
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+          },
+        }
+      )
+    }
+
     const body = await request.json()
     const { bookingId } = body
     
     if (!bookingId) {
       return NextResponse.json(
-        { success: false, error: 'Missing bookingId' },
+        failure('Missing bookingId', 'VALIDATION_ERROR'),
         { status: 400 }
       )
     }
@@ -23,8 +47,30 @@ export async function POST(request: NextRequest) {
     
     if (userError || !user) {
       return NextResponse.json(
-        { success: false, error: 'User not authenticated' },
+        failure('User not authenticated', 'UNAUTHORIZED'),
         { status: 401 }
+      )
+    }
+
+    // Re-check rate limit with user ID
+    const userRateLimitResult = await checkRateLimit(
+      request,
+      RateLimitConfigs.payment,
+      user.id
+    )
+
+    if (!userRateLimitResult.success) {
+      return NextResponse.json(
+        failure('Rate limit exceeded. Please try again later.', 'RATE_LIMIT_EXCEEDED'),
+        {
+          status: 429,
+          headers: {
+            'Retry-After': userRateLimitResult.retryAfter?.toString() || '60',
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(userRateLimitResult.resetTime).toISOString(),
+          },
+        }
       )
     }
     
@@ -33,7 +79,7 @@ export async function POST(request: NextRequest) {
     
     if (!bookingResult.success || !bookingResult.booking) {
       return NextResponse.json(
-        { success: false, error: 'Booking not found' },
+        failure('Booking not found', 'NOT_FOUND'),
         { status: 404 }
       )
     }
@@ -43,7 +89,7 @@ export async function POST(request: NextRequest) {
     // Verify booking belongs to user
     if (booking.user_id !== user.id) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        failure('Unauthorized', 'FORBIDDEN'),
         { status: 403 }
       )
     }
@@ -51,7 +97,7 @@ export async function POST(request: NextRequest) {
     // Verify booking is in correct status
     if (booking.status !== 'awaiting_payment') {
       return NextResponse.json(
-        { success: false, error: `Booking is in ${booking.status} status` },
+        failure(`Booking is in ${booking.status} status`, 'INVALID_STATUS'),
         { status: 400 }
       )
     }
@@ -60,10 +106,10 @@ export async function POST(request: NextRequest) {
     let stripe
     try {
       stripe = getStripe()
-    } catch (stripeError: any) {
-      console.error('Stripe initialization error:', stripeError)
+    } catch (stripeError: unknown) {
+      logger.error('Stripe initialization error', stripeError, { userId: user.id, bookingId })
       return NextResponse.json(
-        { success: false, error: 'Payment system not configured. Please set STRIPE_SECRET_KEY.' },
+        failure('Payment system not configured. Please set STRIPE_SECRET_KEY.', 'STRIPE_CONFIG_ERROR'),
         { status: 500 }
       )
     }
@@ -82,15 +128,23 @@ export async function POST(request: NextRequest) {
       },
     })
     
-    return NextResponse.json({
-      success: true,
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id,
-    })
-  } catch (error: any) {
-    console.error('Error creating payment intent:', error)
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create payment intent' },
+      success({
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+      }),
+      {
+        headers: {
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': userRateLimitResult.remaining.toString(),
+          'X-RateLimit-Reset': new Date(userRateLimitResult.resetTime).toISOString(),
+        },
+      }
+    )
+  } catch (error: unknown) {
+    logger.error('Error creating payment intent', error)
+    return NextResponse.json(
+      handleApiError(error),
       { status: 500 }
     )
   }

@@ -63,7 +63,7 @@ export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProp
           <div className="px-4 pb-6 overflow-y-auto">
             <div className="flex gap-4">
               {/* Business Image */}
-              <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+              <div className="relative w-24 h-24 flex-shrink-0 rounded-airbnb overflow-hidden bg-airbnb-light-gray">
                 {business.image_url ? (
                   <Image
                     src={business.image_url}
@@ -81,12 +81,12 @@ export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProp
 
               {/* Business Info */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-lg mb-1 truncate">
+                <h3 className="font-semibold text-lg mb-1 truncate text-airbnb-dark">
                   {business.name}
                 </h3>
 
                 {/* Category Badge */}
-                <div className="inline-block px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600 mb-2">
+                <div className="inline-block px-2.5 py-1 bg-airbnb-light-gray rounded-airbnb text-xs text-airbnb-dark font-semibold mb-2">
                   {business.category}
                 </div>
 
@@ -94,14 +94,14 @@ export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProp
                 {business.rating && (
                   <div className="flex items-center gap-1 mb-2">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">{business.rating.toFixed(1)}</span>
-                    <span className="text-xs text-gray-500">/5.0</span>
+                    <span className="text-sm font-semibold text-airbnb-dark">{business.rating.toFixed(1)}</span>
+                    <span className="text-xs text-airbnb-gray">/5.0</span>
                   </div>
                 )}
 
                 {/* Address */}
                 {business.address && (
-                  <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                  <p className="text-xs text-airbnb-gray mb-3 line-clamp-2">
                     {business.address}
                   </p>
                 )}

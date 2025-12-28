@@ -12,9 +12,9 @@ import {
   DrawerTitle,
 } from '@/components/shared/ui/drawer'
 import { Button } from '@/components/shared/ui/button'
-import { AddToTripDrawer } from '@/components/plan/add-to-trip-drawer'
+import { AddToTripDrawer } from '@/components/features/trip/add-to-trip-drawer'
 import { useTripStore } from '@/store/trip-store'
-import type { MapBusiness } from '@/services/business.service'
+import type { MapBusiness } from '@/services/business/business.service'
 
 interface BusinessDrawerProps {
   business: MapBusiness | null
