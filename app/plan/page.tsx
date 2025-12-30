@@ -21,9 +21,15 @@ export default function PlanPage() {
     loadTripFromDatabase,
   } = useTripStore()
 
-  // Load trip from database on mount
+  // Load trip from database on mount, but only if we don't have items locally
+  // This prevents overwriting items that were just added but not yet synced
   useEffect(() => {
-    loadTripFromDatabase()
+    const state = useTripStore.getState()
+    // Only load from database if we don't have items or trip details
+    // This prevents race condition where items are added but not yet synced
+    if (!state.items.length || !state.tripDetails) {
+      loadTripFromDatabase()
+    }
   }, [loadTripFromDatabase])
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)

@@ -329,10 +329,29 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
         onClick={handleMapClick}
-        mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+        mapStyle={{
+          version: 8,
+          sources: {
+            'osm-tiles': {
+              type: 'raster',
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256,
+              attribution: '© OpenStreetMap contributors'
+            }
+          },
+          layers: [
+            {
+              id: 'osm-tiles-layer',
+              type: 'raster',
+              source: 'osm-tiles',
+              minzoom: 0,
+              maxzoom: 19
+            }
+          ]
+        }}
         mapLib={import('maplibre-gl') as any}
         style={{ width: '100%', height: '100%' }}
-        maxZoom={20}
+        maxZoom={19}
         minZoom={3}
       >
         {/* Render clusters and individual markers */}

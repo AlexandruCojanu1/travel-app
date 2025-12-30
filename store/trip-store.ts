@@ -37,7 +37,7 @@ interface TripState {
   
   // Actions
   initTrip: (details: TripDetails, budget: Budget) => void
-  addItem: (business: { id: string; name?: string; category?: string; price_level?: string }, dayIndex: number) => void
+  addItem: (business: { id: string; name?: string; category?: string; price_level?: string }, dayIndex: number) => Promise<void>
   removeItem: (itemId: string) => void
   updateBudget: (newTotal: number) => void
   clearTrip: () => void
@@ -91,7 +91,7 @@ export const useTripStore = create<TripState>()(
         })
       },
 
-      addItem: (business, dayIndex) => {
+      addItem: async (business, dayIndex) => {
         const state = get()
         
         // Check if this activity already exists in this day
@@ -124,6 +124,11 @@ export const useTripStore = create<TripState>()(
         set({
           items: [...state.items, newItem],
         })
+
+        // Sync immediately to database to prevent item from disappearing
+        if (state.tripDetails && state.budget) {
+          await state.syncToDatabase()
+        }
       },
 
       removeItem: (itemId) => {
@@ -253,10 +258,45 @@ export const useTripStore = create<TripState>()(
 
       loadTripFromDatabase: async () => {
         try {
+          const currentState = get()
           const result = await fetchUserTrip()
 
           if (result.success && result.trip) {
             const trip = result.trip
+            
+            // Map database items
+            const dbItems: TripItem[] = (trip.items as any[] || []).map((item: any) => {
+              // Fix: Nature reserves should always be free
+              const isNatureReserve = item.business_category === 'Nature' || 
+                                     item.business_name?.includes('Rezervație') ||
+                                     item.business_name?.includes('Peștera') ||
+                                     item.business_name?.includes('Dealul') ||
+                                     item.business_id?.startsWith('nature-')
+              const estimatedCost = isNatureReserve ? 0 : (item.estimated_cost || 0)
+              
+              return {
+                id: item.id || `${Date.now()}-${Math.random()}`,
+                business_id: item.business_id,
+                business_name: item.business_name,
+                business_category: item.business_category,
+                estimated_cost: estimatedCost,
+                day_index: item.day_index,
+                created_at: item.id ? undefined : new Date().toISOString(),
+              }
+            })
+
+            // Merge local items with database items
+            // Keep local items that aren't in database yet (by business_id + day_index)
+            const localItemsNotInDb = currentState.items.filter(
+              (localItem) => !dbItems.some(
+                (dbItem) => dbItem.business_id === localItem.business_id && 
+                           dbItem.day_index === localItem.day_index
+              )
+            )
+            
+            // Combine: database items + local items that aren't in database yet
+            const mergedItems = [...dbItems, ...localItemsNotInDb]
+
             set({
               tripDetails: {
                 cityId: trip.destination_city_id,
@@ -268,25 +308,7 @@ export const useTripStore = create<TripState>()(
               budget: trip.budget_total
                 ? { total: trip.budget_total, currency: 'RON' }
                 : null,
-              items: (trip.items as any[] || []).map((item: any) => {
-                // Fix: Nature reserves should always be free
-                const isNatureReserve = item.business_category === 'Nature' || 
-                                       item.business_name?.includes('Rezervație') ||
-                                       item.business_name?.includes('Peștera') ||
-                                       item.business_name?.includes('Dealul') ||
-                                       item.business_id?.startsWith('nature-')
-                const estimatedCost = isNatureReserve ? 0 : (item.estimated_cost || 0)
-                
-                return {
-                  id: item.id || `${Date.now()}-${Math.random()}`,
-                  business_id: item.business_id,
-                  business_name: item.business_name,
-                  business_category: item.business_category,
-                  estimated_cost: estimatedCost,
-                  day_index: item.day_index,
-                  created_at: item.id ? undefined : new Date().toISOString(),
-                }
-              }),
+              items: mergedItems,
               tripId: trip.id,
               syncStatus: 'synced',
             })

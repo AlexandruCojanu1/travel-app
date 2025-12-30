@@ -80,11 +80,11 @@ export function AddToTripDrawer({
     router.push('/plan')
   }
 
-  const handleAddToDay = () => {
+  const handleAddToDay = async () => {
     if (!tripDetails) return
 
     try {
-      addItem(
+      await addItem(
         {
           id: business.id,
           name: business.name,
