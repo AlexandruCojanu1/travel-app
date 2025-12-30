@@ -33,11 +33,11 @@ interface BookingsKanbanProps {
 }
 
 const STATUS_COLUMNS = [
-  { id: 'pending', label: 'Pending', color: 'bg-yellow-50 border-yellow-200' },
-  { id: 'confirmed', label: 'Confirmed', color: 'bg-mova-light-blue border-mova-blue/30' },
-  { id: 'checked_in', label: 'Checked-In', color: 'bg-green-50 border-green-200' },
-  { id: 'completed', label: 'Completed', color: 'bg-mova-light-gray border-gray-200' },
-  { id: 'cancelled', label: 'Cancelled', color: 'bg-blue-50 border-red-200' },
+  { id: 'pending', label: 'În așteptare', color: 'bg-yellow-50 border-yellow-200' },
+  { id: 'confirmed', label: 'Confirmate', color: 'bg-mova-light-blue border-mova-blue/30' },
+  { id: 'checked_in', label: 'Check-in făcut', color: 'bg-green-50 border-green-200' },
+  { id: 'completed', label: 'Finalizate', color: 'bg-mova-light-gray border-gray-200' },
+  { id: 'cancelled', label: 'Anulate', color: 'bg-blue-50 border-red-200' },
 ] as const
 
 export function BookingsKanban({ businessId }: BookingsKanbanProps) {
@@ -61,7 +61,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
       }
     } catch (error) {
       console.error('Error loading bookings:', error)
-      toast.error('Failed to load bookings')
+      toast.error('Nu s-au putut încărca rezervările')
     } finally {
       setIsLoading(false)
     }
@@ -79,10 +79,10 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
 
       const result = await updateBookingStatus(bookingId, mappedStatus)
       if (result.success) {
-        toast.success(`Booking ${newStatus === 'confirmed' ? 'confirmed' : newStatus === 'cancelled' ? 'cancelled' : 'updated'}`)
+        toast.success(`Rezervarea a fost ${newStatus === 'confirmed' ? 'confirmată' : newStatus === 'cancelled' ? 'anulată' : 'actualizată'}`)
         await loadBookings()
       } else {
-        toast.error(result.error || 'Failed to update booking')
+        toast.error(result.error || 'Nu s-a putut actualiza rezervarea')
       }
     })
   }
@@ -95,10 +95,10 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
       .eq('id', bookingId)
 
     if (!error) {
-      toast.success('Guest checked in')
+      toast.success('Check-in efectuat')
       await loadBookings()
     } else {
-      toast.error('Failed to check in guest')
+      toast.error('Nu s-a putut efectua check-in-ul')
     }
   }
 
@@ -110,10 +110,10 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
       .eq('id', bookingId)
 
     if (!error) {
-      toast.success('Guest checked out')
+      toast.success('Check-out efectuat')
       await loadBookings()
     } else {
-      toast.error('Failed to check out guest')
+      toast.error('Nu s-a putut efectua check-out-ul')
     }
   }
 
@@ -127,12 +127,12 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
       .eq('id', bookingId)
 
     if (!error) {
-      toast.success('Message sent to guest')
+      toast.success('Mesaj trimis clientului')
       setMessageText("")
       setSelectedBooking(null)
       await loadBookings()
     } else {
-      toast.error('Failed to send message')
+      toast.error('Nu s-a putut trimite mesajul')
     }
   }
 
@@ -148,7 +148,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-mova-gray">Loading bookings...</div>
+        <div className="text-mova-gray">Se încarcă rezervările...</div>
       </div>
     )
   }
@@ -158,9 +158,9 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-mova-dark">Reservations & Operations</h3>
+          <h3 className="text-xl font-semibold text-mova-dark">Rezervări și Operațiuni</h3>
           <p className="text-sm text-mova-gray mt-1">
-            Manage bookings, check-ins, and guest communications
+            Gestionează rezervările, check-in-urile și comunicările cu clienții
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -176,7 +176,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
             size="sm"
             onClick={() => setViewMode('list')}
           >
-            List
+            Listă
           </Button>
         </div>
       </div>
@@ -211,7 +211,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
                     ))}
                     {columnBookings.length === 0 && (
                       <div className="text-center py-8 text-mova-gray text-sm">
-                        No bookings
+                        Fără rezervări
                       </div>
                     )}
                   </div>
@@ -227,13 +227,13 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Guest</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Resource</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Dates</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Guests</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Client</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Resursă</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Oaspeți</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Sumă</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Acțiuni</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -242,7 +242,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
                     <td className="px-6 py-4">
                       <div>
                         <div className="font-medium text-slate-900">
-                          {booking.user?.full_name || 'Guest'}
+                          {booking.user?.full_name || 'Client'}
                         </div>
                         <div className="text-sm text-slate-600">
                           {booking.user?.email || ''}
@@ -290,7 +290,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
                               className="text-green-600"
                             >
                               <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Confirm
+                              Confirmă
                             </Button>
                             <Button
                               size="sm"
@@ -300,7 +300,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
                               className="text-red-600"
                             >
                               <XCircle className="h-3 w-3 mr-1" />
-                              Cancel
+                              Anulează
                             </Button>
                           </>
                         )}
@@ -346,20 +346,20 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
             <div className="p-6 border-b border-slate-200">
-              <h3 className="text-lg font-bold text-slate-900">Send Message to Guest</h3>
+              <h3 className="text-lg font-bold text-slate-900">Trimite mesaj clientului</h3>
               <p className="text-sm text-slate-600 mt-1">
-                {selectedBooking.user?.full_name || 'Guest'}
+                {selectedBooking.user?.full_name || 'Client'}
               </p>
             </div>
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Message
+                  Mesaj
                 </label>
                 <textarea
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
-                  placeholder="Type your message..."
+                  placeholder="Scrie mesajul tău..."
                   rows={4}
                   className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 resize-none"
                 />
@@ -372,13 +372,13 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
                     setMessageText("")
                   }}
                 >
-                  Cancel
+                  Anulează
                 </Button>
                 <Button
                   onClick={() => handleSendMessage(selectedBooking.id)}
                   disabled={!messageText.trim()}
                 >
-                  Send Message
+                  Trimite mesaj
                 </Button>
               </div>
             </div>
@@ -414,7 +414,7 @@ function BookingCard({
           <div className="flex items-center gap-2 mb-1">
             <User className="h-4 w-4 text-slate-400" />
             <span className="font-semibold text-slate-900 text-sm">
-              {booking.user?.full_name || 'Guest'}
+              {booking.user?.full_name || 'Client'}
             </span>
           </div>
           {booking.user?.email && (
@@ -428,7 +428,7 @@ function BookingCard({
         {/* Resource */}
         {booking.resource?.name && (
           <div className="text-sm text-slate-600">
-            <span className="font-medium">Resource:</span> {booking.resource.name}
+            <span className="font-medium">Resursă:</span> {booking.resource.name}
           </div>
         )}
 
@@ -444,7 +444,7 @@ function BookingCard({
         {/* Guests & Amount */}
         <div className="flex items-center justify-between text-sm">
           <span className="text-slate-600">
-            {booking.guest_count} {booking.guest_count === 1 ? 'guest' : 'guests'}
+            {booking.guest_count} {booking.guest_count === 1 ? 'oaspete' : 'oaspeți'}
           </span>
           <span className="font-semibold text-slate-900">
             {parseFloat(booking.total_amount.toString()).toFixed(2)} RON
@@ -463,7 +463,7 @@ function BookingCard({
                 className="w-full text-green-600 hover:text-green-700"
               >
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                Confirm
+                Confirmă
               </Button>
               <Button
                 size="sm"
@@ -473,7 +473,7 @@ function BookingCard({
                 className="w-full text-red-600 hover:text-red-700"
               >
                 <XCircle className="h-3 w-3 mr-1" />
-                Cancel
+                Anulează
               </Button>
             </>
           )}
@@ -485,7 +485,7 @@ function BookingCard({
               className="w-full text-blue-600 hover:text-blue-700"
             >
               <Clock className="h-3 w-3 mr-1" />
-              Check-In
+              Check-in
             </Button>
           )}
           {booking.status === 'checked_in' && (
@@ -495,7 +495,7 @@ function BookingCard({
               onClick={() => onCheckOut(booking.id)}
               className="w-full text-green-600 hover:text-green-700"
             >
-              Check-Out
+              Check-out
             </Button>
           )}
           <Button
@@ -505,7 +505,7 @@ function BookingCard({
             className="w-full"
           >
             <MessageSquare className="h-3 w-3 mr-1" />
-            Message
+            Mesaj
           </Button>
         </div>
       </div>

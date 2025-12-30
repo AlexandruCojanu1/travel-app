@@ -135,7 +135,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
 
   async function handleReply(reviewId: string) {
     if (!replyText.trim()) {
-      toast.error('Please enter a reply message')
+      toast.error('Te rugăm să introduci un mesaj de răspuns')
       return
     }
 
@@ -154,14 +154,14 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
       console.error('Error replying to review:', error)
       // If column doesn't exist, we'll need to add it via SQL
       if (error.code === '42703') {
-        toast.error('Reply feature requires database update. Please run the schema update script.')
+        toast.error('Funcția de răspuns necesită actualizarea bazei de date. Te rugăm să rulezi scriptul de actualizare.')
       } else {
-        toast.error('Failed to post reply')
+        toast.error('Nu s-a putut publica răspunsul')
       }
       return
     }
 
-    toast.success('Reply posted successfully')
+    toast.success('Răspuns publicat cu succes')
     setReplyingTo(null)
     setReplyText("")
     await loadReviews()
@@ -178,7 +178,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-mova-gray">Loading reviews...</div>
+        <div className="text-mova-gray">Se încarcă recenziile...</div>
       </div>
     )
   }
@@ -187,9 +187,9 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h3 className="text-xl font-semibold text-mova-dark">Reviews & Reputation</h3>
+        <h3 className="text-xl font-semibold text-mova-dark">Recenzii și Reputație</h3>
         <p className="text-sm text-mova-gray mt-1">
-          Manage reviews, respond to feedback, and monitor your reputation
+          Gestionează recenziile, răspunde la feedback și monitorizează-ți reputația
         </p>
       </div>
 
@@ -197,31 +197,31 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="airbnb-card p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-mova-gray">Average Rating</span>
+            <span className="text-sm text-mova-gray">Rating mediu</span>
             <Star className="h-5 w-5 text-yellow-600 fill-yellow-600" />
           </div>
           <div className="text-3xl font-bold text-mova-dark">
             {averageRating.toFixed(1)}
           </div>
           <div className="text-sm text-mova-gray mt-1">
-            Based on {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
+            Bazat pe {reviews.length} {reviews.length === 1 ? 'recenzie' : 'recenzii'}
           </div>
         </div>
         <div className="airbnb-card p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-mova-gray">Response Rate</span>
+            <span className="text-sm text-mova-gray">Rata de răspuns</span>
             <Reply className="h-5 w-5 text-mova-blue" />
           </div>
           <div className="text-3xl font-bold text-mova-dark">
             {responseRate.toFixed(0)}%
           </div>
           <div className="text-sm text-mova-gray mt-1">
-            You've replied to {reviews.filter(r => r.reply_text).length} reviews
+            Ai răspuns la {reviews.filter(r => r.reply_text).length} recenzii
           </div>
         </div>
         <div className="airbnb-card p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-mova-gray">Total Reviews</span>
+            <span className="text-sm text-mova-gray">Total recenzii</span>
             <Star className="h-5 w-5 text-purple-600" />
           </div>
           <div className="text-3xl font-bold text-mova-dark">
@@ -233,7 +233,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
       {/* Sentiment Analysis */}
       {sentimentData.length > 0 && (
         <div className="airbnb-card p-6">
-          <h4 className="text-lg font-semibold text-mova-dark mb-4">Sentiment Analysis</h4>
+          <h4 className="text-lg font-semibold text-mova-dark mb-4">Analiză sentiment</h4>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={sentimentData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -251,7 +251,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-mova-gray" />
-            <span className="text-sm font-semibold text-mova-dark">Filters:</span>
+            <span className="text-sm font-semibold text-mova-dark">Filtre:</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-mova-gray">Rating:</span>
@@ -260,16 +260,16 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
               onChange={(e) => setFilterRating(e.target.value ? parseInt(e.target.value) : null)}
               className="px-3 py-1.5 rounded-airbnb border border-gray-300 text-sm focus:ring-2 focus:ring-mova-blue focus:border-mova-blue"
             >
-              <option value="">All</option>
-              <option value="5">5 stars</option>
-              <option value="4">4 stars</option>
-              <option value="3">3 stars</option>
-              <option value="2">2 stars</option>
-              <option value="1">1 star</option>
+              <option value="">Toate</option>
+              <option value="5">5 stele</option>
+              <option value="4">4 stele</option>
+              <option value="3">3 stele</option>
+              <option value="2">2 stele</option>
+              <option value="1">1 stea</option>
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-mova-gray">Replied:</span>
+            <span className="text-sm text-mova-gray">Răspuns:</span>
             <select
               value={showRepliedOnly === null ? '' : showRepliedOnly ? 'yes' : 'no'}
               onChange={(e) => {
@@ -278,21 +278,21 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
               }}
               className="px-3 py-1.5 rounded-airbnb border border-gray-300 text-sm focus:ring-2 focus:ring-mova-blue focus:border-mova-blue"
             >
-              <option value="">All</option>
-              <option value="yes">With reply</option>
-              <option value="no">Without reply</option>
+              <option value="">Toate</option>
+              <option value="yes">Cu răspuns</option>
+              <option value="no">Fără răspuns</option>
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-mova-gray">Sort:</span>
+            <span className="text-sm text-mova-gray">Sortare:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="px-3 py-1.5 rounded-airbnb border border-gray-300 text-sm focus:ring-2 focus:ring-mova-blue focus:border-mova-blue"
             >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="lowest">Lowest rating first</option>
+              <option value="newest">Cele mai noi</option>
+              <option value="oldest">Cele mai vechi</option>
+              <option value="lowest">Rating cel mai mic</option>
             </select>
           </div>
         </div>
@@ -303,7 +303,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
         {reviews.length === 0 ? (
           <div className="text-center py-12 bg-mova-light-gray rounded-airbnb-lg border-2 border-dashed border-gray-300">
             <Star className="h-12 w-12 text-mova-gray mx-auto mb-4" />
-            <p className="text-mova-gray">No reviews yet</p>
+            <p className="text-mova-gray">Încă nu există recenzii</p>
           </div>
         ) : (
           reviews.map((review) => (
@@ -350,7 +350,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
                 <div className="mt-4 p-4 bg-mova-light-blue rounded-airbnb border border-mova-blue/30">
                   <div className="flex items-center gap-2 mb-2">
                     <Reply className="h-4 w-4 text-mova-blue" />
-                    <span className="text-sm font-semibold text-mova-dark">Your Reply</span>
+                    <span className="text-sm font-semibold text-mova-dark">Răspunsul tău</span>
                     {review.reply_date && (
                       <span className="text-xs text-mova-gray">
                         {format(new Date(review.reply_date), 'MMM dd, yyyy')}
@@ -366,14 +366,14 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
                       <textarea
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
-                        placeholder="Write your reply..."
+                        placeholder="Scrie răspunsul tău..."
                         rows={3}
                         maxLength={500}
                         className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 resize-none"
                       />
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-mova-gray">
-                          {replyText.length}/500 characters
+                          {replyText.length}/500 caractere
                         </span>
                         <div className="flex items-center gap-2">
                           <Button
@@ -384,14 +384,14 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
                               setReplyText("")
                             }}
                           >
-                            Cancel
+                            Anulează
                           </Button>
                           <Button
                             size="sm"
                             onClick={() => handleReply(review.id)}
                             disabled={!replyText.trim()}
                           >
-                            Post Reply
+                            Publică răspuns
                           </Button>
                         </div>
                       </div>
@@ -404,7 +404,7 @@ export function ReviewsReputation({ businessId }: ReviewsReputationProps) {
                       className="flex items-center gap-2"
                     >
                       <Reply className="h-4 w-4" />
-                      Reply to Review
+                      Răspunde la recenzie
                     </Button>
                   )}
                 </div>

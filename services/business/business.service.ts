@@ -111,6 +111,14 @@ export async function getBusinessById(id: string): Promise<Business | null> {
 
     // Extract coordinates from attributes if not available as direct columns
     const attributes = (data as any).attributes || {}
+    
+    // Extract image_url - check direct column first, then attributes, handle empty strings
+    const imageUrl = data.image_url && data.image_url.trim() !== '' 
+      ? data.image_url 
+      : (attributes.image_url && attributes.image_url.trim() !== '' 
+          ? attributes.image_url 
+          : null)
+    
     const business: Business = {
       id: data.id,
       city_id: data.city_id,
@@ -120,7 +128,7 @@ export async function getBusinessById(id: string): Promise<Business | null> {
       address: data.address || attributes.address || attributes.address_line || null,
       latitude: data.latitude ?? attributes.latitude ?? attributes.lat ?? null,
       longitude: data.longitude ?? attributes.longitude ?? attributes.lng ?? null,
-      image_url: data.image_url || attributes.image_url || null,
+      image_url: imageUrl,
       rating: data.rating,
       is_verified: data.is_verified,
       created_at: data.created_at,

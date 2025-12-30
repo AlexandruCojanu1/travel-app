@@ -155,15 +155,15 @@ export default function BusinessPortalDashboard() {
         <div className="text-center">
           <Building2 className="h-16 w-16 text-mova-gray mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-mova-dark mb-2">
-            No Business Found
+            Nu s-a găsit niciun business
           </h2>
           <p className="text-mova-gray mb-6">
-            Create your first business to get started
+            Creează primul tău business pentru a începe
           </p>
           <Button asChild>
             <Link href="/business-portal/onboarding">
               <Plus className="h-4 w-4 mr-2" />
-              Create Business
+              Creează Business
             </Link>
           </Button>
         </div>
@@ -177,7 +177,7 @@ export default function BusinessPortalDashboard() {
         {/* Sidebar Navigation - Hidden on mobile, shown on desktop */}
         <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col min-h-screen flex-shrink-0">
           <div className="p-6 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-mova-dark">Business Portal</h1>
+            <h1 className="text-xl font-bold text-mova-dark">Portal Business</h1>
             <p className="text-sm text-mova-gray mt-1">{selectedBusiness?.name}</p>
           </div>
           <nav className="flex-1 p-4 space-y-2">
@@ -186,35 +186,35 @@ export default function BusinessPortalDashboard() {
               className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
             >
               <LayoutDashboard className="h-5 w-5" />
-              <span className="font-medium">Overview</span>
+              <span className="font-medium">Prezentare</span>
             </Link>
             <Link
               href="#bookings"
               className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
             >
               <Calendar className="h-5 w-5" />
-              <span className="font-medium">Bookings</span>
+              <span className="font-medium">Rezervări</span>
             </Link>
             <Link
               href="#reviews"
               className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
             >
               <Star className="h-5 w-5" />
-              <span className="font-medium">Reviews</span>
+              <span className="font-medium">Recenzii</span>
             </Link>
             <Link
               href="#resources"
               className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
             >
               <Package className="h-5 w-5" />
-              <span className="font-medium">Inventory</span>
+              <span className="font-medium">Inventar</span>
             </Link>
             <Link
               href="/business-portal/promote"
               className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
             >
               <TrendingUp className="h-5 w-5" />
-              <span className="font-medium">Promote</span>
+              <span className="font-medium">Promovare</span>
             </Link>
           </nav>
           <div className="p-4 border-t border-gray-200">
@@ -237,7 +237,7 @@ export default function BusinessPortalDashboard() {
             <Button variant="outline" className="w-full mt-3" asChild>
               <Link href="/business-portal/onboarding">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Business
+                Adaugă Business
               </Link>
             </Button>
           </div>
@@ -249,7 +249,7 @@ export default function BusinessPortalDashboard() {
             {/* Mobile Header */}
             <div className="md:hidden flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-mova-dark truncate">Business Portal</h1>
+                <h1 className="text-xl font-bold text-mova-dark truncate">Portal Business</h1>
                 <p className="text-sm text-mova-gray truncate">{selectedBusiness?.name}</p>
               </div>
               <Button variant="outline" size="sm" className="ml-2 flex-shrink-0" asChild>
@@ -264,19 +264,19 @@ export default function BusinessPortalDashboard() {
               <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-4 md:mb-6 h-auto">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" />
-                  <span className="hidden sm:inline">Overview</span>
+                  <span className="hidden sm:inline">Prezentare</span>
                 </TabsTrigger>
                 <TabsTrigger value="bookings" className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline">Bookings</span>
+                  <span className="hidden sm:inline">Rezervări</span>
                 </TabsTrigger>
                 <TabsTrigger value="reviews" className="flex items-center gap-2">
                   <Star className="h-4 w-4" />
-                  <span className="hidden sm:inline">Reviews</span>
+                  <span className="hidden sm:inline">Recenzii</span>
                 </TabsTrigger>
                 <TabsTrigger value="resources" className="flex items-center gap-2">
                   <Package className="h-4 w-4" />
-                  <span className="hidden sm:inline">Inventory</span>
+                  <span className="hidden sm:inline">Inventar</span>
                 </TabsTrigger>
                 <TabsTrigger value="availability" className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />

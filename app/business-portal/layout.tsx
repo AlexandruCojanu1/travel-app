@@ -39,7 +39,7 @@ export default function BusinessPortalLayout({
             </div>
             <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
               <Link
-                href="/home"
+                href="/"
                 className="text-xs md:text-sm text-slate-600 hover:text-slate-900 font-medium whitespace-nowrap"
               >
                 <span className="hidden sm:inline">← Back to App</span>

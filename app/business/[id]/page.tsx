@@ -128,6 +128,26 @@ export default function BusinessDetailPage() {
     }
 
     loadBusinessData()
+
+    // Refresh data when page becomes visible (e.g., user returns from editing)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadBusinessData()
+      }
+    }
+
+    // Refresh data when window gains focus
+    const handleFocus = () => {
+      loadBusinessData()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [businessId])
 
   if (isLoading) {

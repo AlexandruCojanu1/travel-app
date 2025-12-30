@@ -176,7 +176,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
 
   const statsCards = [
     {
-      title: "Revenue this Month",
+      title: "Venituri luna aceasta",
       value: `${stats.revenueThisMonth.toFixed(2)} RON`,
       change: `${stats.revenueChange >= 0 ? '+' : ''}${stats.revenueChange.toFixed(0)}%`,
       trend: stats.revenueChange >= 0 ? "up" as const : "down" as const,
@@ -184,15 +184,15 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
       color: "text-green-600"
     },
     {
-      title: "Pending Bookings",
+      title: "Rezervări în așteptare",
       value: stats.pendingBookings.toString(),
-      change: "3 new today",
+      change: "3 noi astăzi",
       trend: "neutral" as const,
       icon: Calendar,
       color: "text-mova-blue"
     },
     {
-      title: "Profile Views",
+      title: "Vizualizări profil",
       value: stats.profileViews.toLocaleString(),
       change: `+${stats.viewsChange}%`,
       trend: "up" as const,
@@ -200,7 +200,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
       color: "text-purple-600"
     },
     {
-      title: "Average Rating",
+      title: "Rating mediu",
       value: stats.averageRating.toFixed(1),
       change: `+${stats.ratingChange.toFixed(1)}`,
       trend: "up" as const,
@@ -212,7 +212,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-mova-gray">Loading overview...</div>
+        <div className="text-mova-gray">Se încarcă prezentarea...</div>
       </div>
     )
   }
@@ -249,7 +249,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
         {/* Bookings/Views Line Chart */}
         <div className="airbnb-card p-4 md:p-6 min-w-0 overflow-hidden">
           <h3 className="text-lg font-semibold text-mova-dark mb-4">
-            Bookings Over Last 30 Days
+            Rezervări în ultimele 30 de zile
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={bookingsData}>
@@ -263,7 +263,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
                 dataKey="bookings" 
                 stroke="#3b82f6" 
                 strokeWidth={2}
-                name="Bookings"
+                name="Rezervări"
               />
             </LineChart>
           </ResponsiveContainer>
@@ -272,7 +272,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
         {/* Revenue Bar Chart */}
         <div className="airbnb-card p-4 md:p-6 min-w-0 overflow-hidden">
           <h3 className="text-lg font-semibold text-mova-dark mb-4">
-            Revenue by Day
+            Venituri pe zi
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={revenueData}>
@@ -281,7 +281,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="revenue" fill="#10b981" name="Revenue (RON)" />
+              <Bar dataKey="revenue" fill="#10b981" name="Venituri (RON)" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -291,7 +291,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
       {statusDistribution.length > 0 && (
         <div className="airbnb-card p-4 md:p-6 min-w-0 overflow-hidden">
           <h3 className="text-lg font-semibold text-mova-dark mb-4">
-            Booking Status Distribution
+            Distribuția statusurilor rezervărilor
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -318,21 +318,21 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
       {/* Recent Activity Feed */}
       <div className="bg-white rounded-xl p-4 md:p-6 border border-slate-200 min-w-0 overflow-hidden">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">
-          Recent Activity
+          Activitate recentă
         </h3>
         <div className="space-y-3">
           <div className="flex items-center gap-3 p-3 rounded-airbnb bg-mova-light-gray">
             <Calendar className="h-5 w-5 text-mova-blue" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-mova-dark">New booking received</p>
-              <p className="text-xs text-mova-gray">2 hours ago</p>
+              <p className="text-sm font-medium text-mova-dark">Rezervare nouă primită</p>
+              <p className="text-xs text-mova-gray">Acum 2 ore</p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 rounded-airbnb bg-mova-light-gray">
             <Star className="h-5 w-5 text-yellow-600" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-mova-dark">New review received</p>
-              <p className="text-xs text-mova-gray">5 hours ago</p>
+              <p className="text-sm font-medium text-mova-dark">Recenzie nouă primită</p>
+              <p className="text-xs text-mova-gray">Acum 5 ore</p>
             </div>
           </div>
         </div>
