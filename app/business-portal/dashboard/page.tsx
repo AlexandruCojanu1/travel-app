@@ -57,6 +57,7 @@ export default function BusinessPortalDashboard() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("overview")
 
   useEffect(() => {
     // Wait for page to fully load and cookies to be available
@@ -128,7 +129,8 @@ export default function BusinessPortalDashboard() {
           router.push("/auth/login?redirect=/business-portal/dashboard")
         } else {
           // User doesn't have businesses, redirect to home (they're a traveler)
-          router.push("/home")
+          // Use window.location to avoid any potential redirect loops
+          window.location.href = "/home"
         }
       }
     } catch (error) {
@@ -181,34 +183,61 @@ export default function BusinessPortalDashboard() {
             <p className="text-sm text-mova-gray mt-1">{selectedBusiness?.name}</p>
           </div>
           <nav className="flex-1 p-4 space-y-2">
-            <Link
-              href="#overview"
-              className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
+                activeTab === "overview"
+                  ? "bg-mova-blue text-white"
+                  : "hover:bg-mova-light-gray text-mova-dark"
+              }`}
             >
               <LayoutDashboard className="h-5 w-5" />
               <span className="font-medium">Prezentare</span>
-            </Link>
-            <Link
-              href="#bookings"
-              className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
+            </button>
+            <button
+              onClick={() => setActiveTab("bookings")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
+                activeTab === "bookings"
+                  ? "bg-mova-blue text-white"
+                  : "hover:bg-mova-light-gray text-mova-dark"
+              }`}
             >
               <Calendar className="h-5 w-5" />
               <span className="font-medium">Rezervări</span>
-            </Link>
-            <Link
-              href="#reviews"
-              className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
+            </button>
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
+                activeTab === "reviews"
+                  ? "bg-mova-blue text-white"
+                  : "hover:bg-mova-light-gray text-mova-dark"
+              }`}
             >
               <Star className="h-5 w-5" />
               <span className="font-medium">Recenzii</span>
-            </Link>
-            <Link
-              href="#resources"
-              className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
+            </button>
+            <button
+              onClick={() => setActiveTab("resources")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
+                activeTab === "resources"
+                  ? "bg-mova-blue text-white"
+                  : "hover:bg-mova-light-gray text-mova-dark"
+              }`}
             >
               <Package className="h-5 w-5" />
               <span className="font-medium">Inventar</span>
-            </Link>
+            </button>
+            <button
+              onClick={() => setActiveTab("availability")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
+                activeTab === "availability"
+                  ? "bg-mova-blue text-white"
+                  : "hover:bg-mova-light-gray text-mova-dark"
+              }`}
+            >
+              <Calendar className="h-5 w-5" />
+              <span className="font-medium">Calendar</span>
+            </button>
             <Link
               href="/business-portal/promote"
               className="flex items-center gap-3 px-4 py-3 rounded-airbnb hover:bg-mova-light-gray text-mova-dark transition-colors"
@@ -246,45 +275,9 @@ export default function BusinessPortalDashboard() {
         {/* Main Content */}
         <main className="flex-1 py-4 md:py-8 px-4 md:px-8 w-full min-w-0">
           <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
-            {/* Mobile Header */}
-            <div className="md:hidden flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-mova-dark truncate">Portal Business</h1>
-                <p className="text-sm text-mova-gray truncate">{selectedBusiness?.name}</p>
-              </div>
-              <Button variant="outline" size="sm" className="ml-2 flex-shrink-0" asChild>
-                <Link href="/business-portal/onboarding">
-                  <Plus className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-
             {/* Main Content Tabs */}
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-4 md:mb-6 h-auto">
-                <TabsTrigger value="overview" className="flex items-center gap-2">
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span className="hidden sm:inline">Prezentare</span>
-                </TabsTrigger>
-                <TabsTrigger value="bookings" className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline">Rezervări</span>
-                </TabsTrigger>
-                <TabsTrigger value="reviews" className="flex items-center gap-2">
-                  <Star className="h-4 w-4" />
-                  <span className="hidden sm:inline">Recenzii</span>
-                </TabsTrigger>
-                <TabsTrigger value="resources" className="flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  <span className="hidden sm:inline">Inventar</span>
-                </TabsTrigger>
-                <TabsTrigger value="availability" className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline">Calendar</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview" className="mt-6">
+            <Tabs value={activeTab || "overview"} onValueChange={setActiveTab} className="w-full">
+              <TabsContent value="overview" className="mt-0">
                 {selectedBusiness && (
                   <DashboardOverview businessId={selectedBusiness.id} />
                 )}

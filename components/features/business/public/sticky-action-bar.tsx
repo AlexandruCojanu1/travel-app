@@ -26,7 +26,7 @@ export function StickyActionBar({
 
   // Determine action text based on business type
   const isHotel = business.category === 'Hotels'
-  const actionText = isHotel ? 'Book Now' : 'Add to Plan'
+  const actionText = isHotel ? 'Rezervă acum' : 'Adaugă în plan'
 
   const handleAction = () => {
     if (isHotel) {
@@ -46,38 +46,27 @@ export function StickyActionBar({
   return (
     <>
       <div
-        className="fixed left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg"
-        style={{ bottom: `${bottomNavHeight}px` }}
+        className="fixed z-50"
+        style={{ 
+          bottom: `${bottomNavHeight + 20}px`,
+          right: '20px'
+        }}
       >
-        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4">
-          <div className="flex items-center justify-between gap-4">
-            {/* Price Display */}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-600 uppercase tracking-wide mb-1">
-                Starting from
-              </p>
-              <p className="text-xl md:text-2xl font-bold text-gray-900">
-                {price}
-              </p>
-            </div>
-
-            {/* Action Button */}
-            <Button
-              onClick={handleAction}
-              size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 md:px-8 py-6 md:py-7 rounded-xl shadow-lg hover:shadow-xl transition-all"
-            >
-              {isHotel ? (
-                actionText
-              ) : (
-                <>
-                  <Plus className="h-5 w-5 mr-2" />
-                  {actionText}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        {/* Action Button */}
+        <Button
+          onClick={handleAction}
+          size="lg"
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 md:px-8 py-6 md:py-7 rounded-xl shadow-lg hover:shadow-xl transition-all"
+        >
+          {isHotel ? (
+            actionText
+          ) : (
+            <>
+              <Plus className="h-5 w-5 mr-2" />
+              {actionText}
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Add to Plan Drawer (for non-hotels) */}

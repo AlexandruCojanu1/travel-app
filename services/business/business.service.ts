@@ -371,7 +371,35 @@ export async function searchBusinesses(
       })
     }
 
-    return results
+    // Extract coordinates from attributes JSONB or direct columns (similar to getBusinessById)
+    const businessesWithCoordinates: Business[] = results.map((business: any) => {
+      const attributes = business.attributes || {}
+      
+      // Extract image_url - check direct column first, then attributes, handle empty strings
+      const imageUrl = business.image_url && business.image_url.trim() !== '' 
+        ? business.image_url 
+        : (attributes.image_url && attributes.image_url.trim() !== '' 
+            ? attributes.image_url 
+            : null)
+      
+      return {
+        id: business.id,
+        city_id: business.city_id,
+        name: business.name,
+        description: business.description,
+        category: business.category,
+        address: business.address || attributes.address || attributes.address_line || null,
+        latitude: business.latitude ?? attributes.latitude ?? attributes.lat ?? null,
+        longitude: business.longitude ?? attributes.longitude ?? attributes.lng ?? null,
+        image_url: imageUrl,
+        rating: business.rating,
+        is_verified: business.is_verified,
+        created_at: business.created_at,
+        updated_at: business.updated_at,
+      }
+    })
+
+    return businessesWithCoordinates
   } catch (error) {
     console.error('Unexpected error searching businesses:', error)
     return []

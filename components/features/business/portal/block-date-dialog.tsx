@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/shared/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/shared/ui/dialog"
 import { Button } from "@/components/shared/ui/button"
 import { Label } from "@/components/shared/ui/label"
 import { Input } from "@/components/shared/ui/input"
@@ -33,6 +33,9 @@ export function BlockDateDialog({ isOpen, onClose, onBlock, date }: BlockDateDia
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Block Date</DialogTitle>
+          <DialogDescription>
+            Blochează o dată pentru a preveni rezervările
+          </DialogDescription>
         </DialogHeader>
         
         {date && (

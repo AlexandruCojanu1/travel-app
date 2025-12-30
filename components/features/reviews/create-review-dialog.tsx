@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/shared/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/shared/ui/dialog'
 import { Button } from '@/components/shared/ui/button'
 import { Textarea } from '@/components/shared/ui/textarea'
 import { Label } from '@/components/shared/ui/label'
@@ -118,6 +118,9 @@ export function CreateReviewDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Write a Review for {businessName}</DialogTitle>
+          <DialogDescription>
+            Scrie o recenzie pentru {businessName}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

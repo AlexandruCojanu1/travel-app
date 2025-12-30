@@ -96,9 +96,20 @@ export default function ExplorePage() {
             query,
             sortBy
           )
+          console.log('Explore: searchBusinesses returned', results.length, 'businesses')
+          
           // Convert to MapBusiness format (only those with coordinates)
           const mapBusinesses: MapBusiness[] = results
-            .filter((b) => b.latitude && b.longitude)
+            .filter((b) => {
+              const hasCoords = b.latitude != null && b.longitude != null
+              if (!hasCoords) {
+                console.warn('Explore: Business without coordinates:', b.id, b.name, {
+                  lat: b.latitude,
+                  lng: b.longitude
+                })
+              }
+              return hasCoords
+            })
             .map((b) => ({
               id: b.id,
               name: b.name,
@@ -110,11 +121,13 @@ export default function ExplorePage() {
               address: b.address,
               price_level: getPriceLevel(b.category),
             }))
+          console.log('Explore: Converted to', mapBusinesses.length, 'MapBusiness objects with coordinates')
           setBusinesses(mapBusinesses)
         } else {
           // Use simple category filter
           const category = activeFilter === "All" ? undefined : activeFilter
           const data = await getBusinessesForMap(currentCity.id, category)
+          console.log('Explore: getBusinessesForMap returned', data.length, 'businesses with coordinates')
           setBusinesses(data)
         }
 

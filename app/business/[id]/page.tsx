@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { MapPin, Loader2, Settings, Edit } from 'lucide-react'
+import { MapPin, Loader2 } from 'lucide-react'
 import { HeroParallax } from '@/components/features/business/public/hero-parallax'
 import { AttributeGrid } from '@/components/features/business/public/attribute-grid'
 import { StickyActionBar } from '@/components/features/business/public/sticky-action-bar'
@@ -38,7 +38,6 @@ export default function BusinessDetailPage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [attributes, setAttributes] = useState<Record<string, any>>({})
-  const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
     async function loadBusinessData() {
@@ -47,19 +46,6 @@ export default function BusinessDetailPage() {
       setIsLoading(true)
       try {
         const supabase = createClient()
-        
-        // Check if user is authenticated and is the owner
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          // Check ownership using client-side query
-          const { data: business, error: businessError } = await supabase
-            .from('businesses')
-            .select('owner_user_id')
-            .eq('id', businessId)
-            .single()
-          
-          setIsOwner(!businessError && business?.owner_user_id === user.id)
-        }
 
         // Fetch business
         const businessData = await getBusinessById(businessId)
@@ -169,14 +155,6 @@ export default function BusinessDetailPage() {
     )
   }
 
-  // Calculate price based on category
-  const getPrice = () => {
-    if (business.category === 'Nature') return 'Free'
-    if (business.category === 'Hotels') return '200 RON / night'
-    if (business.category === 'Food') return '€€ per person'
-    return 'Contact for pricing'
-  }
-
   return (
     <div className="pb-32 md:pb-24">
       {/* Hero Parallax Header */}
@@ -185,36 +163,12 @@ export default function BusinessDetailPage() {
       {/* Content Container */}
       <div className="relative -mt-12 bg-white rounded-t-3xl z-10">
         <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
-          {/* Owner Actions Bar */}
-          {isOwner && (
-            <div className="mb-6 p-5 airbnb-card border-2 border-mova-blue/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-airbnb bg-mova-blue flex items-center justify-center shadow-airbnb-md">
-                    <Settings className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-mova-dark text-base">Business Owner Dashboard</h3>
-                    <p className="text-sm text-mova-gray">Manage your business, bookings, and promotions</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => router.push('/business-portal/dashboard')}
-                  className="airbnb-button"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Open Dashboard
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Tabs */}
           <Tabs defaultValue="about" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="about">About</TabsTrigger>
-              <TabsTrigger value="resources">Resources</TabsTrigger>
-              <TabsTrigger value="reviews">Reviews</TabsTrigger>
+              <TabsTrigger value="about">Despre</TabsTrigger>
+              <TabsTrigger value="resources">Meniu</TabsTrigger>
+              <TabsTrigger value="reviews">Recenzii</TabsTrigger>
             </TabsList>
 
             {/* About Tab */}
@@ -226,7 +180,7 @@ export default function BusinessDetailPage() {
               {business.description && (
                 <div>
                   <h3 className="text-xl font-bold text-mova-dark mb-3">
-                    Description
+                    Descriere
                   </h3>
                   <p className="text-mova-gray leading-relaxed">
                     {business.description}
@@ -238,7 +192,7 @@ export default function BusinessDetailPage() {
               {business.address && (
                 <div>
                   <h3 className="text-xl font-bold text-mova-dark mb-3">
-                    Location
+                    Locație
                   </h3>
                   <div className="flex items-start gap-2">
                     <MapPin className="h-5 w-5 text-mova-gray mt-0.5 flex-shrink-0" />
@@ -251,7 +205,7 @@ export default function BusinessDetailPage() {
               {business.latitude && business.longitude && (
                 <div>
                   <h3 className="text-xl font-bold text-mova-dark mb-3">
-                    Map
+                    Hartă
                   </h3>
                   <div className="relative w-full h-64 rounded-airbnb-lg overflow-hidden bg-mova-light-gray border border-gray-200">
                     <iframe
@@ -270,7 +224,7 @@ export default function BusinessDetailPage() {
               {/* Dynamic Attributes */}
               <div>
                 <h3 className="text-xl font-bold text-mova-dark mb-4">
-                  Details
+                  Detalii
                 </h3>
                 <AttributeGrid business={business} attributes={attributes} />
               </div>
@@ -333,7 +287,7 @@ export default function BusinessDetailPage() {
       </div>
 
       {/* Sticky Action Bar */}
-      <StickyActionBar business={business} price={getPrice()} />
+      <StickyActionBar business={business} />
     </div>
   )
 }

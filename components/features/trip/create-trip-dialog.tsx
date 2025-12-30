@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/shared/ui/dialog'
 import { Button } from '@/components/shared/ui/button'
 import { Slider } from '@/components/shared/ui/slider'
@@ -105,6 +106,11 @@ export function CreateTripDialog({
             {step === 2 && 'Set Your Budget'}
             {step === 3 && 'Review & Create'}
           </DialogTitle>
+          <DialogDescription>
+            {step === 1 && 'Alege destinația și datele călătoriei'}
+            {step === 2 && 'Stabilește bugetul tău'}
+            {step === 3 && 'Revizuiește și creează călătoria'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

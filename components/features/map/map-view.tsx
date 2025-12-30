@@ -140,19 +140,39 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
       maxZoom: 16,
     })
 
-    // Convert businesses to GeoJSON points
-    const points: PointFeature[] = businesses.map((business) => ({
-      type: 'Feature',
-      properties: {
-        cluster: false,
-        business,
-      },
-      geometry: {
-        type: 'Point',
-        coordinates: [business.longitude, business.latitude],
-      },
-    }))
+    // Convert businesses to GeoJSON points - filter out invalid coordinates
+    const points: PointFeature[] = businesses
+      .filter((business) => {
+        // Validate coordinates
+        const isValid = 
+          business.latitude != null && 
+          business.longitude != null &&
+          !isNaN(business.latitude) &&
+          !isNaN(business.longitude) &&
+          business.latitude >= -90 && business.latitude <= 90 &&
+          business.longitude >= -180 && business.longitude <= 180
+        
+        if (!isValid) {
+          console.warn('Invalid coordinates for business:', business.id, business.name, {
+            lat: business.latitude,
+            lng: business.longitude
+          })
+        }
+        return isValid
+      })
+      .map((business) => ({
+        type: 'Feature',
+        properties: {
+          cluster: false,
+          business,
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [business.longitude, business.latitude],
+        },
+      }))
 
+    console.log('MapView: Loaded', points.length, 'valid business markers out of', businesses.length, 'businesses')
     cluster.load(points)
     return cluster
   }, [businesses])
@@ -160,21 +180,36 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
   // Get clusters for current map bounds and zoom
   const { clusters, bounds } = useMemo(() => {
     const map = mapRef.current
-    if (!map) {
-      return { clusters: [], bounds: null }
-    }
-
+    
+    // Use viewState for initial bounds if map is not ready
+    let boundsArray: [number, number, number, number]
+    
     try {
-      const mapBounds = map.getMap().getBounds()
-      const boundsArray: [number, number, number, number] = [
-        mapBounds.getWest(),
-        mapBounds.getSouth(),
-        mapBounds.getEast(),
-        mapBounds.getNorth(),
-      ]
+      if (map) {
+        const mapBounds = map.getMap().getBounds()
+        boundsArray = [
+          mapBounds.getWest(),
+          mapBounds.getSouth(),
+          mapBounds.getEast(),
+          mapBounds.getNorth(),
+        ]
+      } else {
+        // Fallback to viewState-based bounds when map is not initialized
+        const latRange = 0.1 // ~11km
+        const lngRange = 0.1
+        boundsArray = [
+          viewState.longitude - lngRange,
+          viewState.latitude - latRange,
+          viewState.longitude + lngRange,
+          viewState.latitude + latRange,
+        ]
+      }
+
+      const clusters = supercluster.getClusters(boundsArray, Math.floor(viewState.zoom))
+      console.log('MapView: Generated', clusters.length, 'clusters/markers at zoom', Math.floor(viewState.zoom))
 
       return {
-        clusters: supercluster.getClusters(boundsArray, Math.floor(viewState.zoom)),
+        clusters,
         bounds: {
           west: boundsArray[0],
           south: boundsArray[1],
@@ -183,8 +218,25 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
         },
       }
     } catch (error) {
-      // Map not fully initialized yet
-      return { clusters: [], bounds: null }
+      console.error('MapView: Error calculating clusters', error)
+      // Fallback to viewState-based bounds
+      const latRange = 0.1
+      const lngRange = 0.1
+      const fallbackBounds: [number, number, number, number] = [
+        viewState.longitude - lngRange,
+        viewState.latitude - latRange,
+        viewState.longitude + lngRange,
+        viewState.latitude + latRange,
+      ]
+      return {
+        clusters: supercluster.getClusters(fallbackBounds, Math.floor(viewState.zoom)),
+        bounds: {
+          west: fallbackBounds[0],
+          south: fallbackBounds[1],
+          east: fallbackBounds[2],
+          north: fallbackBounds[3],
+        },
+      }
     }
   }, [supercluster, viewState])
 
@@ -327,6 +379,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
             >
               <PriceMarker
                 price={business.price_level}
+                category={business.category}
                 isSelected={selectedBusinessId === business.id}
                 onClick={() => handleMarkerClick(business)}
               />

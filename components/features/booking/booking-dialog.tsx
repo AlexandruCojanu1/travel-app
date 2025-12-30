@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Calendar, Users, Loader2, AlertCircle } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shared/ui/dialog'
 import { Button } from '@/components/shared/ui/button'
 import { Input } from '@/components/shared/ui/input'
 import { Label } from '@/components/shared/ui/label'
@@ -146,6 +146,9 @@ export function BookingDialog({ business, isOpen, onOpenChange }: BookingDialogP
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Book {business.name}</DialogTitle>
+          <DialogDescription>
+            Rezervă {business.name}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

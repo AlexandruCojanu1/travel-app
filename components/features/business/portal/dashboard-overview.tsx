@@ -5,6 +5,8 @@ import { TrendingUp, Calendar, Eye, Star, DollarSign } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { formatDistanceToNow } from "date-fns"
+import { ro } from "date-fns/locale"
 
 interface DashboardOverviewProps {
   businessId: string
@@ -22,6 +24,18 @@ interface Stats {
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
+function getTimeAgo(date: Date): string {
+  try {
+    const distance = formatDistanceToNow(date, { 
+      addSuffix: true, 
+      locale: ro 
+    })
+    return distance.replace('în aproximativ ', '').replace('aproximativ ', '')
+  } catch (error) {
+    return 'Acum puțin timp'
+  }
+}
+
 export function DashboardOverview({ businessId }: DashboardOverviewProps) {
   const [stats, setStats] = useState<Stats>({
     revenueThisMonth: 0,
@@ -35,6 +49,8 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
   const [bookingsData, setBookingsData] = useState<any[]>([])
   const [revenueData, setRevenueData] = useState<any[]>([])
   const [statusDistribution, setStatusDistribution] = useState<any[]>([])
+  const [newBookingsToday, setNewBookingsToday] = useState<number>(0)
+  const [recentActivity, setRecentActivity] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -44,10 +60,18 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
   async function loadOverviewData() {
     const supabase = createClient()
     const now = new Date()
+    // Set to start of month (00:00:00)
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    monthStart.setHours(0, 0, 0, 0)
+    // Set to end of month (23:59:59.999)
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    monthEnd.setHours(23, 59, 59, 999)
+    // Set to start of last month
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    lastMonthStart.setHours(0, 0, 0, 0)
+    // Set to end of last month
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
+    lastMonthEnd.setHours(23, 59, 59, 999)
 
     try {
       // Revenue this month
@@ -95,22 +119,69 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
         .eq('business_id', businessId)
         .eq('status', 'awaiting_payment')
 
-      // Profile views (mock - would need analytics table)
-      const profileViews = 1234 // Placeholder
-      const viewsChange = 23 // Placeholder
+      // New bookings today
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      todayStart.setHours(0, 0, 0, 0)
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      todayEnd.setHours(23, 59, 59, 999)
+      const { count: newBookingsToday } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('business_id', businessId)
+        .gte('created_at', todayStart.toISOString())
+        .lte('created_at', todayEnd.toISOString())
 
-      // Average rating
+      // Profile views - current month
+      const { count: profileViewsCount } = await supabase
+        .from('business_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('business_id', businessId)
+        .gte('viewed_at', monthStart.toISOString())
+        .lte('viewed_at', monthEnd.toISOString())
+
+      // Profile views - last month (for comparison)
+      const { count: lastMonthViewsCount } = await supabase
+        .from('business_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('business_id', businessId)
+        .gte('viewed_at', lastMonthStart.toISOString())
+        .lte('viewed_at', lastMonthEnd.toISOString())
+
+      const profileViews = profileViewsCount || 0
+      const lastMonthViews = lastMonthViewsCount || 0
+      const viewsChange = lastMonthViews > 0 
+        ? ((profileViews - lastMonthViews) / lastMonthViews) * 100 
+        : (profileViews > 0 ? 100 : 0)
+
+      // Average rating - current month
       const { data: reviews } = await supabase
         .from('reviews')
-        .select('rating')
+        .select('rating, created_at')
         .eq('business_id', businessId)
 
       const avgRating = reviews && reviews.length > 0
         ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
         : 0
 
+      // Average rating - last month (for comparison)
+      const { data: lastMonthReviews } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('business_id', businessId)
+        .gte('created_at', lastMonthStart.toISOString())
+        .lte('created_at', lastMonthEnd.toISOString())
+
+      const lastMonthAvgRating = lastMonthReviews && lastMonthReviews.length > 0
+        ? lastMonthReviews.reduce((sum, r) => sum + r.rating, 0) / lastMonthReviews.length
+        : 0
+
+      const ratingChange = lastMonthAvgRating > 0
+        ? avgRating - lastMonthAvgRating
+        : (avgRating > 0 ? avgRating : 0)
+
       // Bookings over last 30 days
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      thirtyDaysAgo.setHours(0, 0, 0, 0)
       const { data: recentBookings } = await supabase
         .from('bookings')
         .select('created_at, status')
@@ -155,6 +226,49 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
         value
       }))
 
+      // Recent activity - last 5 bookings and reviews
+      const { data: recentBookingsActivity } = await supabase
+        .from('bookings')
+        .select('id, created_at, status')
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false })
+        .limit(3)
+
+      const { data: recentReviewsActivity } = await supabase
+        .from('reviews')
+        .select('id, created_at, rating')
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false })
+        .limit(3)
+
+      // Combine and sort activities
+      const activities: any[] = []
+      
+      recentBookingsActivity?.forEach(booking => {
+        activities.push({
+          type: 'booking',
+          id: booking.id,
+          created_at: booking.created_at,
+          status: booking.status,
+        })
+      })
+
+      recentReviewsActivity?.forEach(review => {
+        activities.push({
+          type: 'review',
+          id: review.id,
+          created_at: review.created_at,
+          rating: review.rating,
+        })
+      })
+
+      // Sort by created_at descending and take top 5
+      activities.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+
+      const todayBookingsCount = newBookingsToday || 0
+
       setStats({
         revenueThisMonth: revenue,
         pendingBookings: pendingCount || 0,
@@ -162,11 +276,13 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
         averageRating: avgRating,
         revenueChange,
         viewsChange,
-        ratingChange: 0.2, // Placeholder
+        ratingChange,
       })
       setBookingsData(bookingsChartData)
       setRevenueData(revenueChartData)
       setStatusDistribution(statusData)
+      setNewBookingsToday(todayBookingsCount)
+      setRecentActivity(activities.slice(0, 5))
     } catch (error) {
       console.error('Error loading overview data:', error)
     } finally {
@@ -186,7 +302,7 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
     {
       title: "Rezervări în așteptare",
       value: stats.pendingBookings.toString(),
-      change: "3 noi astăzi",
+      change: `${newBookingsToday} ${newBookingsToday === 1 ? 'nouă' : 'noi'} astăzi`,
       trend: "neutral" as const,
       icon: Calendar,
       color: "text-mova-blue"
@@ -321,20 +437,50 @@ export function DashboardOverview({ businessId }: DashboardOverviewProps) {
           Activitate recentă
         </h3>
         <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 rounded-airbnb bg-mova-light-gray">
-            <Calendar className="h-5 w-5 text-mova-blue" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-mova-dark">Rezervare nouă primită</p>
-              <p className="text-xs text-mova-gray">Acum 2 ore</p>
+          {recentActivity.length > 0 ? (
+            recentActivity.map((activity) => {
+              const timeAgo = getTimeAgo(new Date(activity.created_at))
+              return (
+                <div key={activity.id} className="flex items-center gap-3 p-3 rounded-airbnb bg-mova-light-gray">
+                  {activity.type === 'booking' ? (
+                    <>
+                      <Calendar className="h-5 w-5 text-mova-blue" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-mova-dark">
+                          Rezervare nouă primită
+                          {activity.status && (
+                            <span className="ml-2 text-xs text-mova-gray">
+                              ({activity.status})
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-mova-gray">{timeAgo}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Star className="h-5 w-5 text-yellow-600" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-mova-dark">
+                          Recenzie nouă primită
+                          {activity.rating && (
+                            <span className="ml-2 text-xs text-yellow-600">
+                              {'★'.repeat(activity.rating)}
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-mova-gray">{timeAgo}</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )
+            })
+          ) : (
+            <div className="text-center py-8 text-mova-gray text-sm">
+              Nu există activitate recentă
             </div>
-          </div>
-          <div className="flex items-center gap-3 p-3 rounded-airbnb bg-mova-light-gray">
-            <Star className="h-5 w-5 text-yellow-600" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-mova-dark">Recenzie nouă primită</p>
-              <p className="text-xs text-mova-gray">Acum 5 ore</p>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -29,8 +29,8 @@ export function HeroParallax({ business }: HeroParallaxProps) {
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600" />
       )}
-      <div className="absolute inset-0 flex items-end">
-        <div className="w-full px-6 pb-6">
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full px-6">
           <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
             {business?.name || "Business"}
           </h1>

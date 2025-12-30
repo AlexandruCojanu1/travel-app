@@ -93,23 +93,9 @@ export default function HomePage() {
           return
         }
 
-        // Check if user has businesses - if yes, redirect to business portal
-        try {
-          const supabaseClient = createClient()
-          const { data: businesses, error: businessError } = await supabaseClient
-            .from('businesses')
-            .select('id')
-            .eq('owner_user_id', user.id)
-            .limit(1)
-          
-          if (!businessError && businesses && businesses.length > 0) {
-            logger.log('Home: User has businesses, redirecting to business portal', { userId: user.id })
-            window.location.href = '/business-portal/dashboard'
-            return
-          }
-        } catch (error) {
-          logger.warn('Home: Exception checking businesses', { error, userId: user.id })
-        }
+        // Note: We don't auto-redirect users with businesses from /home
+        // They can access /home even if they have businesses (maybe they want to see traveler view)
+        // Auto-redirect only happens from /auth pages via middleware
 
         // Onboarding is complete - load user's home city into global store
         if (context.homeCity) {
@@ -121,33 +107,55 @@ export default function HomePage() {
             setCity(city)
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         logger.error('Home: Error loading home context', error)
         // On error, try to get profile directly with better error handling
-        const supabase = createClient()
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('home_city_id, role')
-          .eq('id', user.id)
-          .single()
-        
-        if (profileError) {
-          logger.error('Home: Profile fetch error', profileError, { userId: user.id })
-          // If it's an RLS error, don't redirect - just show error
-          // User might have completed onboarding but RLS is blocking access
-          if (profileError.code === 'PGRST116') {
-            // Profile truly doesn't exist
+        try {
+          const supabase = createClient()
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('home_city_id, role')
+            .eq('id', user.id)
+            .single()
+          
+          if (profileError) {
+            logger.error('Home: Profile fetch error', profileError, { userId: user.id })
+            // If it's an RLS error, don't redirect - just show error
+            // User might have completed onboarding but RLS is blocking access
+            if (profileError.code === 'PGRST116') {
+              // Profile truly doesn't exist
+              router.push('/onboarding')
+              return
+            } else {
+              // RLS error - log it but don't redirect
+              logger.warn('Home: RLS error detected, but not redirecting to onboarding', { code: profileError.code })
+              setError('Unable to load profile. Please check RLS policies.')
+              // Still try to load page with default city if available
+              setIsLoading(false)
+              return
+            }
+          } else if (!profile || !profile.home_city_id || !profile.role) {
+            // Profile exists but onboarding incomplete
             router.push('/onboarding')
-          } else {
-            // RLS error - log it but don't redirect
-            logger.warn('Home: RLS error detected, but not redirecting to onboarding', { code: profileError.code })
-            setError('Unable to load profile. Please check RLS policies.')
+            return
           }
-        } else if (!profile || !profile.home_city_id || !profile.role) {
-          // Profile exists but onboarding incomplete
-          router.push('/onboarding')
+          // If profile exists and onboarding is complete, continue normally
+          // Try to load city if we have home_city_id
+          if (profile.home_city_id) {
+            const city = await getCityById(profile.home_city_id)
+            if (city) {
+              setCity(city)
+            }
+          }
+        } catch (fallbackError) {
+          logger.error('Home: Fallback error handling failed', fallbackError)
+          // Last resort: show page with error message but don't redirect
+          setError('Unable to load user data. Please try refreshing the page.')
+          setIsLoading(false)
         }
-        // If profile exists and onboarding is complete, continue normally
+      } finally {
+        // Always set loading to false after attempting to load
+        setIsLoading(false)
       }
     }
 

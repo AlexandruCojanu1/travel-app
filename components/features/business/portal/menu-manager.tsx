@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { MenuSectionDialog } from "./menu-section-dialog"
 import { MenuItemDialog } from "./menu-item-dialog"
+import { toast } from "sonner"
 
 interface MenuItem {
   id: string
@@ -127,32 +128,49 @@ export function MenuManager({ businessId }: MenuManagerProps) {
   async function handleSaveSection(sectionName: string) {
     const supabase = createClient()
     
-    if (editingSection) {
-      const { error } = await supabase
-        .from('business_resources')
-        .update({ name: sectionName })
-        .eq('id', editingSection.id)
+    try {
+      if (editingSection) {
+        const { error } = await supabase
+          .from('business_resources')
+          .update({ name: sectionName })
+          .eq('id', editingSection.id)
 
-      if (!error) {
+        if (error) {
+          console.error('Error updating section:', error)
+          toast.error('Eroare la actualizarea secțiunii: ' + error.message)
+          return
+        }
+
+        toast.success('Secțiunea a fost actualizată cu succes')
         await loadMenu()
         setIsSectionDialogOpen(false)
         setEditingSection(null)
-      }
-    } else {
-      const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1
-      const { error } = await supabase
-        .from('business_resources')
-        .insert({
-          business_id: businessId,
-          resource_type: 'menu_section',
-          name: sectionName,
-          attributes: { order: maxOrder + 1 },
-        })
+      } else {
+        const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1
+        const { error } = await supabase
+          .from('business_resources')
+          .insert({
+            business_id: businessId,
+            resource_type: 'menu_section',
+            kind: 'menu_section', // Add kind column
+            name: sectionName,
+            attributes: { order: maxOrder + 1 },
+            is_active: true,
+          })
 
-      if (!error) {
+        if (error) {
+          console.error('Error creating section:', error)
+          toast.error('Eroare la crearea secțiunii: ' + error.message)
+          return
+        }
+
+        toast.success('Secțiunea a fost creată cu succes')
         await loadMenu()
         setIsSectionDialogOpen(false)
       }
+    } catch (error: any) {
+      console.error('Unexpected error:', error)
+      toast.error('Eroare neașteptată: ' + (error?.message || 'Eroare necunoscută'))
     }
   }
 
@@ -191,6 +209,7 @@ export function MenuManager({ businessId }: MenuManagerProps) {
         .insert({
           business_id: businessId,
           resource_type: 'menu_item',
+          kind: 'menu_item', // Add kind column
           name: itemData.name,
           description: itemData.description,
           base_price: itemData.price,
