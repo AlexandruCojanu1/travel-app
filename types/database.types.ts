@@ -17,6 +17,11 @@ export interface Database {
           avatar_url: string | null
           home_city_id: string | null
           role: 'tourist' | 'local' | null
+          phone: string | null
+          birth_date: string | null
+          gender: 'masculin' | 'feminin' | 'prefer-sa-nu-spun' | null
+          theme: 'light' | 'dark' | 'system' | null
+          two_factor_enabled: boolean | null
           created_at: string
           updated_at: string
         }
@@ -27,6 +32,11 @@ export interface Database {
           avatar_url?: string | null
           home_city_id?: string | null
           role?: 'tourist' | 'local' | null
+          phone?: string | null
+          birth_date?: string | null
+          gender?: 'masculin' | 'feminin' | 'prefer-sa-nu-spun' | null
+          theme?: 'light' | 'dark' | 'system' | null
+          two_factor_enabled?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -37,6 +47,11 @@ export interface Database {
           avatar_url?: string | null
           home_city_id?: string | null
           role?: 'tourist' | 'local' | null
+          phone?: string | null
+          birth_date?: string | null
+          gender?: 'masculin' | 'feminin' | 'prefer-sa-nu-spun' | null
+          theme?: 'light' | 'dark' | 'system' | null
+          two_factor_enabled?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -86,6 +101,10 @@ export interface Database {
           budget_split_activities: number | null
           activity_prefs: string[] | null
           food_prefs: string[] | null
+          push_notifications_urgent: boolean | null
+          push_notifications_checkin: boolean | null
+          email_notifications_newsletter: boolean | null
+          email_notifications_offers: boolean | null
           created_at: string
           updated_at: string
         }
@@ -101,6 +120,10 @@ export interface Database {
           budget_split_activities?: number | null
           activity_prefs?: string[] | null
           food_prefs?: string[] | null
+          push_notifications_urgent?: boolean | null
+          push_notifications_checkin?: boolean | null
+          email_notifications_newsletter?: boolean | null
+          email_notifications_offers?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -116,6 +139,10 @@ export interface Database {
           budget_split_activities?: number | null
           activity_prefs?: string[] | null
           food_prefs?: string[] | null
+          push_notifications_urgent?: boolean | null
+          push_notifications_checkin?: boolean | null
+          email_notifications_newsletter?: boolean | null
+          email_notifications_offers?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -336,6 +363,11 @@ export interface Database {
           avatar_url: string | null
           home_city_id: string | null
           role: 'tourist' | 'local' | null
+          phone: string | null
+          birth_date: string | null
+          gender: 'masculin' | 'feminin' | 'prefer-sa-nu-spun' | null
+          theme: 'light' | 'dark' | 'system' | null
+          two_factor_enabled: boolean | null
           created_at: string
           updated_at: string
         }
@@ -346,6 +378,11 @@ export interface Database {
           avatar_url?: string | null
           home_city_id?: string | null
           role?: 'tourist' | 'local' | null
+          phone?: string | null
+          birth_date?: string | null
+          gender?: 'masculin' | 'feminin' | 'prefer-sa-nu-spun' | null
+          theme?: 'light' | 'dark' | 'system' | null
+          two_factor_enabled?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -356,6 +393,11 @@ export interface Database {
           avatar_url?: string | null
           home_city_id?: string | null
           role?: 'tourist' | 'local' | null
+          phone?: string | null
+          birth_date?: string | null
+          gender?: 'masculin' | 'feminin' | 'prefer-sa-nu-spun' | null
+          theme?: 'light' | 'dark' | 'system' | null
+          two_factor_enabled?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -405,6 +447,10 @@ export interface Database {
           budget_split_activities: number | null
           activity_prefs: string[] | null
           food_prefs: string[] | null
+          push_notifications_urgent: boolean | null
+          push_notifications_checkin: boolean | null
+          email_notifications_newsletter: boolean | null
+          email_notifications_offers: boolean | null
           created_at: string
           updated_at: string
         }
@@ -420,6 +466,10 @@ export interface Database {
           budget_split_activities?: number | null
           activity_prefs?: string[] | null
           food_prefs?: string[] | null
+          push_notifications_urgent?: boolean | null
+          push_notifications_checkin?: boolean | null
+          email_notifications_newsletter?: boolean | null
+          email_notifications_offers?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -435,6 +485,10 @@ export interface Database {
           budget_split_activities?: number | null
           activity_prefs?: string[] | null
           food_prefs?: string[] | null
+          push_notifications_urgent?: boolean | null
+          push_notifications_checkin?: boolean | null
+          email_notifications_newsletter?: boolean | null
+          email_notifications_offers?: boolean | null
           created_at?: string
           updated_at?: string
         }
