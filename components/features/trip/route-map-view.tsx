@@ -9,11 +9,10 @@ import { MapPin, Navigation, Loader2 } from 'lucide-react'
 import { RouteOptimizer } from '@/components/features/map/route-optimizer'
 import { DirectionsButton } from '@/components/features/map/directions-button'
 import { TransportCostsPanel } from './transport-costs-panel'
-import { calculateRealRoute } from '@/services/map/osrm-routing.service'
-import { calculateTransitRoute } from '@/services/map/transit-routing.service'
+import { calculateRealRoute } from '@/services/map/routing.service'
+import type { RoutePoint } from '@/services/map/routing.service'
 import { useAppStore } from '@/store/app-store'
 import type { Business } from '@/services/business/business.service'
-import type { RoutePoint } from '@/services/map/directions.service'
 import type { TransportMode } from '@/services/map/transport-costs.service'
 
 interface RouteMapViewProps {
@@ -182,9 +181,13 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
 
   // Handle route optimization
   const handleOptimized = (optimizedPoints: RoutePoint[]) => {
-    // Map optimized points back to item IDs
+    // Map optimized points back to item IDs using name matching
     const optimizedIds = optimizedPoints
-      .map(p => p.id)
+      .map(p => {
+        // Find matching business by name
+        const business = businesses.find(b => b.name === p.name)
+        return business?.id
+      })
       .filter((id): id is string => id !== undefined)
     
     if (optimizedIds.length === items.length) {
@@ -221,56 +224,30 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           name: b.name,
         }))
 
-        if (transportMode === 'transit' || transportMode === 'walking-transit') {
-          // Calculate transit route
-          if (currentCity?.name) {
-            const transitResult = await calculateTransitRoute(
-              { lat: points[0].latitude, lng: points[0].longitude, name: points[0].name },
-              { lat: points[points.length - 1].latitude, lng: points[points.length - 1].longitude, name: points[points.length - 1].name },
-              currentCity.name
-            )
-
-            if (transitResult) {
-              // Build geometry from transit segments
-              const coords: number[][] = []
-              transitResult.segments.forEach(segment => {
-                if (segment.walkingDistance) {
-                  // Walking segment - straight line
-                  coords.push([segment.from.lng, segment.from.lat])
-                  coords.push([segment.to.lng, segment.to.lat])
-                } else if (segment.route) {
-                  // Transit segment - use route shape if available
-                  coords.push([segment.from.lng, segment.from.lat])
-                  coords.push([segment.to.lng, segment.to.lat])
-                }
-              })
-              setRouteGeometry(coords.length > 0 ? coords : null)
-              setTransitInfo({
-                routes: (transitResult.routes || []).map(r => r?.shortName || r?.longName || '').filter(Boolean),
-                segments: transitResult.segments || [],
-              })
-            } else {
-              // Fallback to straight line
-              setRouteGeometry(points.map(p => [p.longitude, p.latitude]))
-              setTransitInfo(null)
-            }
-          } else {
-            setRouteGeometry(points.map(p => [p.longitude, p.latitude]))
-            setTransitInfo(null)
-          }
+        // Use local routing (no Docker, no external services)
+        const routingMode = transportMode === 'walking' ? 'walking' : transportMode === 'car' ? 'driving' : 'driving'
+        const routePoints: RoutePoint[] = points.map(p => ({
+          latitude: p.latitude,
+          longitude: p.longitude,
+          name: p.name,
+        }))
+        
+        const routeResult = calculateRealRoute(routePoints, routingMode)
+        
+        if (routeResult && routeResult.geometry) {
+          setRouteGeometry(routeResult.geometry)
         } else {
-          // Calculate real route using OSRM
-          const routeResult = await calculateRealRoute(
-            points,
-            transportMode === 'walking' ? 'walking' : transportMode === 'car' ? 'driving' : 'driving'
-          )
-
-          if (routeResult.geometry) {
-            setRouteGeometry(routeResult.geometry.coordinates)
-          } else {
-            // Fallback to straight line
-            setRouteGeometry(points.map(p => [p.longitude, p.latitude]))
-          }
+          // Fallback to straight line
+          setRouteGeometry(points.map(p => [p.longitude, p.latitude]))
+        }
+        
+        // For transit mode, show basic info
+        if (transportMode === 'transit') {
+          setTransitInfo({
+            routes: [],
+            segments: [],
+          })
+        } else {
           setTransitInfo(null)
         }
       } catch (error) {
@@ -332,18 +309,23 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
       ]
 
       setIsCalculatingRoute(true)
-      calculateRealRoute(points, transportMode === 'walking' ? 'walking' : 'driving')
-        .then(result => {
-          if (result.geometry) {
-            setRouteGeometry(result.geometry.coordinates)
-          }
-        })
-        .catch(error => {
-          console.error('Error calculating route from location:', error)
-        })
-        .finally(() => {
-          setIsCalculatingRoute(false)
-        })
+      const routingMode = transportMode === 'walking' ? 'walking' : 'driving'
+      const routePoints: RoutePoint[] = points.map(p => ({
+        latitude: p.latitude,
+        longitude: p.longitude,
+        name: p.name,
+      }))
+      
+      try {
+        const routeResult = calculateRealRoute(routePoints, routingMode)
+        if (routeResult && routeResult.geometry) {
+          setRouteGeometry(routeResult.geometry)
+        }
+      } catch (error) {
+        console.error('Error calculating route from location:', error)
+      } finally {
+        setIsCalculatingRoute(false)
+      }
     }
   }, [userLocation, businesses, transportMode])
 

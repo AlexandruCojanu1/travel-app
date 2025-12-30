@@ -56,3 +56,11 @@ docs/archive/
 
 # Test scripts (not needed in production)
 database/scripts/test/
+
+# Data files (too large for git)
+/data/*.osm.pbf
+/data/*.zip
+/data/*.osrm
+/data/*.osrm.hsgr
+/data/*.osrm.mld
+/data/graph.obj

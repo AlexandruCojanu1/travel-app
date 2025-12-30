@@ -1,0 +1,57 @@
+services:
+  # OpenTripPlanner v2 for Public Transit Routing
+  otp:
+    image: opentripplanner/opentripplanner:latest
+    container_name: mova-otp
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/var/otp/data
+    environment:
+      - JAVA_OPTS=-Xmx2G
+    command:
+      - --build
+      - --serve
+      - /var/otp/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/otp/routers/default"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - mova-network
+
+  # OSRM Backend for Car/Walking Routing
+  osrm:
+    image: osrm/osrm-backend:latest
+    platform: linux/arm64
+    container_name: mova-osrm
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./data:/data
+      - ./osrm-profiles:/profiles
+    command: >
+      sh -c "
+        if [ ! -f /data/brasov-latest.osrm ]; then
+          echo 'Building OSRM graph...';
+          osrm-extract -p /profiles/car.lua /data/brasov-latest.osm.pbf;
+          osrm-partition /data/brasov-latest.osrm;
+          osrm-customize /data/brasov-latest.osrm;
+        fi;
+        osrm-routed --algorithm mld --ip 0.0.0.0 --port 5000 /data/brasov-latest.osrm
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/route/v1/driving/25.6,45.6;25.7,45.7"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - mova-network
+
+networks:
+  mova-network:
+    driver: bridge
+

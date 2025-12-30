@@ -4,6 +4,8 @@
 
 import { getTransitStops, getTransitRoutes, getFeedPathForCity } from './gtfs.service'
 import type { TransitStop, TransitRoute } from './gtfs.service'
+import { getStopSchedule } from './gtfs-schedule.service'
+import { calculateRealRoute } from './osrm-routing.service'
 
 export interface TransitRouteSegment {
   from: { name: string; lat: number; lng: number }
@@ -14,6 +16,8 @@ export interface TransitRouteSegment {
   distance: number // meters
   duration: number // seconds (estimated)
   walkingDistance?: number // meters to/from stops
+  schedule?: Array<{ arrivalTime: string; departureTime: string }> // Real schedule times
+  routeShape?: Array<{ lat: number; lng: number }> // GTFS shape for route display
 }
 
 export interface TransitRouteResult {
@@ -137,33 +141,95 @@ export async function calculateTransitRoute(
     // Find connecting route
     const route = findConnectingRoute(fromStop, toStop, routes)
 
-    // Estimate transit distance and duration
-    const transitDistance = calculateDistance(
-      fromStop.latitude,
-      fromStop.longitude,
-      toStop.latitude,
-      toStop.longitude
-    )
+    // Use route shape if available, otherwise calculate distance
+    let transitDistance = 0
+    let routeShape: Array<{ lat: number; lng: number }> | undefined = undefined
     
-    // Estimate transit duration: average 20 km/h including stops
-    const transitDuration = (transitDistance / (20 / 3.6)) // seconds
+    if (route && route.shape && route.shape.length > 0) {
+      // Use actual route shape for distance calculation
+      routeShape = route.shape
+      
+      // Calculate distance along route shape
+      for (let i = 0; i < route.shape.length - 1; i++) {
+        transitDistance += calculateDistance(
+          route.shape[i].lat,
+          route.shape[i].lng,
+          route.shape[i + 1].lat,
+          route.shape[i + 1].lng
+        )
+      }
+    } else {
+      // Fallback: straight line distance
+      transitDistance = calculateDistance(
+        fromStop.latitude,
+        fromStop.longitude,
+        toStop.latitude,
+        toStop.longitude
+      )
+    }
+    
+    // Estimate transit duration: average 25 km/h including stops (more realistic)
+    const transitDuration = (transitDistance / (25 / 3.6)) // seconds
     // Add walking time: 5 km/h
     const walkDuration = ((walkToFromStop + walkFromToStop) / (5 / 3.6))
     const totalDuration = transitDuration + walkDuration
 
+    // Get real schedule times for the stop
+    let schedule: Array<{ arrivalTime: string; departureTime: string }> | undefined = undefined
+    if (route && fromStop.id) {
+      try {
+        const stopSchedule = await getStopSchedule(fromStop.id, route.id, cityName)
+        schedule = stopSchedule.map(s => ({
+          arrivalTime: s.arrivalTime,
+          departureTime: s.departureTime,
+        }))
+      } catch (error) {
+        console.warn('Could not load schedule:', error)
+      }
+    }
+
     const segments: TransitRouteSegment[] = []
     
-    // Walking segment to first stop
+    // Walking segment to first stop - use OSRM for real walking route
     if (walkToFromStop > 0) {
+      let walkingRouteGeometry: Array<{ lat: number; lng: number }> | undefined = undefined
+      let walkingDuration = walkToFromStop / (5 / 3.6) // fallback duration
+      let actualDistance = walkToFromStop
+      
+      try {
+        const walkingRoute = await calculateRealRoute(
+          [
+            { latitude: from.lat, longitude: from.lng, name: from.name || 'Start' },
+            { latitude: fromStop.latitude, longitude: fromStop.longitude, name: fromStop.name },
+          ],
+          'walking'
+        )
+        
+        if (walkingRoute && walkingRoute.segments.length > 0) {
+          const segment = walkingRoute.segments[0]
+          walkingDuration = segment.duration // seconds
+          actualDistance = segment.distance // meters
+          if (walkingRoute.geometry && walkingRoute.geometry.coordinates) {
+            walkingRouteGeometry = walkingRoute.geometry.coordinates.map((coord: number[]) => ({
+              lat: coord[1],
+              lng: coord[0],
+            }))
+          }
+        }
+      } catch (error) {
+        console.warn('Error calculating walking route to stop:', error)
+      }
+      
       segments.push({
         from: { name: from.name || 'Start', lat: from.lat, lng: from.lng },
         to: { name: fromStop.name, lat: fromStop.latitude, lng: fromStop.longitude },
         route: null,
         stopFrom: null,
         stopTo: fromStop,
-        distance: walkToFromStop,
-        duration: walkToFromStop / (5 / 3.6), // walking speed
-        walkingDistance: walkToFromStop,
+        distance: actualDistance,
+        duration: walkingDuration,
+        walkingDistance: actualDistance,
+        routeShape: walkingRouteGeometry, // Real walking route geometry
       })
     }
     
@@ -177,26 +243,60 @@ export async function calculateTransitRoute(
         stopTo: toStop,
         distance: transitDistance,
         duration: transitDuration,
+        schedule,
+        routeShape,
       })
     }
     
-    // Walking segment from last stop
+    // Walking segment from last stop - use OSRM for real walking route
     if (walkFromToStop > 0) {
+      let walkingRouteGeometry: Array<{ lat: number; lng: number }> | undefined = undefined
+      let walkingDuration = walkFromToStop / (5 / 3.6) // fallback duration
+      let actualDistance = walkFromToStop
+      
+      try {
+        const walkingRoute = await calculateRealRoute(
+          [
+            { latitude: toStop.latitude, longitude: toStop.longitude, name: toStop.name },
+            { latitude: to.lat, longitude: to.lng, name: to.name || 'Destination' },
+          ],
+          'walking'
+        )
+        
+        if (walkingRoute && walkingRoute.segments.length > 0) {
+          const segment = walkingRoute.segments[0]
+          walkingDuration = segment.duration // seconds
+          actualDistance = segment.distance // meters
+          if (walkingRoute.geometry && walkingRoute.geometry.coordinates) {
+            walkingRouteGeometry = walkingRoute.geometry.coordinates.map((coord: number[]) => ({
+              lat: coord[1],
+              lng: coord[0],
+            }))
+          }
+        }
+      } catch (error) {
+        console.warn('Error calculating walking route from stop:', error)
+      }
+      
       segments.push({
         from: { name: toStop.name, lat: toStop.latitude, lng: toStop.longitude },
         to: { name: to.name || 'Destination', lat: to.lat, lng: to.lng },
         route: null,
         stopFrom: toStop,
         stopTo: null,
-        distance: walkFromToStop,
-        duration: walkFromToStop / (5 / 3.6), // walking speed
-        walkingDistance: walkFromToStop,
+        distance: actualDistance,
+        duration: walkingDuration,
+        walkingDistance: actualDistance,
+        routeShape: walkingRouteGeometry, // Real walking route geometry
       })
     }
 
+    // Recalculate total distance from actual segment distances
+    const totalActualDistance = segments.reduce((sum, seg) => sum + seg.distance, 0)
+    
     return {
       segments,
-      totalDistance: walkToFromStop + transitDistance + walkFromToStop,
+      totalDistance: totalActualDistance,
       totalDuration,
       routes: route ? [route] : [],
     }

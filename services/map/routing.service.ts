@@ -139,10 +139,25 @@ export function calculateRealRoute(
     totalDuration += segment.duration
   }
 
+  // Build geometry from points (straight lines between points)
+  const geometry: number[][] = []
+  points.forEach((point, index) => {
+    if (index === 0) {
+      geometry.push([point.longitude, point.latitude])
+    }
+    if (index < points.length - 1) {
+      geometry.push([points[index + 1].longitude, points[index + 1].latitude])
+    }
+  })
+
   return {
     distance: totalDistance,
     duration: totalDuration,
-    segments,
+    segments: segments.map(seg => ({
+      ...seg,
+      geometry: undefined, // No detailed geometry for local calculation
+    })),
+    geometry,
   }
 }
 

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useMemo } from 'react'
-import { DollarSign, Clock, MapPin } from 'lucide-react'
+import { DollarSign, Clock, MapPin, Bus, User } from 'lucide-react'
 import {
   calculateTransportCosts,
   getTransportModeLabel,
@@ -22,7 +22,6 @@ interface TransportCostsPanelProps {
 const transportModes: TransportMode[] = [
   'walking',
   'transit',
-  'walking-transit',
   'car',
   'taxi',
 ]
@@ -163,38 +162,111 @@ export function TransportCostsPanel({
             <h4 className="text-sm font-semibold text-gray-700 mb-2">
               Detalii traseu:
             </h4>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {costs.segments.map((segment, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between bg-white rounded-lg p-2 border border-gray-100 text-sm"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">
-                      {segment.from} → {segment.to}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
-                      <span>{segment.distance.toFixed(1)} km</span>
-                      <span>•</span>
-                      <span>{segment.duration} min</span>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {costs.segments.map((segment, index) => {
+                const seg = segment as any
+                // Check if this is a walking segment (has walkingDistance)
+                const isWalkingSegment = seg.walkingDistance !== undefined && seg.walkingDistance > 0
+                // Check if this is a transit segment (has route and schedule)
+                const isTransitSegment = seg.route && seg.schedule && seg.schedule.length > 0
+                
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-start gap-3 bg-white rounded-lg p-3 border ${
+                      isTransitSegment ? 'border-blue-200 bg-blue-50/30' : 'border-gray-100'
+                    } text-sm`}
+                  >
+                    {/* Icon */}
+                    <div className="flex-shrink-0 mt-0.5">
+                      {isWalkingSegment ? (
+                        <User className="h-4 w-4 text-gray-600" />
+                      ) : isTransitSegment ? (
+                        <div className="relative">
+                          <Bus className="h-5 w-5 text-blue-600" />
+                          {seg.route?.shortName && (
+                            <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                              {seg.route.shortName}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <MapPin className="h-4 w-4 text-gray-600" />
+                      )}
                     </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      {/* Route description */}
+                      <div className="mb-1">
+                        {isWalkingSegment ? (
+                          <p className="text-sm font-medium text-gray-700">
+                            Mers pe jos
+                          </p>
+                        ) : isTransitSegment ? (
+                          <div>
+                            <p className="text-sm font-semibold text-blue-700">
+                              {seg.route?.shortName ? `Linia ${seg.route.shortName}` : 'Transport în comun'}
+                            </p>
+                            {seg.stopFrom && seg.stopTo && (
+                              <p className="text-xs text-gray-600 mt-0.5">
+                                {seg.stopFrom.name} → {seg.stopTo.name}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm font-medium text-gray-900">
+                            {segment.from} → {segment.to}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Details */}
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                        {isTransitSegment && seg.schedule && seg.schedule.length > 0 && (
+                          <>
+                            <span className="font-semibold text-blue-700">
+                              {seg.schedule[0].departureTime || seg.schedule[0].arrivalTime}
+                            </span>
+                            {seg.stopFrom && (
+                              <span className="text-gray-500">
+                                din {seg.stopFrom.name}
+                              </span>
+                            )}
+                            <span className="text-gray-400">•</span>
+                          </>
+                        )}
+                        <span>{segment.distance.toFixed(1)} km</span>
+                        <span className="text-gray-400">•</span>
+                        <span>{segment.duration} min</span>
+                        {isTransitSegment && seg.schedule && seg.schedule.length > 1 && (
+                          <>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-blue-600">
+                              +{seg.schedule.length - 1} plecări
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Cost badge */}
+                    {segment.cost > 0 ? (
+                      <div className="flex-shrink-0">
+                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded font-semibold text-xs">
+                          {segment.cost.toFixed(2)} RON
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex-shrink-0">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded font-semibold text-xs">
+                          Gratis
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  {segment.cost > 0 && (
-                    <div className="ml-3 flex-shrink-0">
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded font-semibold text-xs">
-                        {segment.cost.toFixed(2)} RON
-                      </span>
-                    </div>
-                  )}
-                  {segment.cost === 0 && (
-                    <div className="ml-3 flex-shrink-0">
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded font-semibold text-xs">
-                        Gratis
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

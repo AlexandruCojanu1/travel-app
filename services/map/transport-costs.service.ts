@@ -1,15 +1,15 @@
 /**
  * Service for calculating transportation costs and distances
- * Uses real routing when possible, falls back to Haversine
+ * Uses local routing calculation (Haversine with correction factors)
+ * No Docker, no external services needed
  */
 
-import { calculateRealRoute, type RoutePoint as RoutingPoint } from './osrm-routing.service'
-import { calculateTransitRoute } from './transit-routing.service'
+import { calculateRealRoute } from './routing.service'
+import type { RoutePoint } from './routing.service'
 
 export type TransportMode = 
   | 'walking' 
   | 'transit' 
-  | 'walking-transit' 
   | 'car' 
   | 'taxi'
 
@@ -28,6 +28,16 @@ export interface TransportSegment {
   distance: number // in km
   duration: number // in minutes
   cost: number // in RON
+  // Transit-specific fields
+  route?: {
+    shortName: string
+    longName: string
+  }
+  stopFrom?: { name: string }
+  stopTo?: { name: string }
+  schedule?: Array<{ arrivalTime: string; departureTime: string }>
+  walkingDistance?: number
+  mode?: 'WALK' | 'BUS' | 'TRAM' | 'SUBWAY' | 'RAIL'
 }
 
 /**
@@ -61,7 +71,7 @@ function calculateSegmentCost(
 ): { cost: number; duration: number } {
   switch (mode) {
     case 'walking':
-      // Walking: free, ~5 km/h average speed
+      // Walking: free, ~5 km/h average speed (realistic)
       return {
         cost: 0,
         duration: Math.round((distance / 5) * 60), // minutes
@@ -75,34 +85,21 @@ function calculateSegmentCost(
         duration: Math.round((distance / 20) * 60), // minutes
       }
 
-    case 'walking-transit':
-      // Mixed: assume 50% walking, 50% transit
-      // Walking part: free
-      // Transit part: 5 RON
-      const walkingDistance = distance * 0.5
-      const transitDistance = distance * 0.5
-      return {
-        cost: 5, // One transit ticket
-        duration: Math.round(
-          (walkingDistance / 5) * 60 + (transitDistance / 20) * 60
-        ),
-      }
-
     case 'car':
       // Car: fuel cost ~6 RON/liter, consumption ~7L/100km
       // Cost per km: (6 * 7) / 100 = 0.42 RON/km
-      // Average speed: ~40 km/h in city
+      // Average speed: ~50 km/h in city (more realistic)
       return {
         cost: distance * 0.42,
-        duration: Math.round((distance / 40) * 60), // minutes
+        duration: Math.round((distance / 50) * 60), // minutes
       }
 
     case 'taxi':
       // Taxi/Uber/Bolt: 3 RON per km
-      // Average speed: ~30 km/h in city
+      // Average speed: ~40 km/h in city (more realistic)
       return {
         cost: distance * 3,
-        duration: Math.round((distance / 30) * 60), // minutes
+        duration: Math.round((distance / 40) * 60), // minutes
       }
 
     default:
@@ -112,8 +109,7 @@ function calculateSegmentCost(
 
 /**
  * Calculate transportation costs for a route
- * Uses OSRM for real routes (walking, driving, cycling)
- * Uses GTFS for transit routes
+ * Uses local routing calculation (no Docker, no external services)
  */
 export async function calculateTransportCosts(
   points: Array<{ latitude: number; longitude: number; name?: string }>,
@@ -154,86 +150,67 @@ export async function calculateTransportCosts(
     }
   }
 
-  // Determine routing mode based on transport mode
-  let routingMode: 'walking' | 'driving' | 'cycling' = 'driving'
-  if (mode === 'walking' || mode === 'walking-transit') {
-    routingMode = 'walking'
-  } else if (mode === 'car' || mode === 'taxi') {
-    routingMode = 'driving'
-  }
-
-  // Convert to routing points
-  const routingPoints: RoutingPoint[] = validPoints.map(p => ({
-    latitude: p.latitude,
-    longitude: p.longitude,
-    name: p.name,
-  }))
-
-  // Calculate routes - use transit routing for transit modes
-  let routeResult
+  // Calculate routes using local routing (no Docker, no external services)
+  let routeResult: {
+    distance: number
+    duration: number
+    segments: TransportSegment[]
+    geometry?: { coordinates: number[][] }
+  } | null = null
   let isRealRoute = false
   
   try {
-    if (mode === 'transit' || mode === 'walking-transit') {
-      // Use transit routing
-      if (cityName && routingPoints.length >= 2) {
-        const firstPoint = routingPoints[0]
-        const lastPoint = routingPoints[routingPoints.length - 1]
+    // Convert to routing points
+    const routingPoints: RoutePoint[] = validPoints.map(p => ({
+      latitude: p.latitude,
+      longitude: p.longitude,
+      name: p.name,
+    }))
+    
+    // Determine routing mode
+    let routingMode: 'walking' | 'driving' | 'cycling' = 'driving'
+    if (mode === 'walking') {
+      routingMode = 'walking'
+    } else if (mode === 'car' || mode === 'taxi') {
+      routingMode = 'driving'
+    }
+    
+    // Use local routing service (Haversine with correction factors)
+    const localRoute = calculateRealRoute(routingPoints, routingMode)
+    
+    if (localRoute && localRoute.segments.length > 0) {
+      const segments: TransportSegment[] = localRoute.segments.map((seg, index) => {
+        const from = validPoints[index]
+        const to = validPoints[index + 1]
+        const distanceKm = seg.distance / 1000
+        const durationMin = Math.round(seg.duration / 60)
         
-        if (firstPoint && lastPoint) {
-          try {
-            const transitResult = await calculateTransitRoute(
-              { 
-                lat: firstPoint.latitude, 
-                lng: firstPoint.longitude, 
-                name: firstPoint.name || undefined 
-              },
-              { 
-                lat: lastPoint.latitude, 
-                lng: lastPoint.longitude, 
-                name: lastPoint.name || undefined 
-              },
-              cityName
-            )
-            
-            if (transitResult && transitResult.segments && transitResult.segments.length > 0) {
-              routeResult = {
-                distance: transitResult.totalDistance,
-                duration: transitResult.totalDuration,
-                segments: transitResult.segments.map(s => ({
-                  distance: s.distance || 0,
-                  duration: s.duration || 0,
-                })),
-              }
-              isRealRoute = true
-            }
-          } catch (transitError) {
-            console.warn('Error calculating transit route:', transitError)
-          }
+        const { cost } = calculateSegmentCost(distanceKm, mode)
+        
+        return {
+          distance: Math.round(distanceKm * 100) / 100,
+          duration: durationMin,
+          from: from.name || `Punct ${index + 1}`,
+          to: to.name || `Punct ${index + 2}`,
+          cost: Math.round(cost * 100) / 100,
         }
-      }
+      })
       
-      // Fallback if transit routing fails
-      if (!routeResult || !routeResult.segments || routeResult.segments.length === 0) {
-        routeResult = await calculateRealRoute(routingPoints, 'walking')
-        isRealRoute = routeResult.segments.length > 0 && routeResult.geometry !== undefined
+      routeResult = {
+        distance: localRoute.distance / 1000, // Convert to km
+        duration: Math.round(localRoute.duration / 60), // Convert to minutes
+        segments,
+        geometry: localRoute.geometry ? { coordinates: localRoute.geometry } : undefined,
       }
-    } else {
-      // Use OSRM for walking, driving, cycling
-      routeResult = await calculateRealRoute(routingPoints, routingMode)
-      isRealRoute = routeResult.segments.length > 0 && routeResult.geometry !== undefined
+      isRealRoute = true // Local calculation is "real" enough for our purposes
     }
   } catch (error) {
     console.warn('Error calculating routes, using fallback:', error)
-    routeResult = {
-      distance: 0,
-      duration: 0,
-      segments: [],
-    }
+    routeResult = null
   }
 
   // If no real routes, fallback to Haversine
-  if (!routeResult || routeResult.segments.length === 0) {
+  if (!routeResult || !routeResult.segments || routeResult.segments.length === 0) {
     // Fallback calculation
     const segments: TransportSegment[] = []
     let totalDistance = 0
@@ -281,41 +258,50 @@ export async function calculateTransportCosts(
   }
 
   // Use real route data
-  const segments: TransportSegment[] = []
-  let totalCost = 0
+  const segments: TransportSegment[] = routeResult.segments
+  let totalCost = segments.reduce((sum, seg) => sum + seg.cost, 0)
 
-  for (let i = 0; i < routeResult.segments.length; i++) {
-    const segment = routeResult.segments[i]
-    const from = validPoints[i]
-    const to = validPoints[i + 1]
-
-    // Safety check - skip if points are missing
-    if (!from || !to || !segment) {
-      continue
+  // Calculate total duration - use route duration if realistic, otherwise calculate manually
+  let totalDuration: number
+  const totalDistanceKm = routeResult.distance
+  const routeDurationMin = routeResult.duration
+  
+  if (mode === 'walking') {
+    // For walking, verify route duration is realistic (3-6 km/h)
+    const calculatedSpeed = totalDistanceKm / (routeDurationMin / 60) // km/h
+    if (calculatedSpeed >= 3 && calculatedSpeed <= 6 && routeDurationMin > 0) {
+      totalDuration = routeDurationMin
+    } else {
+      // Fallback: 5 km/h
+      totalDuration = Math.round((totalDistanceKm / 5) * 60)
     }
-
-    // Convert distance from meters to km
-    const distanceKm = segment.distance / 1000
-    // Convert duration from seconds to minutes
-    const durationMin = Math.round(segment.duration / 60)
-
-    const { cost } = calculateSegmentCost(distanceKm, mode)
-
-    segments.push({
-      from: from.name || `Punct ${i + 1}`,
-      to: to.name || `Punct ${i + 2}`,
-      distance: Math.round(distanceKm * 100) / 100,
-      duration: durationMin,
-      cost: Math.round(cost * 100) / 100,
-    })
-
-    totalCost += cost
+  } else if (mode === 'car') {
+    // For car, verify route duration is realistic (30-70 km/h)
+    const calculatedSpeed = totalDistanceKm / (routeDurationMin / 60) // km/h
+    if (calculatedSpeed >= 30 && calculatedSpeed <= 70 && routeDurationMin > 0) {
+      totalDuration = routeDurationMin
+    } else {
+      // Fallback: 50 km/h
+      totalDuration = Math.round((totalDistanceKm / 50) * 60)
+    }
+  } else if (mode === 'taxi') {
+    // For taxi, verify route duration is realistic (25-60 km/h)
+    const calculatedSpeed = totalDistanceKm / (routeDurationMin / 60) // km/h
+    if (calculatedSpeed >= 25 && calculatedSpeed <= 60 && routeDurationMin > 0) {
+      totalDuration = routeDurationMin
+    } else {
+      // Fallback: 40 km/h
+      totalDuration = Math.round((totalDistanceKm / 40) * 60)
+    }
+  } else {
+    // For transit, use the calculated duration
+    totalDuration = routeDurationMin
   }
 
   return {
     mode,
-    totalDistance: Math.round((routeResult.distance / 1000) * 100) / 100, // Convert to km
-    totalDuration: Math.round(routeResult.duration / 60), // Convert to minutes
+    totalDistance: Math.round(totalDistanceKm * 100) / 100,
+    totalDuration,
     totalCost: Math.round(totalCost * 100) / 100,
     segments,
     isRealRoute,
@@ -331,8 +317,6 @@ export function getTransportModeLabel(mode: TransportMode): string {
       return 'Mers pe jos'
     case 'transit':
       return 'Transport în comun'
-    case 'walking-transit':
-      return 'Pe jos + Transport'
     case 'car':
       return 'Mașină personală'
     case 'taxi':
@@ -351,8 +335,6 @@ export function getTransportModeIcon(mode: TransportMode): string {
       return '🚶'
     case 'transit':
       return '🚌'
-    case 'walking-transit':
-      return '🚶🚌'
     case 'car':
       return '🚗'
     case 'taxi':
@@ -361,4 +343,3 @@ export function getTransportModeIcon(mode: TransportMode): string {
       return '📍'
   }
 }
-

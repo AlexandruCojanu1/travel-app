@@ -69,10 +69,14 @@ async function calculateOSRMRoute(
     if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
       const route = data.routes[0]
       
-      return {
-        distance: route.distance, // meters
-        duration: route.duration, // seconds
-        geometry: route.geometry || undefined,
+      // OSRM returns distance in meters and duration in seconds
+      // Verify the values are reasonable
+      if (route.distance && route.duration && route.distance > 0 && route.duration > 0) {
+        return {
+          distance: route.distance, // meters
+          duration: route.duration, // seconds
+          geometry: route.geometry || undefined,
+        }
       }
     }
 
@@ -127,21 +131,21 @@ function calculateRouteSegmentFallback(
   
   switch (profile) {
     case 'foot':
-      roadCorrectionFactor = 1.15
-      speed = 5 / 3.6
+      roadCorrectionFactor = 1.2 // Walking paths are slightly longer
+      speed = 5 / 3.6 // 5 km/h = 1.39 m/s
       break
     case 'car':
-      roadCorrectionFactor = 1.35
-      speed = 40 / 3.6
+      roadCorrectionFactor = 1.4 // Roads are more circuitous
+      speed = 50 / 3.6 // 50 km/h city driving = 13.89 m/s
       break
     case 'bike':
-      roadCorrectionFactor = 1.25
-      speed = 15 / 3.6
+      roadCorrectionFactor = 1.3 // Bike paths are somewhat circuitous
+      speed = 15 / 3.6 // 15 km/h = 4.17 m/s
       break
   }
 
   const roadDistance = straightDistance * roadCorrectionFactor
-  const duration = roadDistance / speed
+  const duration = roadDistance / speed // seconds
 
   return {
     distance: roadDistance,
