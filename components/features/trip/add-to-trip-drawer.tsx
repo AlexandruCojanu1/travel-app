@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/shared/ui/button'
 import { useTripStore } from '@/store/trip-store'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
 import type { Business } from '@/services/business/business.service'
 import type { MapBusiness } from '@/services/business/business.service'
 
@@ -47,13 +48,19 @@ export function AddToTripDrawer({
     return priceMap[priceLevel || '€€'] || 150
   }
 
-  const estimatedCost = getPriceFromLevel(
+  // Check if this is a nature reserve or recreation area (free)
+  const isNatureOrActivity = business.category === 'Nature' || 
+                             business.category === 'Activities' ||
+                             business.id?.startsWith('nature-') ||
+                             business.id?.startsWith('recreation-')
+  
+  const estimatedCost = isNatureOrActivity ? 0 : getPriceFromLevel(
     'price_level' in business ? business.price_level : undefined
   )
 
-  // Calculate budget impact
+  // Calculate budget impact (only for paid activities)
   const budgetImpact =
-    remaining > 0 ? Math.round((estimatedCost / remaining) * 100) : 0
+    remaining > 0 && estimatedCost > 0 ? Math.round((estimatedCost / remaining) * 100) : 0
 
   // Generate day options with dates
   const dayOptions = Array.from({ length: daysCount }).map((_, index) => {
@@ -63,7 +70,7 @@ export function AddToTripDrawer({
     dayDate.setDate(startDate.getDate() + index)
     return {
       index,
-      label: `Day ${index + 1}`,
+      label: `Ziua ${index + 1}`,
       date: format(dayDate, 'EEE d'),
     }
   })
@@ -76,20 +83,27 @@ export function AddToTripDrawer({
   const handleAddToDay = () => {
     if (!tripDetails) return
 
-    addItem(
-      {
-        id: business.id,
-        name: business.name,
-        category: business.category,
-        price_level:
-          'price_level' in business ? business.price_level : undefined,
-      },
-      selectedDayIndex
-    )
+    try {
+      addItem(
+        {
+          id: business.id,
+          name: business.name,
+          category: business.category,
+          price_level:
+            'price_level' in business ? business.price_level : undefined,
+        },
+        selectedDayIndex
+      )
 
-    onOpenChange(false)
-    if (onSuccess) {
-      onSuccess(selectedDayIndex)
+      onOpenChange(false)
+      if (onSuccess) {
+        onSuccess(selectedDayIndex)
+      }
+    } catch (error: any) {
+      // Show error message if duplicate
+      if (error.message) {
+        toast.error(error.message)
+      }
     }
   }
 
@@ -98,28 +112,28 @@ export function AddToTripDrawer({
       <DrawerContent className="max-h-[70vh]">
         <DrawerHeader>
           <DrawerTitle className="text-xl font-bold">
-            Add {business.name} to...
+            Adaugă {business.name} la...
           </DrawerTitle>
         </DrawerHeader>
 
-        <div className="px-4 pb-6 overflow-y-auto space-y-6">
+        <div className="px-4 pb-6 overflow-y-auto space-y-6 max-h-[60vh]">
           {/* Case A: No Active Trip */}
           {!tripDetails ? (
             <div className="space-y-4">
               <div className="bg-gray-50 rounded-xl p-6 text-center">
                 <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No Active Trip
+                  Nu există călătorie activă
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Create a new trip first to start planning your itinerary
+                  Creează o călătorie nouă pentru a începe să-ți planifici itinerariul
                 </p>
                 <Button
                   onClick={handleCreateTrip}
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Create a New Trip
+                  Creează o călătorie nouă
                 </Button>
               </div>
             </div>
@@ -129,9 +143,9 @@ export function AddToTripDrawer({
               {/* Day Selection */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
-                  Select Day
+                  Selectează ziua
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">
                   {dayOptions.map((day) => {
                     if (!day) return null
                     const isSelected = selectedDayIndex === day.index
@@ -139,16 +153,16 @@ export function AddToTripDrawer({
                       <button
                         key={day.index}
                         onClick={() => setSelectedDayIndex(day.index)}
-                        className={`p-4 rounded-xl border-2 transition-all text-left ${
+                        className={`p-3 rounded-xl border-2 transition-all text-left ${
                           isSelected
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-gray-200 bg-white hover:border-gray-300'
                         }`}
                       >
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 text-sm">
                           {day.label}
                         </div>
-                        <div className="text-sm text-gray-600 mt-1">
+                        <div className="text-xs text-gray-600 mt-1">
                           {day.date}
                         </div>
                       </button>
@@ -157,19 +171,19 @@ export function AddToTripDrawer({
                 </div>
               </div>
 
-              {/* Budget Impact */}
-              {budget && remaining > 0 && (
+              {/* Budget Impact - Only show for paid activities */}
+              {budget && remaining > 0 && estimatedCost > 0 && (
                 <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
                   <div className="flex items-start gap-3">
                     <DollarSign className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900 mb-1">
-                        Budget Impact
+                        Impact buget
                       </p>
                       <p className="text-xs text-gray-600">
-                        Consumes ~{budgetImpact}% of remaining budget (
+                        Consumă ~{budgetImpact}% din bugetul rămas (
                         {estimatedCost.toFixed(0)} {budget.currency} /{' '}
-                        {remaining.toFixed(0)} {budget.currency} remaining)
+                        {remaining.toFixed(0)} {budget.currency} rămas)
                       </p>
                     </div>
                   </div>
@@ -182,7 +196,7 @@ export function AddToTripDrawer({
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6"
               >
                 <Plus className="h-5 w-5 mr-2" />
-                Add to Day {selectedDayIndex + 1}
+                Adaugă la Ziua {selectedDayIndex + 1}
               </Button>
             </>
           )}

@@ -34,9 +34,9 @@ export function TimelineItem({
 
   // Get relative time slot based on index
   const getTimeSlot = (idx: number, total: number) => {
-    if (idx === 0) return 'Start of Day'
-    if (idx === total - 1) return 'End of Day'
-    return 'Next Stop'
+    if (idx === 0) return 'Începutul zilei'
+    if (idx === total - 1) return 'Sfârșitul zilei'
+    return 'Următoarea oprire'
   }
 
   const timeSlot = getTimeSlot(index, totalItems)
@@ -60,7 +60,19 @@ export function TimelineItem({
     }
   }
 
+  // Translate category to Romanian
+  const translateCategory = (category?: string) => {
+    const translations: Record<string, string> = {
+      'Hotels': 'Hoteluri',
+      'Food': 'Mâncare',
+      'Nature': 'Natură',
+      'Activities': 'Activități',
+    }
+    return translations[category || ''] || category || 'Activitate'
+  }
+
   const categoryIcon = getCategoryIcon(item.business_category)
+  const translatedCategory = translateCategory(item.business_category)
 
   return (
     <motion.div
@@ -124,11 +136,11 @@ export function TimelineItem({
           <div className="flex items-start justify-between mb-2 pl-6">
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-mova-dark text-base mb-1 line-clamp-1">
-                {item.business_name || 'Business'}
+                {item.business_name || 'Loc'}
               </h3>
               <div className="flex items-center gap-2 text-sm text-mova-gray">
                 <div className="text-mova-gray">{categoryIcon}</div>
-                <span>{item.business_category || 'Activity'}</span>
+                <span>{translatedCategory}</span>
               </div>
             </div>
 
@@ -146,12 +158,21 @@ export function TimelineItem({
             </Button>
           </div>
 
-          {/* Footer: Cost Badge */}
-          <div className="flex items-center justify-end mt-3 pl-6">
-            <span className="px-3 py-1 bg-mova-light-blue text-mova-blue rounded-full text-sm font-semibold">
-              {item.estimated_cost.toFixed(0)} {budget?.currency || 'RON'}
-            </span>
-          </div>
+          {/* Footer: Cost Badge - Only show if cost > 0 */}
+          {item.estimated_cost > 0 && (
+            <div className="flex items-center justify-end mt-3 pl-6">
+              <span className="px-3 py-1 bg-mova-light-blue text-mova-blue rounded-full text-sm font-semibold">
+                {item.estimated_cost.toFixed(0)} {budget?.currency || 'RON'}
+              </span>
+            </div>
+          )}
+          {item.estimated_cost === 0 && (
+            <div className="flex items-center justify-end mt-3 pl-6">
+              <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-semibold">
+                Gratis
+              </span>
+            </div>
+          )}
         </motion.div>
       </div>
     </motion.div>

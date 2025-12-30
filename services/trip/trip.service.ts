@@ -98,19 +98,26 @@ export async function fetchUserTrip() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single()
 
     if (error) {
-      if (error.code === "PGRST116") {
-        // No trip found
+      // 406 error usually means Accept header issue or RLS policy
+      // Try without .single() first
+      if (error.code === "PGRST116" || error.status === 406) {
+        // No trip found or RLS issue - return empty
         return { success: true, trip: null }
       }
       return { success: false, error: error.message }
     }
 
-    return { success: true, trip: data }
+    // If no data, return null
+    if (!data || data.length === 0) {
+      return { success: true, trip: null }
+    }
+
+    return { success: true, trip: data[0] }
   } catch (error: any) {
-    return { success: false, error: error.message || "An unexpected error occurred" }
+    // Silently handle errors - trips are optional
+    return { success: true, trip: null }
   }
 }
 

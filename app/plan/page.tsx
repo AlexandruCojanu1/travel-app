@@ -38,10 +38,10 @@ export default function PlanPage() {
             <Sparkles className="h-12 w-12 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-mova-dark mb-3">
-            Start Planning Your Trip
+            Începe să-ți planifici călătoria
           </h2>
           <p className="text-mova-gray mb-8">
-            Create your perfect itinerary, set a budget, and track your spending all in one place.
+            Creează-ți itinerariul perfect, stabilește un buget și urmărește-ți cheltuielile într-un singur loc.
           </p>
           <Button
             onClick={() => setIsCreateDialogOpen(true)}
@@ -49,7 +49,7 @@ export default function PlanPage() {
             className="airbnb-button px-8 py-6 text-lg"
           >
             <Plus className="h-5 w-5 mr-2" />
-            Start a New Trip
+            Începe o călătorie nouă
           </Button>
         </div>
 
@@ -72,7 +72,7 @@ export default function PlanPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-            Trip to {tripDetails.cityName || 'Your Destination'}
+            Călătorie la {tripDetails.cityName || 'Destinația ta'}
           </h1>
           <div className="flex items-center gap-4 text-slate-600">
             <div className="flex items-center gap-1.5">
@@ -87,7 +87,7 @@ export default function PlanPage() {
             </div>
             <div className="flex items-center gap-1.5">
               <MapPin className="h-4 w-4" />
-              <span className="text-sm">{daysCount} days</span>
+              <span className="text-sm">{daysCount} zile</span>
             </div>
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function PlanPage() {
             className="flex items-center gap-2"
           >
             <Share2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Share</span>
+            <span className="hidden sm:inline">Distribuie</span>
           </Button>
         </div>
       </div>
@@ -116,7 +116,7 @@ export default function PlanPage() {
         <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="h-5 w-5 text-mova-blue" />
-            <span className="text-sm font-medium text-mova-gray">Places</span>
+            <span className="text-sm font-medium text-mova-gray">Locuri</span>
           </div>
           <p className="text-2xl font-bold text-mova-dark">{placesCount}</p>
         </div>
@@ -124,7 +124,7 @@ export default function PlanPage() {
         <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="h-5 w-5 text-purple-600" />
-            <span className="text-sm font-medium text-mova-gray">Days</span>
+            <span className="text-sm font-medium text-mova-gray">Zile</span>
           </div>
           <p className="text-2xl font-bold text-mova-dark">{daysCount}</p>
         </div>
@@ -132,7 +132,7 @@ export default function PlanPage() {
         <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
-            <span className="text-sm font-medium text-mova-gray">Spent</span>
+            <span className="text-sm font-medium text-mova-gray">Cheltuit</span>
           </div>
           <p className="text-2xl font-bold text-mova-dark">
             {spent.toFixed(0)} {budget?.currency || 'RON'}
@@ -142,7 +142,7 @@ export default function PlanPage() {
         <div className="airbnb-card p-5">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-5 w-5 text-orange-600" />
-            <span className="text-sm font-medium text-mova-gray">Remaining</span>
+            <span className="text-sm font-medium text-mova-gray">Rămas</span>
           </div>
           <p className="text-2xl font-bold text-mova-dark">
             {budget
@@ -161,20 +161,20 @@ export default function PlanPage() {
           className="flex items-center gap-2"
         >
           <Edit className="h-4 w-4" />
-          Edit Budget
+          Editează bugetul
         </Button>
         <Button
           variant="outline"
           className="flex items-center gap-2"
         >
           <Share2 className="h-4 w-4" />
-          Share Plan
+          Distribuie planul
         </Button>
       </div>
 
       {/* Timeline View */}
       <div>
-        <h2 className="text-xl font-bold text-mova-dark mb-4">Itinerary</h2>
+        <h2 className="text-xl font-bold text-mova-dark mb-4">Itinerar</h2>
         <TimelineView />
       </div>
 
@@ -182,11 +182,11 @@ export default function PlanPage() {
       {isEditBudgetOpen && budget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-airbnb-lg p-6 max-w-md w-full mx-4 shadow-airbnb-lg border border-gray-200">
-            <h3 className="text-lg font-bold text-mova-dark mb-4">Edit Budget</h3>
+            <h3 className="text-lg font-bold text-mova-dark mb-4">Editează bugetul</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-mova-dark mb-2">
-                  Budget: {budget.total.toLocaleString()} {budget.currency}
+                  Buget: {budget.total.toLocaleString()} {budget.currency}
                 </label>
                 <input
                   type="number"
@@ -203,13 +203,13 @@ export default function PlanPage() {
                   variant="outline"
                   onClick={() => setIsEditBudgetOpen(false)}
                 >
-                  Cancel
+                  Anulează
                 </Button>
                 <Button
                   onClick={() => setIsEditBudgetOpen(false)}
                   className="airbnb-button"
                 >
-                  Save
+                  Salvează
                 </Button>
               </div>
             </div>

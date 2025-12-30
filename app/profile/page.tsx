@@ -85,14 +85,14 @@ export default function ProfilePage() {
             <span className="text-2xl">⚠️</span>
           </div>
           <h3 className="text-xl font-bold text-mova-dark mb-2">
-            Something went wrong
+            Ceva nu a mers bine
           </h3>
           <p className="text-mova-gray mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="airbnb-button px-6 py-3"
           >
-            Try Again
+            Încearcă din nou
           </button>
         </div>
       </div>
@@ -106,7 +106,7 @@ export default function ProfilePage() {
 
       {/* Menu List */}
       <div className="space-y-3">
-        <h2 className="text-lg font-bold text-mova-dark px-2">Quick Actions</h2>
+        <h2 className="text-lg font-bold text-mova-dark px-2">Acțiuni rapide</h2>
 
         {/* Saved Places */}
         <Link
@@ -119,10 +119,10 @@ export default function ProfilePage() {
             </div>
             <div>
               <h3 className="font-semibold text-mova-dark group-hover:text-mova-blue transition-colors text-base">
-                Saved Places
+                Locuri salvate
               </h3>
               <p className="text-sm text-mova-gray">
-                {profileData.stats.savedPlacesCount} saved
+                {profileData.stats.savedPlacesCount} salvate
               </p>
             </div>
           </div>
@@ -140,10 +140,10 @@ export default function ProfilePage() {
             </div>
             <div>
               <h3 className="font-semibold text-mova-dark group-hover:text-mova-blue transition-colors text-base">
-                Account Settings
+                Setări cont
               </h3>
               <p className="text-sm text-mova-gray">
-                Manage your account details
+                Gestionează detaliile contului tău
               </p>
             </div>
           </div>
@@ -161,9 +161,9 @@ export default function ProfilePage() {
             </div>
             <div>
               <h3 className="font-semibold text-mova-dark group-hover:text-mova-blue transition-colors text-base">
-                Help & Support
+                Ajutor și suport
               </h3>
-              <p className="text-sm text-mova-gray">Get help when you need it</p>
+              <p className="text-sm text-mova-gray">Obține ajutor când ai nevoie</p>
             </div>
           </div>
           <ChevronRight className="h-5 w-5 text-mova-gray group-hover:text-mova-blue transition-colors" />
@@ -173,10 +173,10 @@ export default function ProfilePage() {
       {/* Travel Preferences */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-2">
-          <h2 className="text-lg font-bold text-mova-dark">Travel Preferences</h2>
+          <h2 className="text-lg font-bold text-mova-dark">Preferințe de călătorie</h2>
           <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors flex items-center gap-1">
             <Edit className="h-4 w-4" />
-            Edit
+            Editează
           </button>
         </div>
 

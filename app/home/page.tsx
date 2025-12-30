@@ -185,9 +185,9 @@ export default function HomePage() {
   // Get greeting based on time of day
   const getGreeting = () => {
     const hour = new Date().getHours()
-    if (hour < 12) return "Good Morning"
-    if (hour < 18) return "Good Afternoon"
-    return "Good Evening"
+    if (hour < 12) return "Bună dimineața"
+    if (hour < 18) return "Bună ziua"
+    return "Bună seara"
   }
 
   // Get current date formatted
@@ -201,15 +201,15 @@ export default function HomePage() {
           <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/25">
             <MapPin className="h-10 w-10 text-white" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-3">Choose Your Destination</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mb-3">Alege Destinația</h3>
           <p className="text-slate-600 mb-6">
-            Select a city to discover amazing places, events, and local experiences
+            Selectează un oraș pentru a descoperi locuri uimitoare, evenimente și experiențe locale
           </p>
           <button
             onClick={openCitySelector}
             className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
           >
-            Select City
+            Selectează Oraș
           </button>
         </div>
       </div>
@@ -231,13 +231,13 @@ export default function HomePage() {
           <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">⚠️</span>
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">Something went wrong</h3>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">Ceva nu a mers bine</h3>
           <p className="text-slate-600 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
           >
-            Try Again
+            Încearcă din nou
           </button>
         </div>
       </div>
@@ -276,19 +276,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-mova-blue to-mova-teal rounded-airbnb-lg p-8 md:p-10 text-white shadow-airbnb-md">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="h-5 w-5" />
-          <span className="text-white/90 font-semibold">{getGreeting()}</span>
-        </div>
-        <h2 className="text-3xl md:text-4xl font-bold mb-3">
-          Discover What's New
-        </h2>
-        <p className="text-white/90 max-w-2xl text-lg">
-          Explore the latest events, top-rated places, and exclusive deals in your city
-        </p>
-      </div>
 
       {/* Quick Filters */}
       <div>
@@ -301,10 +288,10 @@ export default function HomePage() {
       {/* Featured Section - "Don't Miss" */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Don't Miss</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Nu rata</h2>
           {feedData.featuredBusinesses.length > 0 && (
             <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors">
-              View All
+              Vezi toate
             </button>
           )}
         </div>
@@ -317,10 +304,10 @@ export default function HomePage() {
               <MapPin className="h-8 w-8 text-slate-400" />
             </div>
             <h3 className="font-semibold text-slate-900 mb-2">
-              No featured places yet
+              Încă nu există locuri recomandate
             </h3>
             <p className="text-slate-600 text-sm">
-              Check back soon for new recommendations
+              Revino curând pentru recomandări noi
             </p>
           </div>
         )}
@@ -329,10 +316,10 @@ export default function HomePage() {
       {/* News/Events Section - "Happening Nearby" */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Happening Nearby</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Se întâmplă în apropiere</h2>
           {feedData.cityPosts.length > 0 && (
             <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors">
-              View All
+              Vezi toate
             </button>
           )}
         </div>
@@ -349,15 +336,15 @@ export default function HomePage() {
               <Calendar className="h-8 w-8 text-mova-gray" />
             </div>
             <h3 className="font-semibold text-mova-dark mb-2 text-lg">
-              No news or events yet
+              Încă nu există știri sau evenimente
             </h3>
             <p className="text-mova-gray text-sm">
-              Be the first to share something happening in your city
+              Fii primul care împărtășește ceva ce se întâmplă în orașul tău
             </p>
             {/* Only show Create Post button for business owners */}
             {isBusinessOwner && (
             <button className="mt-4 airbnb-button">
-              Create Post
+              Creează postare
             </button>
             )}
           </div>
@@ -368,9 +355,9 @@ export default function HomePage() {
       {feedData.promotions.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Special Offers</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Oferte speciale</h2>
             <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors">
-              View All
+              Vezi toate
             </button>
           </div>
 
@@ -385,7 +372,7 @@ export default function HomePage() {
                     {promotion.discount_percentage}% OFF
                   </span>
                   <span className="text-xs text-slate-600">
-                    Valid until {format(new Date(promotion.valid_until), "MMM d")}
+                    Valabil până pe {format(new Date(promotion.valid_until), "d MMM")}
                   </span>
                 </div>
                 <h3 className="font-bold text-slate-900 mb-2">{promotion.title}</h3>

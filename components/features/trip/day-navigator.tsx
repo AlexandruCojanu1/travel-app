@@ -42,7 +42,7 @@ export function DayNavigator({
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             )}
           >
-            Day {dayIndex + 1}
+            Ziua {dayIndex + 1}
           </button>
         ))}
       </div>

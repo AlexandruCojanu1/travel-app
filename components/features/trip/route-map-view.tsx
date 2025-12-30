@@ -1,14 +1,20 @@
 "use client"
 
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import Map, { Marker, Source, Layer } from 'react-map-gl'
 import { useTripStore } from '@/store/trip-store'
 import { getBusinessById } from '@/services/business/business.service'
-import { MapPin } from 'lucide-react'
+import { getBrasovNatureReserves, getBrasovRecreationAreas } from '@/services/nature/nature-reserves.service'
+import { MapPin, Navigation, Loader2 } from 'lucide-react'
 import { RouteOptimizer } from '@/components/features/map/route-optimizer'
 import { DirectionsButton } from '@/components/features/map/directions-button'
+import { TransportCostsPanel } from './transport-costs-panel'
+import { calculateRealRoute } from '@/services/map/osrm-routing.service'
+import { calculateTransitRoute } from '@/services/map/transit-routing.service'
+import { useAppStore } from '@/store/app-store'
 import type { Business } from '@/services/business/business.service'
 import type { RoutePoint } from '@/services/map/directions.service'
+import type { TransportMode } from '@/services/map/transport-costs.service'
 
 interface RouteMapViewProps {
   dayIndex: number
@@ -17,37 +23,129 @@ interface RouteMapViewProps {
 
 export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) {
   const { getItemsByDay, tripDetails, reorderItems } = useTripStore()
+  const { currentCity } = useAppStore()
   const [businesses, setBusinesses] = React.useState<Business[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [transportMode, setTransportMode] = useState<TransportMode>('walking')
+  const [routeGeometry, setRouteGeometry] = useState<number[][] | null>(null)
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [isLocating, setIsLocating] = useState(false)
+  const [transitInfo, setTransitInfo] = useState<{ routes: string[]; segments: any[] } | null>(null)
 
   const items = getItemsByDay(dayIndex)
+  
+  // Memoize items IDs to prevent infinite loops
+  const itemsIds = React.useMemo(() => items.map(i => i.id).join(','), [items])
 
-  // Load business details for all items
+  // Load business details for all items (including nature reserves and recreation areas)
   React.useEffect(() => {
+    let cancelled = false
+    
     async function loadBusinesses() {
       if (items.length === 0) {
-        setBusinesses([])
-        setIsLoading(false)
+        if (!cancelled) {
+          setBusinesses([])
+          setIsLoading(false)
+        }
         return
       }
 
-      setIsLoading(true)
+      if (!cancelled) {
+        setIsLoading(true)
+      }
+      
       try {
-        const businessPromises = items.map((item) => getBusinessById(item.business_id))
+        // Load hardcoded nature reserves and recreation areas
+        const natureReserves = getBrasovNatureReserves()
+        const recreationAreas = getBrasovRecreationAreas()
+        
+        const businessPromises = items.map(async (item) => {
+          // Check if it's a nature reserve
+          if (item.business_id.startsWith('nature-')) {
+            const reserveName = item.business_id.replace('nature-', '').replace(/-/g, ' ').toLowerCase().trim()
+            const reserve = natureReserves.find((r) => {
+              const rName = r.name.toLowerCase().trim()
+              // Flexible matching: exact match or contains
+              return rName === reserveName || 
+                     rName.includes(reserveName) || 
+                     reserveName.includes(rName)
+            })
+            if (reserve) {
+              return {
+                id: item.business_id,
+                name: reserve.name,
+                category: 'Nature',
+                latitude: reserve.latitude,
+                longitude: reserve.longitude,
+                description: reserve.description,
+                address: null,
+                image_url: null,
+                rating: null,
+                is_verified: false,
+                city_id: '',
+                created_at: '',
+                updated_at: '',
+              } as Business
+            }
+          }
+          
+          // Check if it's a recreation area
+          if (item.business_id.startsWith('recreation-')) {
+            const areaName = item.business_id.replace('recreation-', '').replace(/-/g, ' ').toLowerCase().trim()
+            const area = recreationAreas.find((a) => {
+              const aName = a.name.toLowerCase().trim()
+              // Flexible matching: exact match or contains
+              return aName === areaName || 
+                     aName.includes(areaName) || 
+                     areaName.includes(aName)
+            })
+            if (area) {
+              return {
+                id: item.business_id,
+                name: area.name,
+                category: 'Activities',
+                latitude: area.latitude,
+                longitude: area.longitude,
+                description: area.description,
+                address: null,
+                image_url: null,
+                rating: null,
+                is_verified: false,
+                city_id: '',
+                created_at: '',
+                updated_at: '',
+              } as Business
+            }
+          }
+          
+          // Regular business
+          return getBusinessById(item.business_id)
+        })
+        
         const businessResults = await Promise.all(businessPromises)
-        const validBusinesses = businessResults.filter(
-          (b): b is Business => b !== null && b.latitude !== null && b.longitude !== null
-        )
-        setBusinesses(validBusinesses)
+        
+        if (!cancelled) {
+          const validBusinesses = businessResults.filter(
+            (b): b is Business => b !== null && b.latitude !== null && b.longitude !== null
+          )
+          setBusinesses(validBusinesses)
+          setIsLoading(false)
+        }
       } catch (error) {
         console.error('Error loading businesses for route:', error)
-      } finally {
-        setIsLoading(false)
+        if (!cancelled) {
+          setIsLoading(false)
+        }
       }
     }
 
     loadBusinesses()
-  }, [items])
+    
+    return () => {
+      cancelled = true
+    }
+  }, [itemsIds, dayIndex])
 
   // Calculate center and bounds
   const { center, bounds } = useMemo(() => {
@@ -105,33 +203,172 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
     }))
   }, [businesses])
 
-  // Create route line connecting businesses in order
+  // Calculate real route when businesses or transport mode changes
+  useEffect(() => {
+    if (businesses.length < 2) {
+      setRouteGeometry(null)
+      setTransitInfo(null)
+      return
+    }
+
+    setIsCalculatingRoute(true)
+    
+    async function calculateRoute() {
+      try {
+        const points: RoutePoint[] = businesses.map(b => ({
+          latitude: b.latitude!,
+          longitude: b.longitude!,
+          name: b.name,
+        }))
+
+        if (transportMode === 'transit' || transportMode === 'walking-transit') {
+          // Calculate transit route
+          if (currentCity?.name) {
+            const transitResult = await calculateTransitRoute(
+              { lat: points[0].latitude, lng: points[0].longitude, name: points[0].name },
+              { lat: points[points.length - 1].latitude, lng: points[points.length - 1].longitude, name: points[points.length - 1].name },
+              currentCity.name
+            )
+
+            if (transitResult) {
+              // Build geometry from transit segments
+              const coords: number[][] = []
+              transitResult.segments.forEach(segment => {
+                if (segment.walkingDistance) {
+                  // Walking segment - straight line
+                  coords.push([segment.from.lng, segment.from.lat])
+                  coords.push([segment.to.lng, segment.to.lat])
+                } else if (segment.route) {
+                  // Transit segment - use route shape if available
+                  coords.push([segment.from.lng, segment.from.lat])
+                  coords.push([segment.to.lng, segment.to.lat])
+                }
+              })
+              setRouteGeometry(coords.length > 0 ? coords : null)
+              setTransitInfo({
+                routes: (transitResult.routes || []).map(r => r?.shortName || r?.longName || '').filter(Boolean),
+                segments: transitResult.segments || [],
+              })
+            } else {
+              // Fallback to straight line
+              setRouteGeometry(points.map(p => [p.longitude, p.latitude]))
+              setTransitInfo(null)
+            }
+          } else {
+            setRouteGeometry(points.map(p => [p.longitude, p.latitude]))
+            setTransitInfo(null)
+          }
+        } else {
+          // Calculate real route using OSRM
+          const routeResult = await calculateRealRoute(
+            points,
+            transportMode === 'walking' ? 'walking' : transportMode === 'car' ? 'driving' : 'driving'
+          )
+
+          if (routeResult.geometry) {
+            setRouteGeometry(routeResult.geometry.coordinates)
+          } else {
+            // Fallback to straight line
+            setRouteGeometry(points.map(p => [p.longitude, p.latitude]))
+          }
+          setTransitInfo(null)
+        }
+      } catch (error) {
+        console.error('Error calculating route:', error)
+        // Fallback to straight line
+        const points: RoutePoint[] = businesses.map(b => ({
+          latitude: b.latitude!,
+          longitude: b.longitude!,
+          name: b.name,
+        }))
+        setRouteGeometry(points.map(p => [p.longitude, p.latitude]))
+        setTransitInfo(null)
+      } finally {
+        setIsCalculatingRoute(false)
+      }
+    }
+
+    calculateRoute()
+  }, [businesses, transportMode, currentCity?.name])
+
+  // Handle user location
+  const handleGetLocation = React.useCallback(() => {
+    if (!navigator.geolocation) {
+      alert('Geolocation nu este suportat de browser-ul tău')
+      return
+    }
+    
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        setUserLocation({ lat: latitude, lng: longitude })
+        setIsLocating(false)
+      },
+      (error) => {
+        console.error('Error getting location:', error)
+        alert('Nu am putut obține locația ta. Te rugăm să verifici permisiunile.')
+        setIsLocating(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    )
+  }, [])
+
+  // Calculate route from user location to first activity
+  useEffect(() => {
+    if (userLocation && businesses.length > 0) {
+      // Recalculate route with user location as start
+      const points: RoutePoint[] = [
+        { latitude: userLocation.lat, longitude: userLocation.lng, name: 'Locația mea' },
+        ...businesses.map(b => ({
+          latitude: b.latitude!,
+          longitude: b.longitude!,
+          name: b.name,
+        })),
+      ]
+
+      setIsCalculatingRoute(true)
+      calculateRealRoute(points, transportMode === 'walking' ? 'walking' : 'driving')
+        .then(result => {
+          if (result.geometry) {
+            setRouteGeometry(result.geometry.coordinates)
+          }
+        })
+        .catch(error => {
+          console.error('Error calculating route from location:', error)
+        })
+        .finally(() => {
+          setIsCalculatingRoute(false)
+        })
+    }
+  }, [userLocation, businesses, transportMode])
+
+  // Create route line from calculated geometry
   const routeLine = useMemo(() => {
-    if (businesses.length < 2) return null
-
-    const coordinates = businesses
-      .map((b) => [b.longitude!, b.latitude!] as [number, number])
-      .filter((coord) => coord[0] !== null && coord[1] !== null)
-
-    if (coordinates.length < 2) return null
+    if (!routeGeometry || routeGeometry.length < 2) return null
 
     return {
       type: 'Feature' as const,
       geometry: {
         type: 'LineString' as const,
-        coordinates,
+        coordinates: routeGeometry,
       },
       properties: {},
     }
-  }, [businesses])
+  }, [routeGeometry])
 
+  // Early returns AFTER all hooks
   if (isLoading) {
     return (
       <div
         className="w-full bg-gray-100 rounded-xl flex items-center justify-center"
         style={{ height }}
       >
-        <div className="text-gray-500">Loading route...</div>
+        <div className="text-gray-500">Se încarcă ruta...</div>
       </div>
     )
   }
@@ -144,7 +381,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
       >
         <div className="text-gray-500 text-center">
           <MapPin className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-          <p>No locations added for this day</p>
+          <p>Nu există locații adăugate pentru această zi</p>
         </div>
       </div>
     )
@@ -153,13 +390,64 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
   return (
     <div className="space-y-4">
       {businesses.length >= 2 && (
-        <div className="flex items-center justify-between gap-4">
-          <RouteOptimizer
+        <>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <RouteOptimizer
+                points={routePoints}
+                onOptimized={handleOptimized}
+              />
+              <DirectionsButton points={routePoints} />
+              <button
+                onClick={handleGetLocation}
+                disabled={isLocating}
+                className="px-4 py-2 rounded-lg font-semibold text-sm transition-all border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50 flex items-center gap-2 disabled:opacity-50"
+              >
+                {isLocating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Navigation className="h-4 w-4" />
+                )}
+                <span>Locația mea</span>
+              </button>
+            </div>
+            {isCalculatingRoute && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Se calculează ruta...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Transit Info */}
+          {transitInfo && transitInfo.routes.length > 0 && (
+            <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+              <h4 className="font-semibold text-blue-900 mb-2">Transport în comun:</h4>
+              <div className="flex flex-wrap gap-2">
+                {transitInfo.routes.map((routeName, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-semibold"
+                  >
+                    Linia {routeName}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-blue-700 mt-2">
+                {transitInfo.segments.filter(s => s.walkingDistance).length > 0 && 
+                  'Include mers pe jos până la stație și de la stație'}
+              </p>
+            </div>
+          )}
+          
+          {/* Transport Costs Panel */}
+          <TransportCostsPanel
             points={routePoints}
-            onOptimized={handleOptimized}
+            selectedMode={transportMode}
+            onModeChange={setTransportMode}
+            cityName={currentCity?.name}
           />
-          <DirectionsButton points={routePoints} />
-        </div>
+        </>
       )}
       
       <div className="w-full rounded-xl overflow-hidden border border-gray-200" style={{ height }}>
@@ -197,6 +485,27 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           </Source>
         )}
 
+        {/* User Location Marker */}
+        {userLocation && (
+          <Marker
+            latitude={userLocation.lat}
+            longitude={userLocation.lng}
+            anchor="center"
+          >
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-blue-500 rounded-full opacity-20 animate-ping" />
+              </div>
+              <div className="relative flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                  <div className="w-3 h-3 bg-white rounded-full" />
+                </div>
+                <div className="absolute top-7 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-blue-600" />
+              </div>
+            </div>
+          </Marker>
+        )}
+
         {/* Business Markers */}
         {businesses.map((business, index) => (
           <Marker
@@ -207,7 +516,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           >
             <div className="relative">
               <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white">
-                {index + 1}
+                {userLocation ? index + 1 : index + 1}
               </div>
               <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
                 <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-600" />

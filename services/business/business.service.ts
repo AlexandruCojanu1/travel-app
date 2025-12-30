@@ -42,8 +42,6 @@ export async function getBusinessesForMap(
       .from('businesses')
       .select('*')
       .eq('city_id', cityId)
-      .not('latitude', 'is', null)
-      .not('longitude', 'is', null)
 
     if (category) {
       query = query.eq('category', category)
@@ -56,18 +54,33 @@ export async function getBusinessesForMap(
       return []
     }
 
+    // Extract coordinates from attributes JSONB or direct columns (lat/lng)
+    // Filter out businesses without valid coordinates
+    const validBusinesses = (data || []).filter((b: any) => {
+      const attributes = b.attributes || {}
+      const lat = b.latitude ?? b.lat ?? attributes.latitude ?? attributes.lat
+      const lng = b.longitude ?? b.lng ?? attributes.longitude ?? attributes.lng
+      return lat != null && lng != null
+    })
+
     // Transform to MapBusiness and add price_level based on category
-    return (data || []).map((business) => ({
-      id: business.id,
-      name: business.name,
-      category: business.category,
-      latitude: business.latitude!,
-      longitude: business.longitude!,
-      rating: business.rating,
-      image_url: business.image_url,
-      address: business.address,
-      price_level: getPriceLevelForCategory(business.category),
-    }))
+    return validBusinesses.map((business: any) => {
+      const attributes = business.attributes || {}
+      const lat = business.latitude ?? business.lat ?? attributes.latitude ?? attributes.lat
+      const lng = business.longitude ?? business.lng ?? attributes.longitude ?? attributes.lng
+      
+      return {
+        id: business.id,
+        name: business.name,
+        category: business.category,
+        latitude: lat,
+        longitude: lng,
+        rating: business.rating,
+        image_url: business.image_url,
+        address: business.address,
+        price_level: getPriceLevelForCategory(business.category),
+      }
+    })
   } catch (error) {
     console.error('Unexpected error fetching businesses for map:', error)
     return []
@@ -172,12 +185,6 @@ export async function searchBusinessesInBounds(
       .from('businesses')
       .select('*')
       .eq('city_id', cityId)
-      .not('latitude', 'is', null)
-      .not('longitude', 'is', null)
-      .gte('latitude', bounds.south)
-      .lte('latitude', bounds.north)
-      .gte('longitude', bounds.west)
-      .lte('longitude', bounds.east)
 
     if (category) {
       query = query.eq('category', category)
@@ -190,17 +197,33 @@ export async function searchBusinessesInBounds(
       return []
     }
 
-    return (data || []).map((business) => ({
-      id: business.id,
-      name: business.name,
-      category: business.category,
-      latitude: business.latitude!,
-      longitude: business.longitude!,
-      rating: business.rating,
-      image_url: business.image_url,
-      address: business.address,
-      price_level: getPriceLevelForCategory(business.category),
-    }))
+    // Extract coordinates from attributes JSONB or direct columns (lat/lng)
+    // Filter by bounds and valid coordinates
+    const validBusinesses = (data || []).filter((b: any) => {
+      const attributes = b.attributes || {}
+      const lat = b.latitude ?? b.lat ?? attributes.latitude ?? attributes.lat
+      const lng = b.longitude ?? b.lng ?? attributes.longitude ?? attributes.lng
+      if (lat == null || lng == null) return false
+      return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east
+    })
+
+    return validBusinesses.map((business: any) => {
+      const attributes = business.attributes || {}
+      const lat = business.latitude ?? business.lat ?? attributes.latitude ?? attributes.lat
+      const lng = business.longitude ?? business.lng ?? attributes.longitude ?? attributes.lng
+      
+      return {
+        id: business.id,
+        name: business.name,
+        category: business.category,
+        latitude: lat,
+        longitude: lng,
+        rating: business.rating,
+        image_url: business.image_url,
+        address: business.address,
+        price_level: getPriceLevelForCategory(business.category),
+      }
+    })
   } catch (error) {
     console.error('Unexpected error searching businesses in bounds:', error)
     return []

@@ -92,7 +92,24 @@ export const useTripStore = create<TripState>()(
       },
 
       addItem: (business, dayIndex) => {
-        const estimatedCost = getPriceFromLevel(business.price_level)
+        const state = get()
+        
+        // Check if this activity already exists in this day
+        const existingItem = state.items.find(
+          (item) => item.day_index === dayIndex && item.business_id === business.id
+        )
+        
+        if (existingItem) {
+          // Item already exists in this day - don't add duplicate
+          throw new Error('Această activitate există deja în această zi')
+        }
+        
+        // For Nature reserves and Activities, always set cost to 0
+        const isNatureOrActivity = business.category === 'Nature' || 
+                                   business.category === 'Activities' ||
+                                   business.id?.startsWith('nature-') ||
+                                   business.id?.startsWith('recreation-')
+        const estimatedCost = isNatureOrActivity ? 0 : getPriceFromLevel(business.price_level)
         
         const newItem: TripItem = {
           id: `${Date.now()}-${Math.random()}`,
@@ -104,9 +121,9 @@ export const useTripStore = create<TripState>()(
           created_at: new Date().toISOString(),
         }
 
-        set((state) => ({
+        set({
           items: [...state.items, newItem],
-        }))
+        })
       },
 
       removeItem: (itemId) => {
@@ -251,15 +268,25 @@ export const useTripStore = create<TripState>()(
               budget: trip.budget_total
                 ? { total: trip.budget_total, currency: 'RON' }
                 : null,
-              items: (trip.items as any[] || []).map((item: any) => ({
-                id: item.id || `${Date.now()}-${Math.random()}`,
-                business_id: item.business_id,
-                business_name: item.business_name,
-                business_category: item.business_category,
-                estimated_cost: item.estimated_cost,
-                day_index: item.day_index,
-                created_at: item.id ? undefined : new Date().toISOString(),
-              })),
+              items: (trip.items as any[] || []).map((item: any) => {
+                // Fix: Nature reserves should always be free
+                const isNatureReserve = item.business_category === 'Nature' || 
+                                       item.business_name?.includes('Rezervație') ||
+                                       item.business_name?.includes('Peștera') ||
+                                       item.business_name?.includes('Dealul') ||
+                                       item.business_id?.startsWith('nature-')
+                const estimatedCost = isNatureReserve ? 0 : (item.estimated_cost || 0)
+                
+                return {
+                  id: item.id || `${Date.now()}-${Math.random()}`,
+                  business_id: item.business_id,
+                  business_name: item.business_name,
+                  business_category: item.business_category,
+                  estimated_cost: estimatedCost,
+                  day_index: item.day_index,
+                  created_at: item.id ? undefined : new Date().toISOString(),
+                }
+              }),
               tripId: trip.id,
               syncStatus: 'synced',
             })

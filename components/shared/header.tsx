@@ -14,11 +14,11 @@ import { useAppStore } from "@/store/app-store"
 import { createClient } from "@/lib/supabase/client"
 
 const navLinks = [
-  { label: "Home", href: "/home" },
-  { label: "Explore", href: "/explore" },
-  { label: "Plan", href: "/plan" },
-  { label: "Bookings", href: "/bookings" },
-  { label: "Profile", href: "/profile" },
+  { label: "Acasă", href: "/home" },
+  { label: "Explorează", href: "/explore" },
+  { label: "Planifică", href: "/plan" },
+  { label: "Rezervări", href: "/bookings" },
+  { label: "Profil", href: "/profile" },
 ]
 
 export function Header() {

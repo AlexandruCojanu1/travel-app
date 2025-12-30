@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, forwardRef, useImperativeHandle } from 'react'
 import Map, { Marker, NavigationControl, GeolocateControl, Source, Layer } from 'react-map-gl'
 import type { MapRef } from 'react-map-gl'
 import Supercluster from 'supercluster'
@@ -21,9 +21,42 @@ interface MapViewProps {
   bottomNavHeight?: number
   onBusinessSelect: (business: MapBusiness | null) => void
   selectedBusinessId: string | null
+  onNatureReserveSelect?: (reserve: {
+    name: string
+    latitude: number
+    longitude: number
+    description: string
+    area_hectares: number
+    iucn_category: string
+    reserve_type: string
+  } | null) => void
+  onRecreationAreaSelect?: (area: {
+    name: string
+    latitude: number
+    longitude: number
+    description: string
+    category: string
+  } | null) => void
   onMapMove?: (bounds: { north: number; south: number; east: number; west: number }) => void
   cityName?: string
   showTransit?: boolean
+  userLocation?: { lat: number; lng: number } | null
+  natureReserves?: Array<{
+    name: string
+    latitude: number
+    longitude: number
+    description: string
+    area_hectares: number
+    iucn_category: string
+    reserve_type: string
+  }>
+  recreationAreas?: Array<{
+    name: string
+    latitude: number
+    longitude: number
+    description: string
+    category: string
+  }>
 }
 
 type ClusterFeature = {
@@ -51,7 +84,11 @@ type PointFeature = {
   }
 }
 
-export function MapView({
+export interface MapViewRef {
+  centerToLocation: (lat: number, lng: number) => void
+}
+
+export const MapView = forwardRef<MapViewRef, MapViewProps>(({
   businesses,
   initialLatitude,
   initialLongitude,
@@ -62,13 +99,35 @@ export function MapView({
   onMapMove,
   cityName,
   showTransit = false,
-}: MapViewProps) {
+  userLocation = null,
+  natureReserves = [],
+  recreationAreas = [],
+  onNatureReserveSelect,
+  onRecreationAreaSelect,
+}, ref) => {
   const mapRef = useRef<MapRef>(null)
   const [viewState, setViewState] = useState({
     latitude: initialLatitude,
     longitude: initialLongitude,
     zoom: initialZoom,
   })
+
+  // Expose centerToLocation function to parent via ref
+  useImperativeHandle(ref, () => ({
+    centerToLocation: (lat: number, lng: number) => {
+      setViewState({
+        latitude: lat,
+        longitude: lng,
+        zoom: 15, // Zoom closer for user location
+      })
+      // Also use flyTo for smooth animation
+      mapRef.current?.flyTo({
+        center: [lng, lat],
+        zoom: 15,
+        duration: 1000,
+      })
+    },
+  }))
   const [transitStops, setTransitStops] = useState<TransitStop[]>([])
   const [transitRoutes, setTransitRoutes] = useState<TransitRoute[]>([])
   const [selectedStop, setSelectedStop] = useState<TransitStop | null>(null)
@@ -300,18 +359,128 @@ export function MapView({
           </Marker>
         ))}
 
-        {/* Map Controls */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md">
-            <NavigationControl showCompass={false} />
-          </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md">
-            <GeolocateControl
-              positionOptions={{ enableHighAccuracy: true }}
-              trackUserLocation={true}
-            />
-          </div>
-        </div>
+        {/* Nature Reserves Markers */}
+        {natureReserves.map((reserve) => (
+          <Marker
+            key={`nature-reserve-${reserve.name}`}
+            latitude={reserve.latitude}
+            longitude={reserve.longitude}
+            anchor="center"
+            onClick={(e) => {
+              e.originalEvent.preventDefault()
+              if (onNatureReserveSelect) {
+                onNatureReserveSelect(reserve)
+              }
+            }}
+          >
+            <div className="relative group">
+              {/* Main marker */}
+              <div className="relative flex items-center justify-center cursor-pointer">
+                <div className="w-10 h-10 bg-green-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                {/* Pin point */}
+                <div className="absolute top-9 w-0 h-0 border-l-5 border-r-5 border-t-8 border-l-transparent border-r-transparent border-t-green-600" />
+              </div>
+              {/* Tooltip on hover */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                <div className="bg-white rounded-lg shadow-xl p-3 border-2 border-green-200 min-w-[200px] max-w-[250px]">
+                  <h3 className="font-bold text-green-800 text-sm mb-1">{reserve.name}</h3>
+                  <p className="text-xs text-gray-600 mb-1">{reserve.description}</p>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>{reserve.area_hectares} ha</span>
+                    <span>•</span>
+                    <span>IUCN {reserve.iucn_category}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Marker>
+        ))}
+
+        {/* Recreation Areas Markers */}
+        {recreationAreas.map((area) => (
+          <Marker
+            key={`recreation-area-${area.name}`}
+            latitude={area.latitude}
+            longitude={area.longitude}
+            anchor="center"
+            onClick={(e) => {
+              e.originalEvent.preventDefault()
+              if (onRecreationAreaSelect) {
+                onRecreationAreaSelect(area)
+              }
+            }}
+          >
+            <div className="relative group">
+              {/* Main marker */}
+              <div className="relative flex items-center justify-center cursor-pointer">
+                <div className="w-10 h-10 bg-purple-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                  </svg>
+                </div>
+                {/* Pin point */}
+                <div className="absolute top-9 w-0 h-0 border-l-5 border-r-5 border-t-8 border-l-transparent border-r-transparent border-t-purple-600" />
+              </div>
+              {/* Tooltip on hover */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                <div className="bg-white rounded-lg shadow-xl p-3 border-2 border-purple-200 min-w-[200px] max-w-[250px]">
+                  <h3 className="font-bold text-purple-800 text-sm mb-1">{area.name}</h3>
+                  <p className="text-xs text-gray-600">{area.description}</p>
+                </div>
+              </div>
+            </div>
+          </Marker>
+        ))}
+
+        {/* User Location Marker */}
+        {userLocation && (
+          <Marker
+            latitude={userLocation.lat}
+            longitude={userLocation.lng}
+            anchor="center"
+          >
+            <div className="relative">
+              {/* Pulse animation circle */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-blue-500 rounded-full opacity-20 animate-ping" />
+              </div>
+              {/* Main pin */}
+              <div className="relative flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                  <div className="w-3 h-3 bg-white rounded-full" />
+                </div>
+                {/* Pin point */}
+                <div className="absolute top-7 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-blue-600" />
+              </div>
+            </div>
+          </Marker>
+        )}
+
+        {/* Map Controls - Must be direct children of Map component */}
+        <NavigationControl position="top-right" showCompass={false} />
+        <GeolocateControl 
+          position="bottom-right"
+          positionOptions={{ enableHighAccuracy: true }}
+          trackUserLocation={true}
+        />
+
+
 
         {/* Transit Stop Info Popup */}
         {showTransit && selectedStop && (
@@ -339,5 +508,7 @@ export function MapView({
       </Map>
     </div>
   )
-}
+})
+
+MapView.displayName = 'MapView'
 

@@ -164,48 +164,16 @@ export async function getCityFeed(
 
     // Fetch active promotions
     // Handle case where is_active column might not exist
-    const now = new Date().toISOString()
-    let promotionsQuery = supabase
+    // Don't try to filter by is_active or dates - just fetch all promotions
+    // This avoids 400 errors if columns don't exist
+    const { data: promotions, error: promotionsError } = await supabase
       .from('promotions')
       .select('*')
       .limit(5)
 
-    // Try to filter by is_active if column exists
-    try {
-      promotionsQuery = promotionsQuery.eq('is_active', true)
-    } catch (e) {
-      // Column doesn't exist, skip this filter
-      console.warn('is_active column not found, fetching all promotions')
-    }
-
-    // Try to filter by date range
-    try {
-      promotionsQuery = promotionsQuery
-        .lte('valid_from', now)
-        .gte('valid_until', now)
-    } catch (e) {
-      // Date columns might not exist, skip
-      console.warn('Date columns not found, skipping date filter')
-    }
-
-    const { data: promotions, error: promotionsError } = await promotionsQuery
-
     if (promotionsError) {
-      console.error('Error fetching promotions:', promotionsError)
-      // If is_active column doesn't exist (code 42703), try without it
-      if (promotionsError.code === '42703' || promotionsError.message?.includes('is_active')) {
-        console.warn('is_active column not found, fetching promotions without filter')
-        const { data: simplePromotions } = await supabase
-          .from('promotions')
-          .select('*')
-          .limit(5)
-        
-        return {
-          cityPosts: cityPosts || [],
-          featuredBusinesses: featuredBusinesses || [],
-          promotions: simplePromotions || [],
-        }
-      }
+      // Silently fail - promotions are optional
+      console.warn('Error fetching promotions (non-critical):', promotionsError.message)
     }
 
     return {

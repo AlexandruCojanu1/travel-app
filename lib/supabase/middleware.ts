@@ -52,19 +52,29 @@ export async function updateSession(request: NextRequest) {
         // Refresh session first to ensure cookies are up to date
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         if (sessionError) {
-            logger.warn('Middleware: Error getting session', { error: sessionError })
+            // Only log non-AuthSessionMissingError errors (missing session is normal for unauthenticated users)
+            if (sessionError.name !== 'AuthSessionMissingError' && sessionError.status !== 400) {
+                logger.warn('Middleware: Error getting session', { error: sessionError })
+            }
         }
         
         // Then get user
         const { data: { user: userData }, error: userError } = await supabase.auth.getUser()
         if (userError) {
-            logger.warn('Middleware: Error getting user', { error: userError })
+            // Only log non-AuthSessionMissingError errors (missing session is normal for unauthenticated users)
+            if (userError.name !== 'AuthSessionMissingError' && userError.status !== 400) {
+                logger.warn('Middleware: Error getting user', { error: userError })
+            }
+            // AuthSessionMissingError is expected for unauthenticated users - don't log as warning
         } else {
             user = userData
         }
-    } catch (error) {
+    } catch (error: any) {
         // If getUser() fails, continue without user (will be handled below)
-        logger.warn('Middleware: Failed to get user', { error })
+        // Only log if it's not a session missing error
+        if (error?.name !== 'AuthSessionMissingError' && error?.status !== 400) {
+            logger.warn('Middleware: Failed to get user', { error })
+        }
     }
 
     const pathname = request.nextUrl.pathname

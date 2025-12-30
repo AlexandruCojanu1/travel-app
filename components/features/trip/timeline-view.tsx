@@ -28,14 +28,7 @@ export function TimelineView() {
     if (tripDetails) {
       setLocalItems(dayItems)
     }
-  }, [selectedDayIndex, dayItems.length, tripDetails, dayItems])
-
-  // Sync when store items change
-  React.useEffect(() => {
-    if (tripDetails) {
-      setLocalItems(dayItems)
-    }
-  }, [dayItems, tripDetails])
+  }, [selectedDayIndex, tripDetails, dayItems.length])
 
   if (!tripDetails) {
     return null
@@ -90,11 +83,11 @@ export function TimelineView() {
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="timeline" className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Timeline
+            Cronologie
           </TabsTrigger>
           <TabsTrigger value="map" className="flex items-center gap-2">
             <Map className="h-4 w-4" />
-            Route Map
+            Hartă rută
           </TabsTrigger>
         </TabsList>
 
@@ -121,22 +114,11 @@ export function TimelineView() {
                   <Plus className="h-8 w-8 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Plan is empty for this day
+                  Planul este gol pentru această zi
                 </h3>
                 <p className="text-sm text-gray-600 mb-6">
-                  Start building your itinerary by adding activities and places
+                  Începe să-ți construiești itinerariul adăugând activități și locuri
                 </p>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 mx-auto"
-                  onClick={() => {
-                    // Navigate to explore page to add items
-                    window.location.href = '/explore'
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Activity
-                </Button>
               </div>
             </motion.div>
           ) : (
@@ -164,6 +146,21 @@ export function TimelineView() {
             </motion.div>
           )}
         </AnimatePresence>
+        
+        {/* Constant Add Activity Button - Always visible */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <Button
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            onClick={() => {
+              // Navigate to explore page to add items
+              window.location.href = '/explore'
+            }}
+          >
+            <Plus className="h-5 w-5" />
+            <span className="font-semibold">Adaugă activitate</span>
+          </Button>
+        </div>
             </div>
           </div>
         </TabsContent>
