@@ -265,7 +265,16 @@ export const useTripStore = create<TripState>()(
             const trip = result.trip
             
             // Map database items
-            const dbItems: TripItem[] = (trip.items as any[] || []).map((item: any) => {
+            interface DatabaseTripItem {
+              id?: string
+              business_id: string
+              business_name?: string
+              business_category?: string
+              estimated_cost?: number
+              day_index: number
+            }
+            
+            const dbItems: TripItem[] = ((trip.items as DatabaseTripItem[]) || []).map((item: DatabaseTripItem) => {
               // Fix: Nature reserves should always be free
               const isNatureReserve = item.business_category === 'Nature' || 
                                      item.business_name?.includes('Rezervație') ||

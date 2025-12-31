@@ -1,14 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense, lazy } from "react"
 import { Calendar, MapPin, DollarSign, Share2, Edit, Plus, Sparkles } from "lucide-react"
 import { useTripStore } from "@/store/trip-store"
-import { BudgetMeter } from "@/components/features/trip/budget-meter"
-import { TimelineView } from "@/components/features/trip/timeline-view"
 import { CreateTripDialog } from "@/components/features/trip/create-trip-dialog"
 import { SyncIndicator } from "@/components/features/trip/sync-indicator"
 import { Button } from "@/components/shared/ui/button"
 import { format } from "date-fns"
+
+// Lazy load heavy trip components
+const BudgetMeter = lazy(() => import("@/components/features/trip/budget-meter").then(m => ({ default: m.BudgetMeter })))
+const TimelineView = lazy(() => import("@/components/features/trip/timeline-view").then(m => ({ default: m.TimelineView })))
 
 export default function PlanPage() {
   const {
@@ -113,7 +115,11 @@ export default function PlanPage() {
       {/* Budget Meter Hero Widget */}
       {budget && (
         <div className="airbnb-card p-6">
-          <BudgetMeter />
+          <Suspense fallback={
+            <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
+          }>
+            <BudgetMeter />
+          </Suspense>
         </div>
       )}
 
@@ -181,7 +187,15 @@ export default function PlanPage() {
       {/* Timeline View */}
       <div>
         <h2 className="text-xl font-bold text-mova-dark mb-4">Itinerar</h2>
-        <TimelineView />
+        <Suspense fallback={
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        }>
+          <TimelineView />
+        </Suspense>
       </div>
 
       {/* Edit Budget Dialog (Simple) */}

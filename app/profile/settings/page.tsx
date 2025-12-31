@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/shared/ui/skeleton"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { getUserProfile } from "@/services/auth/profile.service"
+import { logger } from "@/lib/logger"
 import {
   updateProfile,
   updatePreferences,
@@ -127,7 +128,7 @@ export default function SettingsPage() {
 
         setIsLoading(false)
       } catch (err) {
-        console.error("Error loading settings:", err)
+        logger.error("Error loading settings", err)
         setError("Eroare la încărcarea setărilor. Te rugăm să reîmprospătezi pagina.")
         setIsLoading(false)
       }
@@ -178,7 +179,7 @@ export default function SettingsPage() {
         setError(result.error || "Eroare la salvarea informațiilor.")
       }
     } catch (error) {
-      console.error("Error saving personal info:", error)
+      logger.error("Error saving personal info", error)
       setError("Eroare la salvarea informațiilor. Te rugăm să încerci din nou.")
     } finally {
       setIsSaving(false)
@@ -216,7 +217,7 @@ export default function SettingsPage() {
         setError(result.error || "Eroare la schimbarea parolei.")
       }
     } catch (error) {
-      console.error("Error changing password:", error)
+      logger.error("Error changing password", error)
       setError("Eroare la schimbarea parolei. Te rugăm să încerci din nou.")
     } finally {
       setIsSaving(false)
@@ -247,7 +248,7 @@ export default function SettingsPage() {
         setError(result.error || "Eroare la salvarea preferințelor.")
       }
     } catch (error) {
-      console.error("Error saving preferences:", error)
+      logger.error("Error saving preferences", error)
       setError("Eroare la salvarea preferințelor. Te rugăm să încerci din nou.")
     } finally {
       setIsSaving(false)
@@ -269,7 +270,7 @@ export default function SettingsPage() {
         setError(result.error || "Eroare la actualizarea autentificării în 2 pași.")
       }
     } catch (error) {
-      console.error("Error toggling 2FA:", error)
+      logger.error("Error toggling 2FA", error)
       setError("Eroare la actualizarea autentificării în 2 pași.")
     }
   }
@@ -298,7 +299,7 @@ export default function SettingsPage() {
         setError(result.error || "Eroare la ștergerea contului.")
       }
     } catch (error) {
-      console.error("Error deleting account:", error)
+      logger.error("Error deleting account", error)
       setError("Eroare la ștergerea contului. Te rugăm să încerci din nou sau să contactezi suportul.")
     }
   }

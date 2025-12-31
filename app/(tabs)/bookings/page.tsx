@@ -1,14 +1,32 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Calendar, MapPin, Clock, CheckCircle2, XCircle } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
+import { logger } from "@/lib/logger"
+
+interface Booking {
+  id: string
+  user_id: string
+  business_id: string
+  resource_id: string
+  start_date: string
+  end_date: string
+  guest_count: number
+  total_amount: number
+  status: string
+  created_at: string
+  updated_at: string
+}
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState<any[]>([])
+  const router = useRouter()
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadBookings() {
@@ -16,23 +34,30 @@ export default function BookingsPage() {
         const supabase = createClient()
         const {
           data: { user },
+          error: userError,
         } = await supabase.auth.getUser()
 
-        if (!user) return
+        if (userError || !user) {
+          setError("Please log in to view your bookings")
+          setIsLoading(false)
+          return
+        }
 
-        const { data, error } = await supabase
+        const { data, error: bookingsError } = await supabase
           .from("bookings")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
 
-        if (error) {
-          console.error("Error loading bookings:", error)
+        if (bookingsError) {
+          logger.error("Error loading bookings", bookingsError)
+          setError("Failed to load bookings. Please try again.")
         } else {
           setBookings(data || [])
         }
-      } catch (error) {
-        console.error("Error:", error)
+      } catch (err) {
+        logger.error("Error loading bookings", err)
+        setError("An unexpected error occurred")
       } finally {
         setIsLoading(false)
       }
@@ -44,7 +69,28 @@ export default function BookingsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-mova-gray">Loading bookings...</div>
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin border-4 border-mova-blue border-t-transparent rounded-full mx-auto mb-4" />
+          <div className="text-mova-gray">Loading bookings...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+        <div className="text-center max-w-md">
+          <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-mova-dark mb-2">Error</h2>
+          <p className="text-mova-gray mb-6">{error}</p>
+          <button
+            onClick={() => router.refresh()}
+            className="airbnb-button inline-block px-6 py-3"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }

@@ -60,7 +60,7 @@ export function BookingsKanban({ businessId }: BookingsKanbanProps) {
         setBookings(result.bookings)
       }
     } catch (error) {
-      console.error('Error loading bookings:', error)
+      logger.error('Error loading bookings', error)
       toast.error('Nu s-au putut încărca rezervările')
     } finally {
       setIsLoading(false)

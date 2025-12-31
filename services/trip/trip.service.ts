@@ -14,7 +14,18 @@ export interface TripData {
   status?: string
 }
 
-export async function createOrUpdateTrip(tripData: TripData, items?: any[]) {
+export async function createOrUpdateTrip(
+  tripData: TripData, 
+  items?: Array<{
+    id?: string
+    business_id: string
+    business_name?: string
+    business_category?: string
+    estimated_cost?: number
+    day_index: number
+    [key: string]: unknown
+  }>
+) {
   const supabase = createClient()
   
   const {
@@ -75,8 +86,9 @@ export async function createOrUpdateTrip(tripData: TripData, items?: any[]) {
 
       return { success: true, tripId: data.id, trip: data }
     }
-  } catch (error: any) {
-    return { success: false, error: error.message || "An unexpected error occurred" }
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error('Unknown error')
+    return { success: false, error: err.message || "An unexpected error occurred" }
   }
 }
 
@@ -115,7 +127,7 @@ export async function fetchUserTrip() {
     }
 
     return { success: true, trip: data[0] }
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Silently handle errors - trips are optional
     return { success: true, trip: null }
   }

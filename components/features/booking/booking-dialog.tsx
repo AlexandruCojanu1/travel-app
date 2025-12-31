@@ -9,6 +9,7 @@ import { Input } from '@/components/shared/ui/input'
 import { Label } from '@/components/shared/ui/label'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/logger'
 import type { Business, MapBusiness } from '@/services/business/business.service'
 
 interface BookingDialogProps {
@@ -55,7 +56,7 @@ export function BookingDialog({ business, isOpen, onOpenChange }: BookingDialogP
         .order('price_per_night', { ascending: true })
 
       if (resourcesError) {
-        console.error('Error loading resources:', resourcesError)
+        logger.error('Error loading resources', resourcesError, { businessId: business.id })
         // Fallback: try without resource_type filter
         const { data: fallbackData } = await supabase
           .from('business_resources')
@@ -76,7 +77,7 @@ export function BookingDialog({ business, isOpen, onOpenChange }: BookingDialogP
         }
       }
     } catch (err) {
-      console.error('Error loading resources:', err)
+      logger.error('Error loading resources', err, { businessId: business.id })
       setError('Failed to load available rooms')
     } finally {
       setIsLoading(false)
@@ -125,9 +126,10 @@ export function BookingDialog({ business, isOpen, onOpenChange }: BookingDialogP
       toast.success('Booking created! Redirecting to checkout...')
       router.push(`/checkout?bookingId=${result.bookingId}`)
       onOpenChange(false)
-    } catch (err: any) {
-      console.error('Error creating booking:', err)
-      setError(err.message || 'Failed to create booking')
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error('Unknown error')
+      logger.error('Error creating booking', error, { businessId: business.id })
+      setError(error.message || 'Failed to create booking')
       setIsCreating(false)
     }
   }

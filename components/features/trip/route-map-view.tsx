@@ -4,8 +4,9 @@ import React, { useMemo, useState, useEffect } from 'react'
 import Map, { Marker, Source, Layer } from 'react-map-gl'
 import { useTripStore } from '@/store/trip-store'
 import { getBusinessById } from '@/services/business/business.service'
-import { getBrasovNatureReserves, getBrasovRecreationAreas } from '@/services/nature/nature-reserves.service'
 import { MapPin, Navigation, Loader2 } from 'lucide-react'
+import { logger } from '@/lib/logger'
+import { toast } from 'sonner'
 import { RouteOptimizer } from '@/components/features/map/route-optimizer'
 import { DirectionsButton } from '@/components/features/map/directions-button'
 import { TransportCostsPanel } from './transport-costs-panel'
@@ -30,7 +31,12 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [isLocating, setIsLocating] = useState(false)
-  const [transitInfo, setTransitInfo] = useState<{ routes: string[]; segments: any[] } | null>(null)
+  interface TransitSegment {
+    walkingDistance?: number
+    [key: string]: unknown
+  }
+  
+  const [transitInfo, setTransitInfo] = useState<{ routes: string[]; segments: TransitSegment[] } | null>(null)
 
   const items = getItemsByDay(dayIndex)
   
@@ -55,70 +61,8 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
       }
       
       try {
-        // Load hardcoded nature reserves and recreation areas
-        const natureReserves = getBrasovNatureReserves()
-        const recreationAreas = getBrasovRecreationAreas()
-        
+        // All items (including nature reserves and recreation areas) are in businesses table
         const businessPromises = items.map(async (item) => {
-          // Check if it's a nature reserve
-          if (item.business_id.startsWith('nature-')) {
-            const reserveName = item.business_id.replace('nature-', '').replace(/-/g, ' ').toLowerCase().trim()
-            const reserve = natureReserves.find((r) => {
-              const rName = r.name.toLowerCase().trim()
-              // Flexible matching: exact match or contains
-              return rName === reserveName || 
-                     rName.includes(reserveName) || 
-                     reserveName.includes(rName)
-            })
-            if (reserve) {
-              return {
-                id: item.business_id,
-                name: reserve.name,
-                category: 'Nature',
-                latitude: reserve.latitude,
-                longitude: reserve.longitude,
-                description: reserve.description,
-                address: null,
-                image_url: null,
-                rating: null,
-                is_verified: false,
-                city_id: '',
-                created_at: '',
-                updated_at: '',
-              } as Business
-            }
-          }
-          
-          // Check if it's a recreation area
-          if (item.business_id.startsWith('recreation-')) {
-            const areaName = item.business_id.replace('recreation-', '').replace(/-/g, ' ').toLowerCase().trim()
-            const area = recreationAreas.find((a) => {
-              const aName = a.name.toLowerCase().trim()
-              // Flexible matching: exact match or contains
-              return aName === areaName || 
-                     aName.includes(areaName) || 
-                     areaName.includes(aName)
-            })
-            if (area) {
-              return {
-                id: item.business_id,
-                name: area.name,
-                category: 'Activities',
-                latitude: area.latitude,
-                longitude: area.longitude,
-                description: area.description,
-                address: null,
-                image_url: null,
-                rating: null,
-                is_verified: false,
-                city_id: '',
-                created_at: '',
-                updated_at: '',
-              } as Business
-            }
-          }
-          
-          // Regular business
           return getBusinessById(item.business_id)
         })
         
@@ -132,7 +76,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           setIsLoading(false)
         }
       } catch (error) {
-        console.error('Error loading businesses for route:', error)
+        logger.error('Error loading businesses for route', error, { dayIndex, itemsCount: items.length })
         if (!cancelled) {
           setIsLoading(false)
         }
@@ -144,7 +88,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
     return () => {
       cancelled = true
     }
-  }, [itemsIds, dayIndex])
+  }, [itemsIds, dayIndex, currentCity?.id])
 
   // Calculate center and bounds
   const { center, bounds } = useMemo(() => {
@@ -251,7 +195,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           setTransitInfo(null)
         }
       } catch (error) {
-        console.error('Error calculating route:', error)
+        logger.error('Error calculating route', error, { transportMode, businessesCount: businesses.length })
         // Fallback to straight line
         const points: RoutePoint[] = businesses.map(b => ({
           latitude: b.latitude!,
@@ -271,7 +215,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
   // Handle user location
   const handleGetLocation = React.useCallback(() => {
     if (!navigator.geolocation) {
-      alert('Geolocation nu este suportat de browser-ul tău')
+      toast.error('Geolocation nu este suportat de browser-ul tău')
       return
     }
     
@@ -281,10 +225,11 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
         const { latitude, longitude } = position.coords
         setUserLocation({ lat: latitude, lng: longitude })
         setIsLocating(false)
+        toast.success('Locația a fost obținută cu succes')
       },
       (error) => {
-        console.error('Error getting location:', error)
-        alert('Nu am putut obține locația ta. Te rugăm să verifici permisiunile.')
+        logger.error('Error getting location', error)
+        toast.error('Nu am putut obține locația ta. Te rugăm să verifici permisiunile.')
         setIsLocating(false)
       },
       {
@@ -322,7 +267,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           setRouteGeometry(routeResult.geometry)
         }
       } catch (error) {
-        console.error('Error calculating route from location:', error)
+        logger.error('Error calculating route from location', error, { userLocation, businessesCount: businesses.length })
       } finally {
         setIsCalculatingRoute(false)
       }
@@ -435,6 +380,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
       <div className="w-full rounded-xl overflow-hidden border border-gray-200" style={{ height }}>
         <Map
         mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mapLib={import('maplibre-gl') as any}
         initialViewState={{
           latitude: center.lat,

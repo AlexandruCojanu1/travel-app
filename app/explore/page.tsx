@@ -1,21 +1,23 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useCallback, useRef, Suspense, lazy } from "react"
 import { MapPin, Loader2, Navigation, Bus, LocateIcon } from "lucide-react"
 import { motion } from "framer-motion"
 import { useAppStore } from "@/store/app-store"
 import { useSearchStore } from "@/store/search-store"
-import { MapView } from "@/components/features/map/map-view"
-import { BusinessDrawer } from "@/components/features/map/business-drawer"
-import { NatureDrawer } from "@/components/features/map/nature-drawer"
-import { RecreationDrawer } from "@/components/features/map/recreation-drawer"
 import { GlobalSearch } from "@/components/features/map/search/global-search"
 import { QuickFilters } from "@/components/features/feed/quick-filters"
 import { searchBusinesses, getBusinessesForMap, type MapBusiness } from "@/services/business/business.service"
-import { getBrasovNatureReserves, getBrasovRecreationAreas } from "@/services/nature/nature-reserves.service"
 import { Button } from "@/components/shared/ui/button"
 import { logger } from "@/lib/logger"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
+
+// Lazy load heavy map components
+const MapView = lazy(() => import("@/components/features/map/map-view").then(m => ({ default: m.MapView })))
+const BusinessDrawer = lazy(() => import("@/components/features/map/business-drawer").then(m => ({ default: m.BusinessDrawer })))
+const NatureDrawer = lazy(() => import("@/components/features/map/nature-drawer").then(m => ({ default: m.NatureDrawer })))
+const RecreationDrawer = lazy(() => import("@/components/features/map/recreation-drawer").then(m => ({ default: m.RecreationDrawer })))
 
 export default function ExplorePage() {
   const { currentCity, openCitySelector } = useAppStore()
@@ -96,17 +98,14 @@ export default function ExplorePage() {
             query,
             sortBy
           )
-          console.log('Explore: searchBusinesses returned', results.length, 'businesses')
+          logger.log('Explore: searchBusinesses returned', { count: results.length, cityId: currentCity.id })
           
           // Convert to MapBusiness format (only those with coordinates)
           const mapBusinesses: MapBusiness[] = results
             .filter((b) => {
               const hasCoords = b.latitude != null && b.longitude != null
               if (!hasCoords) {
-                console.warn('Explore: Business without coordinates:', b.id, b.name, {
-                  lat: b.latitude,
-                  lng: b.longitude
-                })
+                logger.warn('Explore: Business without coordinates', { businessId: b.id, businessName: b.name })
               }
               return hasCoords
             })
@@ -121,13 +120,13 @@ export default function ExplorePage() {
               address: b.address,
               price_level: getPriceLevel(b.category),
             }))
-          console.log('Explore: Converted to', mapBusinesses.length, 'MapBusiness objects with coordinates')
+          logger.log('Explore: Converted to MapBusiness', { count: mapBusinesses.length })
           setBusinesses(mapBusinesses)
         } else {
           // Use simple category filter
           const category = activeFilter === "All" ? undefined : activeFilter
           const data = await getBusinessesForMap(currentCity.id, category)
-          console.log('Explore: getBusinessesForMap returned', data.length, 'businesses with coordinates')
+          logger.log('Explore: getBusinessesForMap returned', { count: data.length, cityId: currentCity.id })
           setBusinesses(data)
         }
 
@@ -144,16 +143,10 @@ export default function ExplorePage() {
 
     loadBusinesses()
 
-    // Load nature reserves and recreation areas for Brașov
-    if (currentCity?.name?.toLowerCase().includes('brașov') || currentCity?.name?.toLowerCase().includes('brasov')) {
-      const reserves = getBrasovNatureReserves()
-      setNatureReserves(reserves)
-      const recreation = getBrasovRecreationAreas()
-      setRecreationAreas(recreation)
-    } else {
-      setNatureReserves([])
-      setRecreationAreas([])
-    }
+    // Nature reserves and recreation areas are already in businesses table
+    // No need to load separately
+    setNatureReserves([])
+    setRecreationAreas([])
   }, [currentCity?.id, currentCity?.name, activeFilter, query, filters, sortBy])
 
   // Helper function to get price level
@@ -299,7 +292,7 @@ export default function ExplorePage() {
                   <Button
                     onClick={() => {
                       if (!navigator.geolocation) {
-                        alert('Geolocation nu este suportat de browser-ul tău')
+                        toast.error('Geolocation nu este suportat de browser-ul tău')
                         return
                       }
                       
@@ -318,8 +311,8 @@ export default function ExplorePage() {
                           setIsLocating(false)
                         },
                         (error) => {
-                          console.error('Error getting location:', error)
-                          alert('Nu am putut obține locația ta. Te rugăm să verifici permisiunile.')
+                          logger.error('Error getting location', error)
+                          toast.error('Nu am putut obține locația ta. Te rugăm să verifici permisiunile.')
                           setIsLocating(false)
                         },
                         {
@@ -387,56 +380,68 @@ export default function ExplorePage() {
       {/* Map View */}
       {initialCenter && (
         <div className="absolute inset-0" style={{ top: '120px', bottom: '80px' }}>
-          <MapView
-            ref={mapViewRef}
-            businesses={businesses}
-            initialLatitude={initialCenter.lat}
-            initialLongitude={initialCenter.lng}
-            initialZoom={12}
-            bottomNavHeight={80}
-            onBusinessSelect={setSelectedBusiness}
-            selectedBusinessId={selectedBusiness?.id || null}
-            onMapMove={handleMapMove}
-            cityName={currentCity?.name}
-            showTransit={showTransit}
-            userLocation={userLocation}
-            natureReserves={natureReserves}
-            recreationAreas={recreationAreas}
-            onNatureReserveSelect={(reserve) => {
-              setSelectedBusiness(null)
-              setSelectedRecreationArea(null)
-              setSelectedNatureReserve(reserve)
-            }}
-            onRecreationAreaSelect={(area) => {
-              setSelectedBusiness(null)
-              setSelectedNatureReserve(null)
-              setSelectedRecreationArea(area)
-            }}
-          />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-mova-blue" />
+            </div>
+          }>
+            <MapView
+              ref={mapViewRef}
+              businesses={businesses}
+              initialLatitude={initialCenter.lat}
+              initialLongitude={initialCenter.lng}
+              initialZoom={12}
+              bottomNavHeight={80}
+              onBusinessSelect={setSelectedBusiness}
+              selectedBusinessId={selectedBusiness?.id || null}
+              onMapMove={handleMapMove}
+              cityName={currentCity?.name}
+              showTransit={showTransit}
+              userLocation={userLocation}
+              natureReserves={natureReserves}
+              recreationAreas={recreationAreas}
+              onNatureReserveSelect={(reserve) => {
+                setSelectedBusiness(null)
+                setSelectedRecreationArea(null)
+                setSelectedNatureReserve(reserve)
+              }}
+              onRecreationAreaSelect={(area) => {
+                setSelectedBusiness(null)
+                setSelectedNatureReserve(null)
+                setSelectedRecreationArea(area)
+              }}
+            />
+          </Suspense>
         </div>
       )}
 
 
       {/* Business Details Drawer */}
-      <BusinessDrawer
-        business={selectedBusiness}
-        isOpen={!!selectedBusiness}
-        onClose={() => setSelectedBusiness(null)}
-      />
+      <Suspense fallback={null}>
+        <BusinessDrawer
+          business={selectedBusiness}
+          isOpen={!!selectedBusiness}
+          onClose={() => setSelectedBusiness(null)}
+        />
+      </Suspense>
 
       {/* Nature Reserve Drawer */}
-      <NatureDrawer
-        reserve={selectedNatureReserve}
-        isOpen={!!selectedNatureReserve}
-        onClose={() => setSelectedNatureReserve(null)}
-      />
+      <Suspense fallback={null}>
+        <NatureDrawer
+          reserve={selectedNatureReserve}
+          isOpen={!!selectedNatureReserve}
+          onClose={() => setSelectedNatureReserve(null)}
+        />
+      </Suspense>
 
       {/* Recreation Area Drawer */}
-      <RecreationDrawer
-        area={selectedRecreationArea}
-        isOpen={!!selectedRecreationArea}
-        onClose={() => setSelectedRecreationArea(null)}
-      />
+      <Suspense fallback={null}>
+        <RecreationDrawer
+          area={selectedRecreationArea}
+          isOpen={!!selectedRecreationArea}
+          onClose={() => setSelectedRecreationArea(null)}
+        />
+      </Suspense>
     </div>
   )
 }

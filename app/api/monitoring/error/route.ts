@@ -19,24 +19,8 @@ export async function POST(request: NextRequest) {
       userAgent,
     })
 
-    // TODO: Store in database for analysis
-    // You can create an errors table in Supabase:
-    // CREATE TABLE error_logs (
-    //   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    //   message TEXT,
-    //   error_data JSONB,
-    //   context JSONB,
-    //   url TEXT,
-    //   user_agent TEXT,
-    //   created_at TIMESTAMP DEFAULT NOW()
-    // );
-
-    // For now, just log to console (Vercel Logs will capture this)
-    // In production, you can:
-    // 1. Store in Supabase errors table
-    // 2. Send email notifications for critical errors
-    // 3. Use Vercel Logs (included in Vercel plan)
-    // 4. Use Better Stack (free tier available)
+    // Errors are logged via logger which sends to monitoring endpoint
+    // For production, consider storing in Supabase error_logs table
 
     return NextResponse.json({ success: true })
   } catch (error) {

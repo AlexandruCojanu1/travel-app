@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense, lazy } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { getHomeContext, getCityFeed, type HomeContext, type CityFeedData } from "@/services/feed/feed.service"
 import { getUserBusinesses } from "@/actions/business-portal"
 import { QuickFilters } from "@/components/features/feed/quick-filters"
-import { FeaturedCarousel } from "@/components/features/feed/featured-carousel"
 import { NewsCard } from "@/components/features/feed/news-card"
 import { FeedSkeleton } from "@/components/features/feed/feed-skeleton"
 import { GlobalSearch } from "@/components/features/map/search/global-search"
@@ -15,8 +14,10 @@ import { useSearchStore } from "@/store/search-store"
 import { getCityById } from "@/services/auth/city.service"
 import { Calendar, MapPin, Sparkles } from "lucide-react"
 import { format } from "date-fns"
-// Removed server-side ownership service import - using client-side check instead
 import { logger } from "@/lib/logger"
+
+// Lazy load heavy feed components
+const FeaturedCarousel = lazy(() => import("@/components/features/feed/featured-carousel").then(m => ({ default: m.FeaturedCarousel })))
 
 export default function HomePage() {
   const router = useRouter()
@@ -242,7 +243,7 @@ export default function HomePage() {
           <h3 className="text-xl font-bold text-slate-900 mb-2">Ceva nu a mers bine</h3>
           <p className="text-slate-600 mb-6">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => router.refresh()}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
           >
             Încearcă din nou
@@ -305,7 +306,15 @@ export default function HomePage() {
         </div>
 
         {feedData.featuredBusinesses.length > 0 ? (
-          <FeaturedCarousel businesses={feedData.featuredBusinesses} />
+          <Suspense fallback={
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-64 bg-gray-100 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          }>
+            <FeaturedCarousel businesses={feedData.featuredBusinesses} />
+          </Suspense>
         ) : (
           <div className="bg-white rounded-xl p-12 text-center">
             <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">

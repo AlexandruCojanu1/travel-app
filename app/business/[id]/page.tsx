@@ -107,7 +107,7 @@ export default function BusinessDetailPage() {
           )
         }
       } catch (error) {
-        console.error('Error loading business data:', error)
+        logger.error('Error loading business data', error)
       } finally {
         setIsLoading(false)
       }
@@ -158,7 +158,13 @@ export default function BusinessDetailPage() {
   return (
     <div className="pb-32 md:pb-24">
       {/* Hero Parallax Header */}
-      <HeroParallax business={business} />
+      <Suspense fallback={
+        <div className="h-64 bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        </div>
+      }>
+        <HeroParallax business={business} />
+      </Suspense>
 
       {/* Content Container */}
       <div className="relative -mt-12 bg-white rounded-t-3xl z-10">
@@ -174,7 +180,13 @@ export default function BusinessDetailPage() {
             {/* About Tab */}
             <TabsContent value="about" className="space-y-6">
               {/* Gallery */}
-              <Gallery businessId={businessId} />
+              <Suspense fallback={
+                <div className="h-64 bg-gray-100 rounded-xl flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              }>
+                <Gallery businessId={businessId} />
+              </Suspense>
 
               {/* Description */}
               {business.description && (
@@ -226,7 +238,15 @@ export default function BusinessDetailPage() {
                 <h3 className="text-xl font-bold text-mova-dark mb-4">
                   Detalii
                 </h3>
-                <AttributeGrid business={business} attributes={attributes} />
+                <Suspense fallback={
+                  <div className="grid grid-cols-2 gap-4">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                }>
+                  <AttributeGrid business={business} attributes={attributes} />
+                </Suspense>
               </div>
             </TabsContent>
 
@@ -277,17 +297,27 @@ export default function BusinessDetailPage() {
 
             {/* Reviews Tab */}
             <TabsContent value="reviews" className="space-y-4">
-              <ReviewsSection
-                reviews={reviews}
-                averageRating={business.rating}
-              />
+              <Suspense fallback={
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              }>
+                <ReviewsSection
+                  reviews={reviews}
+                  averageRating={business.rating}
+                />
+              </Suspense>
             </TabsContent>
           </Tabs>
         </div>
       </div>
 
       {/* Sticky Action Bar */}
-      <StickyActionBar business={business} />
+      <Suspense fallback={null}>
+        <StickyActionBar business={business} />
+      </Suspense>
     </div>
   )
 }

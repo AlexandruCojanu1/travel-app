@@ -1,4 +1,30 @@
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/logger'
+
+interface SupabaseBusiness {
+  id: string
+  city_id: string
+  name: string
+  description: string | null
+  category: string
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  lat?: number | null
+  lng?: number | null
+  image_url: string | null
+  rating: number | null
+  is_verified: boolean
+  created_at: string
+  updated_at: string
+  attributes?: {
+    latitude?: number
+    longitude?: number
+    lat?: number
+    lng?: number
+    [key: string]: unknown
+  }
+}
 
 export interface Business {
   id: string
@@ -50,13 +76,13 @@ export async function getBusinessesForMap(
     const { data, error } = await query.order('rating', { ascending: false })
 
     if (error) {
-      console.error('Error fetching businesses for map:', error)
+      logger.error('Error fetching businesses for map', error, { cityId })
       return []
     }
 
     // Extract coordinates from attributes JSONB or direct columns (lat/lng)
     // Filter out businesses without valid coordinates
-    const validBusinesses = (data || []).filter((b: any) => {
+    const validBusinesses = (data || []).filter((b: SupabaseBusiness) => {
       const attributes = b.attributes || {}
       const lat = b.latitude ?? b.lat ?? attributes.latitude ?? attributes.lat
       const lng = b.longitude ?? b.lng ?? attributes.longitude ?? attributes.lng
@@ -64,7 +90,7 @@ export async function getBusinessesForMap(
     })
 
     // Transform to MapBusiness and add price_level based on category
-    return validBusinesses.map((business: any) => {
+    return validBusinesses.map((business: SupabaseBusiness) => {
       const attributes = business.attributes || {}
       const lat = business.latitude ?? business.lat ?? attributes.latitude ?? attributes.lat
       const lng = business.longitude ?? business.lng ?? attributes.longitude ?? attributes.lng
@@ -73,8 +99,8 @@ export async function getBusinessesForMap(
         id: business.id,
         name: business.name,
         category: business.category,
-        latitude: lat,
-        longitude: lng,
+        latitude: lat!,
+        longitude: lng!,
         rating: business.rating,
         image_url: business.image_url,
         address: business.address,
@@ -82,7 +108,7 @@ export async function getBusinessesForMap(
       }
     })
   } catch (error) {
-    console.error('Unexpected error fetching businesses for map:', error)
+    logger.error('Unexpected error fetching businesses for map', error, { cityId })
     return []
   }
 }
@@ -101,7 +127,7 @@ export async function getBusinessById(id: string): Promise<Business | null> {
       .single()
 
     if (error) {
-      console.error('Error fetching business by ID:', error)
+      logger.error('Error fetching business by ID', error, { businessId: id })
       return null
     }
 
@@ -110,12 +136,13 @@ export async function getBusinessById(id: string): Promise<Business | null> {
     }
 
     // Extract coordinates from attributes if not available as direct columns
-    const attributes = (data as any).attributes || {}
+    const businessData = data as SupabaseBusiness
+    const attributes = businessData.attributes || {}
     
     // Extract image_url - check direct column first, then attributes, handle empty strings
-    const imageUrl = data.image_url && data.image_url.trim() !== '' 
-      ? data.image_url 
-      : (attributes.image_url && attributes.image_url.trim() !== '' 
+    const imageUrl = businessData.image_url && typeof businessData.image_url === 'string' && businessData.image_url.trim() !== '' 
+      ? businessData.image_url 
+      : (attributes.image_url && typeof attributes.image_url === 'string' && attributes.image_url.trim() !== '' 
           ? attributes.image_url 
           : null)
     
@@ -137,7 +164,7 @@ export async function getBusinessById(id: string): Promise<Business | null> {
 
     return business
   } catch (error) {
-    console.error('Unexpected error fetching business by ID:', error)
+    logger.error('Unexpected error fetching business by ID', error, { businessId: id })
     return null
   }
 }
@@ -201,24 +228,29 @@ export async function searchBusinessesInBounds(
     const { data, error } = await query.order('rating', { ascending: false })
 
     if (error) {
-      console.error('Error searching businesses in bounds:', error)
+      logger.error('Error searching businesses in bounds', error, { cityId, bounds })
       return []
     }
 
     // Extract coordinates from attributes JSONB or direct columns (lat/lng)
     // Filter by bounds and valid coordinates
-    const validBusinesses = (data || []).filter((b: any) => {
+    const validBusinesses = (data || []).filter((b: SupabaseBusiness) => {
       const attributes = b.attributes || {}
-      const lat = b.latitude ?? b.lat ?? attributes.latitude ?? attributes.lat
-      const lng = b.longitude ?? b.lng ?? attributes.longitude ?? attributes.lng
+      const lat = b.latitude ?? b.lat ?? (typeof attributes.latitude === 'number' ? attributes.latitude : null) ?? (typeof attributes.lat === 'number' ? attributes.lat : null)
+      const lng = b.longitude ?? b.lng ?? (typeof attributes.longitude === 'number' ? attributes.longitude : null) ?? (typeof attributes.lng === 'number' ? attributes.lng : null)
       if (lat == null || lng == null) return false
       return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east
     })
 
-    return validBusinesses.map((business: any) => {
+    return validBusinesses.map((business: SupabaseBusiness) => {
       const attributes = business.attributes || {}
-      const lat = business.latitude ?? business.lat ?? attributes.latitude ?? attributes.lat
-      const lng = business.longitude ?? business.lng ?? attributes.longitude ?? attributes.lng
+      const lat = business.latitude ?? business.lat ?? (typeof attributes.latitude === 'number' ? attributes.latitude : null) ?? (typeof attributes.lat === 'number' ? attributes.lat : null)
+      const lng = business.longitude ?? business.lng ?? (typeof attributes.longitude === 'number' ? attributes.longitude : null) ?? (typeof attributes.lng === 'number' ? attributes.lng : null)
+      
+      if (lat == null || lng == null) {
+        // Skip businesses without valid coordinates
+        return null
+      }
       
       return {
         id: business.id,
@@ -231,7 +263,7 @@ export async function searchBusinessesInBounds(
         address: business.address,
         price_level: getPriceLevelForCategory(business.category),
       }
-    })
+    }).filter((b): b is MapBusiness => b !== null)
   } catch (error) {
     console.error('Unexpected error searching businesses in bounds:', error)
     return []
@@ -350,7 +382,7 @@ export async function searchBusinesses(
     if (filters.difficulty) {
       results = results.filter((business) => {
         // Check if business has attributes with difficulty
-        const attributes = (business as any).attributes
+        const attributes = (business as SupabaseBusiness).attributes
         if (attributes && typeof attributes === 'object') {
           return attributes.difficulty === filters.difficulty
         }
@@ -361,42 +393,47 @@ export async function searchBusinesses(
     // Filter by amenities if set (client-side fallback)
     if (filters.amenities.length > 0) {
       results = results.filter((business) => {
-        const attributes = (business as any).attributes
-        if (attributes && attributes.amenities && Array.isArray(attributes.amenities)) {
-          return filters.amenities.every((amenity) =>
-            attributes.amenities.includes(amenity)
-          )
+        const attributes = (business as SupabaseBusiness).attributes
+        if (attributes && typeof attributes === 'object' && 'amenities' in attributes) {
+          const amenities = attributes.amenities
+          if (Array.isArray(amenities)) {
+            return filters.amenities.every((amenity) =>
+              amenities.includes(amenity)
+            )
+          }
         }
         return false // If no amenities, exclude it
       })
     }
 
     // Extract coordinates from attributes JSONB or direct columns (similar to getBusinessById)
-    const businessesWithCoordinates: Business[] = results.map((business: any) => {
+    const businessesWithCoordinates: Business[] = results.map((business: SupabaseBusiness) => {
       const attributes = business.attributes || {}
       
       // Extract image_url - check direct column first, then attributes, handle empty strings
-      const imageUrl = business.image_url && business.image_url.trim() !== '' 
+      const imageUrl = business.image_url && typeof business.image_url === 'string' && business.image_url.trim() !== '' 
         ? business.image_url 
-        : (attributes.image_url && attributes.image_url.trim() !== '' 
+        : (attributes.image_url && typeof attributes.image_url === 'string' && attributes.image_url.trim() !== '' 
             ? attributes.image_url 
             : null)
       
-      return {
+      const businessResult: Business = {
         id: business.id,
         city_id: business.city_id,
         name: business.name,
         description: business.description,
         category: business.category,
-        address: business.address || attributes.address || attributes.address_line || null,
-        latitude: business.latitude ?? attributes.latitude ?? attributes.lat ?? null,
-        longitude: business.longitude ?? attributes.longitude ?? attributes.lng ?? null,
+        address: business.address || (typeof attributes.address === 'string' ? attributes.address : null) || (typeof attributes.address_line === 'string' ? attributes.address_line : null) || null,
+        latitude: business.latitude ?? (typeof attributes.latitude === 'number' ? attributes.latitude : null) ?? (typeof attributes.lat === 'number' ? attributes.lat : null) ?? null,
+        longitude: business.longitude ?? (typeof attributes.longitude === 'number' ? attributes.longitude : null) ?? (typeof attributes.lng === 'number' ? attributes.lng : null) ?? null,
         image_url: imageUrl,
         rating: business.rating,
         is_verified: business.is_verified,
         created_at: business.created_at,
         updated_at: business.updated_at,
       }
+      
+      return businessResult
     })
 
     return businessesWithCoordinates

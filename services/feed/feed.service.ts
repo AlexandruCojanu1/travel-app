@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/logger'
 import type { Database } from '@/types/database.types'
 
 type CityPost = Database['public']['Tables']['city_posts']['Row']
@@ -39,7 +40,7 @@ export async function getHomeContext(userId: string): Promise<HomeContext> {
 
     // If profile doesn't exist or error, return default
     if (profileError || !profile) {
-      console.warn('Profile not found or error:', profileError?.message)
+      logger.warn('Profile not found or error', profileError, { userId })
       return {
         userId,
         homeCity: null,
@@ -65,7 +66,7 @@ export async function getHomeContext(userId: string): Promise<HomeContext> {
       .single()
 
     if (cityError) {
-      console.error('Failed to fetch city details:', cityError)
+      logger.error('Failed to fetch city details', cityError, { cityId: profile.home_city_id })
       return {
         userId,
         homeCity: null,
@@ -81,7 +82,7 @@ export async function getHomeContext(userId: string): Promise<HomeContext> {
       role: profile.role || null,
     }
   } catch (error) {
-    console.error('Error in getHomeContext:', error)
+    logger.error('Error in getHomeContext', error, { userId })
     throw error
   }
 }
@@ -97,7 +98,8 @@ export async function getCityFeed(
 
   try {
     // Fetch city posts (news/events)
-    let postsQuery = supabase
+    // Note: Don't filter by category as city_posts.category may not exist
+    const { data: cityPosts, error: postsError } = await supabase
       .from('city_posts')
       .select('*')
       .eq('city_id', cityId)
@@ -105,14 +107,8 @@ export async function getCityFeed(
       .order('created_at', { ascending: false })
       .limit(10)
 
-    if (categoryFilter && categoryFilter !== 'All') {
-      postsQuery = postsQuery.eq('category', categoryFilter)
-    }
-
-    const { data: cityPosts, error: postsError } = await postsQuery
-
     if (postsError) {
-      console.error('Error fetching city posts:', postsError)
+      logger.error('Error fetching city posts', postsError, { cityId })
     }
 
     // Fetch featured businesses (top rated or verified)
@@ -131,17 +127,25 @@ export async function getCityFeed(
       businessQuery = businessQuery.order('created_at', { ascending: false })
     }
 
+    // Map filter IDs to database category values
     if (categoryFilter && categoryFilter !== 'All') {
-      businessQuery = businessQuery.eq('category', categoryFilter)
+      const categoryMap: Record<string, string> = {
+        'Food': 'Restaurant', // Map "Food" filter to "Restaurant" category in DB
+        'Hotels': 'Hotels',
+        'Nature': 'Nature',
+        'Activities': 'Activities',
+      }
+      const dbCategory = categoryMap[categoryFilter] || categoryFilter
+      businessQuery = businessQuery.eq('category', dbCategory)
     }
 
     const { data: featuredBusinesses, error: businessError } = await businessQuery
 
     if (businessError) {
-      console.error('Error fetching businesses:', businessError)
+      logger.error('Error fetching businesses', businessError, { cityId, categoryFilter })
       // If error is about rating column, try again without rating order
       if (businessError.message?.includes('rating') || businessError.code === '42703') {
-        console.warn('Rating column not found, fetching businesses without rating order')
+        logger.warn('Rating column not found, fetching businesses without rating order', { cityId })
         const fallbackQuery = supabase
           .from('businesses')
           .select('*')
@@ -149,8 +153,16 @@ export async function getCityFeed(
           .order('created_at', { ascending: false })
           .limit(5)
         
+        // Map filter IDs to database category values
         if (categoryFilter && categoryFilter !== 'All') {
-          fallbackQuery.eq('category', categoryFilter)
+          const categoryMap: Record<string, string> = {
+            'Food': 'Restaurant', // Map "Food" filter to "Restaurant" category in DB
+            'Hotels': 'Hotels',
+            'Nature': 'Nature',
+            'Activities': 'Activities',
+          }
+          const dbCategory = categoryMap[categoryFilter] || categoryFilter
+          fallbackQuery.eq('category', dbCategory)
         }
         
         const { data: fallbackBusinesses } = await fallbackQuery
@@ -173,7 +185,7 @@ export async function getCityFeed(
 
     if (promotionsError) {
       // Silently fail - promotions are optional
-      console.warn('Error fetching promotions (non-critical):', promotionsError.message)
+      logger.warn('Error fetching promotions (non-critical)', promotionsError, { cityId })
     }
 
     return {
@@ -182,7 +194,7 @@ export async function getCityFeed(
       promotions: promotions || [],
     }
   } catch (error) {
-    console.error('Error in getCityFeed:', error)
+    logger.error('Error in getCityFeed', error, { cityId, categoryFilter })
     throw error
   }
 }
@@ -201,13 +213,13 @@ export async function getBusinessById(businessId: string): Promise<Business | nu
       .single()
 
     if (error) {
-      console.error('Error fetching business:', error)
+      logger.error('Error fetching business', error, { businessId })
       return null
     }
 
     return data
   } catch (error) {
-    console.error('Error in getBusinessById:', error)
+    logger.error('Error in getBusinessById', error, { businessId })
     return null
   }
 }

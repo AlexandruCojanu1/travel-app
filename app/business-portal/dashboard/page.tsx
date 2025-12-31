@@ -24,6 +24,7 @@ import {
   TrendingUp
 } from "lucide-react"
 import { toast } from "sonner"
+import { logger } from "@/lib/logger"
 import Link from "next/link"
 
 interface Business {
@@ -71,20 +72,20 @@ export default function BusinessPortalDashboard() {
   const loadBusinesses = async () => {
     setIsLoading(true)
     try {
-      console.log("Business Dashboard: Loading businesses...")
+      logger.log("Business Dashboard: Loading businesses")
       
       // First verify user is authenticated on client side
       const supabase = createClient()
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       
       if (authError || !user) {
-        console.error("Business Dashboard: User not authenticated on client:", authError)
+        logger.error("Business Dashboard: User not authenticated", authError)
         toast.error("Sesiunea a expirat. Te rugăm să te autentifici din nou.")
         router.push("/auth/login?redirect=/business-portal/dashboard")
         return
       }
       
-      console.log("Business Dashboard: User authenticated:", user.id)
+      logger.log("Business Dashboard: User authenticated", { userId: user.id })
       
       // Get session token to send with request
       const { data: { session } } = await supabase.auth.getSession()
@@ -107,34 +108,33 @@ export default function BusinessPortalDashboard() {
       })
       
       const result = await response.json()
-      console.log("Business Dashboard: Result", result)
+      logger.log("Business Dashboard: Result", { success: result.success })
       
       // Handle both 'businesses' and 'data' response formats
       const businessesList = result.businesses || result.data || []
       
       if (result.success && businessesList.length > 0) {
-        console.log("Business Dashboard: Found", businessesList.length, "businesses")
+        logger.log("Business Dashboard: Found businesses", { count: businessesList.length })
         setBusinesses(businessesList)
         setSelectedBusiness(businessesList[0])
-        console.log("Business Dashboard: Selected business", businessesList[0].name)
+        logger.log("Business Dashboard: Selected business", { name: businessesList[0].name })
       } else if (result.success && businessesList.length === 0) {
         // No businesses, redirect to onboarding
-        console.log("Business Dashboard: No businesses found, redirecting to onboarding")
+        logger.log("Business Dashboard: No businesses found, redirecting to onboarding")
         router.push("/business-portal/onboarding")
       } else {
-        console.error("Business Dashboard: Failed to load businesses", result.error)
+        logger.error("Business Dashboard: Failed to load businesses", result.error)
         toast.error(result.error || "Failed to load businesses")
         // If not authenticated, redirect to login
         if (response.status === 401) {
           router.push("/auth/login?redirect=/business-portal/dashboard")
         } else {
           // User doesn't have businesses, redirect to home (they're a traveler)
-          // Use window.location to avoid any potential redirect loops
-          window.location.href = "/home"
+          router.push("/home")
         }
       }
     } catch (error) {
-      console.error("Business Dashboard: Exception loading businesses", error)
+      logger.error("Business Dashboard: Exception loading businesses", error)
       toast.error("Failed to load businesses")
       router.push("/business-portal/onboarding")
     } finally {

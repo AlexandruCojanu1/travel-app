@@ -153,10 +153,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
           business.longitude >= -180 && business.longitude <= 180
         
         if (!isValid) {
-          console.warn('Invalid coordinates for business:', business.id, business.name, {
-            lat: business.latitude,
-            lng: business.longitude
-          })
+          // Invalid coordinates filtered out silently
         }
         return isValid
       })
@@ -172,7 +169,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
         },
       }))
 
-    console.log('MapView: Loaded', points.length, 'valid business markers out of', businesses.length, 'businesses')
+    // Loaded business markers
     cluster.load(points)
     return cluster
   }, [businesses])
@@ -206,7 +203,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
       }
 
       const clusters = supercluster.getClusters(boundsArray, Math.floor(viewState.zoom))
-      console.log('MapView: Generated', clusters.length, 'clusters/markers at zoom', Math.floor(viewState.zoom))
+      // Generated clusters/markers
 
       return {
         clusters,
@@ -218,7 +215,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
         },
       }
     } catch (error) {
-      console.error('MapView: Error calculating clusters', error)
+      // Error calculating clusters - handled silently
       // Fallback to viewState-based bounds
       const latRange = 0.1
       const lngRange = 0.1
@@ -260,12 +257,12 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
       try {
         const feedPath = getFeedPathForCity(cityName)
         if (!feedPath) {
-          console.log('No GTFS feed found for city:', cityName)
+          // No GTFS feed found for city
           setIsLoadingTransit(false)
           return
         }
 
-        console.log('Loading transit data for city:', cityName, 'feed:', feedPath)
+        // Loading transit data
 
         // Use bounds if available, otherwise use initial viewport bounds
         const loadBounds = bounds || {
@@ -277,15 +274,15 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
 
         // Load stops within current map bounds
         const stops = await getTransitStops(feedPath, loadBounds)
-        console.log('Loaded transit stops:', stops.length)
+        // Loaded transit stops
         setTransitStops(stops)
 
         // Load routes (limit to first 50 for performance)
         const allRoutes = await getTransitRoutes(feedPath)
-        console.log('Loaded transit routes:', allRoutes.length)
+        // Loaded transit routes
         setTransitRoutes(allRoutes.slice(0, 50))
       } catch (error) {
-        console.error('Error loading transit data:', error)
+        // Error loading transit data - handled silently
       } finally {
         setIsLoadingTransit(false)
       }
