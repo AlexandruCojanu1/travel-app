@@ -1,5 +1,19 @@
 import { createClient } from "@/lib/supabase/client"
 
+// Cache for cities to avoid repeated requests
+let citiesCache: Array<{
+  id: string
+  name: string
+  country: string
+  state_province: string | null
+  latitude: number
+  longitude: number
+  is_active: boolean
+  created_at: string
+}> | null = null
+let citiesCacheTimestamp: number = 0
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
 export async function getCityById(cityId: string) {
   const supabase = createClient()
   const { data, error } = await supabase
@@ -17,6 +31,12 @@ export async function getCityById(cityId: string) {
 }
 
 export async function getCities() {
+  // Check cache first
+  const now = Date.now()
+  if (citiesCache && (now - citiesCacheTimestamp) < CACHE_DURATION) {
+    return citiesCache
+  }
+
   try {
     const supabase = createClient()
     const { data, error } = await supabase
@@ -27,19 +47,24 @@ export async function getCities() {
 
     if (error) {
       console.error("Error fetching cities:", error)
-      console.error("Error details:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      })
+      // Return cached data if available, even if stale
+      if (citiesCache) {
+        return citiesCache
+      }
       return []
     }
 
-    console.log(`Loaded ${data?.length || 0} cities from database`)
-    return data || []
+    // Update cache
+    citiesCache = data || []
+    citiesCacheTimestamp = now
+
+    return citiesCache
   } catch (err) {
     console.error("Unexpected error fetching cities:", err)
+    // Return cached data if available
+    if (citiesCache) {
+      return citiesCache
+    }
     return []
   }
 }
@@ -47,4 +72,3 @@ export async function getCities() {
 export async function getActiveCities() {
   return getCities()
 }
-
