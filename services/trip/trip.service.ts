@@ -15,7 +15,7 @@ export interface TripData {
 }
 
 export async function createOrUpdateTrip(
-  tripData: TripData, 
+  tripData: TripData,
   items?: Array<{
     id?: string
     business_id: string
@@ -27,7 +27,7 @@ export async function createOrUpdateTrip(
   }>
 ) {
   const supabase = createClient()
-  
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -42,20 +42,26 @@ export async function createOrUpdateTrip(
       .from("trips")
       .select("id")
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
+
+    let tripId: string
+    let tripResult
+
+    const commonData = {
+      destination_city_id: tripData.city_id || tripData.destination_city_id,
+      start_date: tripData.start_date,
+      end_date: tripData.end_date,
+      title: tripData.title,
+      budget_total: tripData.budget_total,
+      status: 'planning', // Ensure we use a valid string
+      updated_at: new Date().toISOString(),
+    }
 
     if (existingTrip) {
       // Update existing trip
       const { data, error } = await supabase
         .from("trips")
-        .update({
-          city_id: tripData.city_id || tripData.destination_city_id,
-          start_date: tripData.start_date,
-          end_date: tripData.end_date,
-          title: tripData.title,
-          budget_total: tripData.budget_total,
-          updated_at: new Date().toISOString(),
-        })
+        .update(commonData)
         .eq("id", existingTrip.id)
         .select()
         .single()
@@ -63,19 +69,15 @@ export async function createOrUpdateTrip(
       if (error) {
         return { success: false, error: error.message }
       }
-
-      return { success: true, tripId: data.id, trip: data }
+      tripId = data.id
+      tripResult = data
     } else {
       // Create new trip
       const { data, error } = await supabase
         .from("trips")
         .insert({
           user_id: user.id,
-          city_id: tripData.city_id || tripData.destination_city_id,
-          start_date: tripData.start_date,
-          end_date: tripData.end_date,
-          title: tripData.title,
-          budget_total: tripData.budget_total,
+          ...commonData,
         })
         .select()
         .single()
@@ -83,9 +85,46 @@ export async function createOrUpdateTrip(
       if (error) {
         return { success: false, error: error.message }
       }
-
-      return { success: true, tripId: data.id, trip: data }
+      tripId = data.id
+      tripResult = data
     }
+
+    // Now sync items if provided
+    if (items && items.length > 0) {
+      // 1. Delete existing items for this trip to ensure clean sync
+      // (This is a simplified approach for a single-trip-per-user system)
+      await supabase
+        .from("trip_items")
+        .delete()
+        .eq("trip_id", tripId)
+
+      // 2. Insert new items
+      const itemsToInsert = items.map(item => ({
+        trip_id: tripId,
+        business_id: item.business_id,
+        business_name: item.business_name,
+        business_category: item.business_category,
+        estimated_cost: item.estimated_cost || 0,
+        day_index: item.day_index,
+      }))
+
+      const { error: itemsError } = await supabase
+        .from("trip_items")
+        .insert(itemsToInsert)
+
+      if (itemsError) {
+        console.error("Error saving trip items:", itemsError)
+        // We don't fail the whole trip save if items fail, but we log it
+      }
+    } else if (items) {
+      // Items were provided but empty - clear them from DB
+      await supabase
+        .from("trip_items")
+        .delete()
+        .eq("trip_id", tripId)
+    }
+
+    return { success: true, tripId, trip: tripResult }
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error('Unknown error')
     return { success: false, error: err.message || "An unexpected error occurred" }
@@ -94,7 +133,7 @@ export async function createOrUpdateTrip(
 
 export async function fetchUserTrip() {
   const supabase = createClient()
-  
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -104,24 +143,24 @@ export async function fetchUserTrip() {
   }
 
   try {
+    // Fetch trip with its items
     const { data, error } = await supabase
       .from("trips")
-      .select("*")
+      .select(`
+        *,
+        items:trip_items(*)
+      `)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
 
     if (error) {
-      // 406 error usually means Accept header issue or RLS policy
-      // Try without .single() first
-      if (error.code === "PGRST116" || error.status === 406) {
-        // No trip found or RLS issue - return empty
+      if (error.code === "PGRST116" || (error as any).status === 406) {
         return { success: true, trip: null }
       }
       return { success: false, error: error.message }
     }
 
-    // If no data, return null
     if (!data || data.length === 0) {
       return { success: true, trip: null }
     }

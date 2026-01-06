@@ -16,11 +16,12 @@ const filters = [
 interface QuickFiltersProps {
   activeFilter: string
   onFilterChange: (filter: string) => void
+  className?: string
 }
 
-export function QuickFilters({ activeFilter, onFilterChange }: QuickFiltersProps) {
+export function QuickFilters({ activeFilter, onFilterChange, className }: QuickFiltersProps) {
   return (
-    <div className="relative">
+    <div className={cn("relative", className)}>
       <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-2 justify-center">
         {filters.map((filter) => {
           const Icon = filter.icon
@@ -40,7 +41,7 @@ export function QuickFilters({ activeFilter, onFilterChange }: QuickFiltersProps
             >
               <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-mova-gray")} />
               <span>{filter.label}</span>
-              
+
               {isActive && (
                 <motion.div
                   layoutId="activeFilterIndicator"

@@ -8,6 +8,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
 } from '@/components/shared/ui/drawer'
 import { Button } from '@/components/shared/ui/button'
 import { useTripStore } from '@/store/trip-store'
@@ -49,11 +50,11 @@ export function AddToTripDrawer({
   }
 
   // Check if this is a nature reserve or recreation area (free)
-  const isNatureOrActivity = business.category === 'Nature' || 
-                             business.category === 'Activities' ||
-                             business.id?.startsWith('nature-') ||
-                             business.id?.startsWith('recreation-')
-  
+  const isNatureOrActivity = business.category === 'Nature' ||
+    business.category === 'Activities' ||
+    business.id?.startsWith('nature-') ||
+    business.id?.startsWith('recreation-')
+
   const estimatedCost = isNatureOrActivity ? 0 : getPriceFromLevel(
     'price_level' in business ? business.price_level : undefined
   )
@@ -114,6 +115,9 @@ export function AddToTripDrawer({
           <DrawerTitle className="text-xl font-bold">
             Adaugă {business.name} la...
           </DrawerTitle>
+          <DrawerDescription className="sr-only">
+            Alege ziua în care vrei să vizitezi această locație.
+          </DrawerDescription>
         </DrawerHeader>
 
         <div className="px-4 pb-6 overflow-y-auto space-y-6 max-h-[60vh]">
@@ -153,11 +157,10 @@ export function AddToTripDrawer({
                       <button
                         key={day.index}
                         onClick={() => setSelectedDayIndex(day.index)}
-                        className={`p-3 rounded-xl border-2 transition-all text-left ${
-                          isSelected
+                        className={`p-3 rounded-xl border-2 transition-all text-left ${isSelected
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-gray-200 bg-white hover:border-gray-300'
-                        }`}
+                          }`}
                       >
                         <div className="font-semibold text-gray-900 text-sm">
                           {day.label}

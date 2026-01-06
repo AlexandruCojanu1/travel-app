@@ -1,408 +1,165 @@
 "use client"
 
-import { useEffect, useState, Suspense, lazy } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { getHomeContext, getCityFeed, type HomeContext, type CityFeedData } from "@/services/feed/feed.service"
-import { getUserBusinesses } from "@/actions/business-portal"
-import { QuickFilters } from "@/components/features/feed/quick-filters"
-import { NewsCard } from "@/components/features/feed/news-card"
-import { FeedSkeleton } from "@/components/features/feed/feed-skeleton"
-import { GlobalSearch } from "@/components/features/map/search/global-search"
+import { getCityFeed, getHomeContext, type CityFeedData, type HomeContext } from "@/services/feed/feed.service"
 import { useAppStore } from "@/store/app-store"
-import { useSearchStore } from "@/store/search-store"
-import { getCityById } from "@/services/auth/city.service"
-import { Calendar, MapPin, Sparkles } from "lucide-react"
-import { format } from "date-fns"
+import { useVacationStore } from "@/store/vacation-store"
+import { TravelGuideCard } from "@/components/features/feed/travel-guide-card"
+import { TripSummaryCard } from "@/components/features/feed/trip-summary-card"
+import { FeedSkeleton } from "@/components/features/feed/feed-skeleton"
 import { logger } from "@/lib/logger"
-
-// Lazy load heavy feed components
-const FeaturedCarousel = lazy(() => import("@/components/features/feed/featured-carousel").then(m => ({ default: m.FeaturedCarousel })))
+import { useUIStore } from "@/store/ui-store"
 
 export default function HomePage() {
   const router = useRouter()
-  const { currentCity, openCitySelector, setCity } = useAppStore()
-  const { query, filters, sortBy } = useSearchStore()
+  const { currentCity, setCity } = useAppStore()
+  const { vacations, loadVacations, selectVacation } = useVacationStore()
+  const { openBusinessDrawer } = useUIStore()
   const [isLoading, setIsLoading] = useState(true)
+  const [profile, setProfile] = useState<{ avatar_url: string | null; full_name: string | null } | null>(null)
   const [homeContext, setHomeContext] = useState<HomeContext | null>(null)
   const [feedData, setFeedData] = useState<CityFeedData | null>(null)
-  const [activeFilter, setActiveFilter] = useState("All")
   const [error, setError] = useState<string | null>(null)
-  const [isBusinessOwner, setIsBusinessOwner] = useState(false)
 
-  // Check if user is a business owner
   useEffect(() => {
-    async function checkBusinessOwner() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        setIsBusinessOwner(false)
-        return
-      }
-
-      // Check if user has businesses using client-side query
-      const { data: businesses, error } = await supabase
-        .from('businesses')
-        .select('id')
-        .eq('owner_user_id', user.id)
-        .limit(1)
-      
-      setIsBusinessOwner(!error && businesses && businesses.length > 0)
-    }
-
-    checkBusinessOwner()
-  }, [])
-
-  // Initialize city from user's home city on first load
-  useEffect(() => {
-    async function initializeCity() {
-      // If we already have a city in store, use it (e.g., from onboarding)
-      if (currentCity) {
-        // Still load context for feed data
+    async function initialize() {
+      setIsLoading(true)
+      try {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          try {
-            const context = await getHomeContext(user.id)
-            setHomeContext(context)
-          } catch (error) {
-            logger.error('Error loading home context', error)
-          }
+
+        if (!user) {
+          router.push('/auth/login')
+          return
         }
-        return
-      }
 
-      const supabase = createClient()
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('avatar_url, full_name')
+          .eq('id', user.id)
+          .single()
 
-      if (userError || !user) {
-        router.push('/auth/login')
-        return
-      }
+        if (profileData) setProfile(profileData)
 
-      // Get user's home city from profile
-      try {
         const context = await getHomeContext(user.id)
         setHomeContext(context)
 
-        // Only redirect to onboarding if user hasn't completed it
-        // Check both homeCityId and role to ensure onboarding is complete
         if (!context.homeCityId || !context.role) {
-          logger.log('Home: Onboarding incomplete, redirecting to onboarding')
           router.push('/onboarding')
           return
         }
 
-        // Note: We don't auto-redirect users with businesses from /home
-        // They can access /home even if they have businesses (maybe they want to see traveler view)
-        // Auto-redirect only happens from /auth pages via middleware
-
-        // Onboarding is complete - load user's home city into global store
         if (context.homeCity) {
           setCity(context.homeCity)
-        } else if (context.homeCityId) {
-          // If we have ID but not full city data, fetch it
-          const city = await getCityById(context.homeCityId)
-          if (city) {
-            setCity(city)
-          }
         }
-      } catch (error: any) {
-        logger.error('Home: Error loading home context', error)
-        // On error, try to get profile directly with better error handling
-        try {
-          const supabase = createClient()
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('home_city_id, role')
-            .eq('id', user.id)
-            .single()
-          
-          if (profileError) {
-            logger.error('Home: Profile fetch error', profileError, { userId: user.id })
-            // If it's an RLS error, don't redirect - just show error
-            // User might have completed onboarding but RLS is blocking access
-            if (profileError.code === 'PGRST116') {
-              // Profile truly doesn't exist
-              router.push('/onboarding')
-              return
-            } else {
-              // RLS error - log it but don't redirect
-              logger.warn('Home: RLS error detected, but not redirecting to onboarding', { code: profileError.code })
-              setError('Unable to load profile. Please check RLS policies.')
-              // Still try to load page with default city if available
-              setIsLoading(false)
-              return
-            }
-          } else if (!profile || !profile.home_city_id || !profile.role) {
-            // Profile exists but onboarding incomplete
-            router.push('/onboarding')
-            return
-          }
-          // If profile exists and onboarding is complete, continue normally
-          // Try to load city if we have home_city_id
-          if (profile.home_city_id) {
-            const city = await getCityById(profile.home_city_id)
-            if (city) {
-              setCity(city)
-            }
-          }
-        } catch (fallbackError) {
-          logger.error('Home: Fallback error handling failed', fallbackError)
-          // Last resort: show page with error message but don't redirect
-          setError('Unable to load user data. Please try refreshing the page.')
-          setIsLoading(false)
-        }
-      } finally {
-        // Always set loading to false after attempting to load
-        setIsLoading(false)
-      }
-    }
 
-    initializeCity()
-  }, [currentCity, router, setCity])
+        // Load vacations and feed data
+        const [_, feed] = await Promise.all([
+          loadVacations(),
+          context.homeCityId ? getCityFeed(context.homeCityId) : Promise.resolve(null)
+        ])
 
-  // Fetch feed data when currentCity, filter, search query, or filters change
-  useEffect(() => {
-    async function loadFeed() {
-      // If no city selected yet, don't fetch
-      if (!currentCity) {
-        setIsLoading(false)
-        return
-      }
+        if (feed) setFeedData(feed)
 
-      try {
-        setIsLoading(true)
-        setError(null)
-
-        // Fetch feed data for current city
-        // Note: Search/filtering will be applied to featured businesses
-        const feed = await getCityFeed(currentCity.id, activeFilter)
-        setFeedData(feed)
       } catch (err) {
-        logger.error('Error loading feed', err)
-        setError('Failed to load feed. Please try again.')
+        logger.error('Error initializing home page', err)
+        setError('A apărut o eroare la încărcarea datelor.')
       } finally {
         setIsLoading(false)
       }
     }
 
-    loadFeed()
-  }, [currentCity?.id, activeFilter, query, filters, sortBy])
+    initialize()
+  }, [router, setCity, loadVacations])
 
-  // Get greeting based on time of day
-  const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return "Bună dimineața"
-    if (hour < 18) return "Bună ziua"
-    return "Bună seara"
-  }
-
-  // Get current date formatted
-  const currentDate = format(new Date(), "EEEE, d MMM")
-
-  // Show city selector prompt if no city selected
-  if (!currentCity) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="text-center max-w-md">
-          <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/25">
-            <MapPin className="h-10 w-10 text-white" />
-          </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-3">Alege Destinația</h3>
-          <p className="text-slate-600 mb-6">
-            Selectează un oraș pentru a descoperi locuri uimitoare, evenimente și experiențe locale
-          </p>
-          <button
-            onClick={openCitySelector}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
-          >
-            Selectează Oraș
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <FeedSkeleton />
-      </div>
-    )
-  }
+  if (isLoading) return <FeedSkeleton />
 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4">
-        <div className="text-center max-w-md w-full">
-          <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">⚠️</span>
-          </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">Ceva nu a mers bine</h3>
-          <p className="text-slate-600 mb-6">{error}</p>
-          <button
-            onClick={() => router.refresh()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Încearcă din nou
-          </button>
-        </div>
+        <p className="text-red-500 mb-4">{error}</p>
+        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-blue-600 text-white rounded-xl">
+          Reîncearcă
+        </button>
       </div>
     )
   }
 
-  if (!feedData) {
-    return null
-  }
-
   return (
-    <div className="w-full max-w-screen-xl mx-auto px-4 md:px-6 lg:px-8 space-y-6">
-      {/* Global Search Bar */}
-      <div className="mt-4">
-        <GlobalSearch variant="static" />
-      </div>
-
-      {/* Header Context */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-slate-600">
-          <Calendar className="h-4 w-4" />
-          <span>{currentDate}</span>
-        </div>
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-mova-dark">
-            {currentCity.name}
-          </h1>
-          <div className="flex items-center gap-2 text-mova-gray mt-2">
-            <MapPin className="h-4 w-4" />
-            <span className="text-base">
-              {currentCity.state_province
-                ? `${currentCity.state_province}, ${currentCity.country}`
-                : currentCity.country}
-            </span>
-          </div>
-        </div>
-      </div>
-
-
-      {/* Quick Filters */}
-      <div>
-        <QuickFilters
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
-      </div>
-
-      {/* Featured Section - "Don't Miss" */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Nu rata</h2>
-          {feedData.featuredBusinesses.length > 0 && (
-            <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors">
-              Vezi toate
-            </button>
+    <div className="w-full px-4 sm:px-6 lg:px-12 space-y-12 pb-32 pt-6">
+      {/* Travel Guides */}
+      <section className="space-y-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Ghiduri de călătorie</h2>
+        <div className="flex gap-6 overflow-x-auto pb-6 px-2 no-scrollbar scroll-smooth -mx-4 sm:mx-0">
+          {feedData?.featuredBusinesses && feedData.featuredBusinesses.length > 0 ? (
+            feedData.featuredBusinesses.map((biz) => (
+              <TravelGuideCard
+                key={biz.id}
+                title={`1-Day ${biz.name} Trip`}
+                city={currentCity?.name || 'România'}
+                spotsCount={7}
+                imageUrl={biz.image_url || 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=500&q=80'}
+                onClick={() => openBusinessDrawer(biz.id)}
+              />
+            ))
+          ) : (
+            // Fallback guides
+            [1, 2, 3, 4, 5].map((i) => (
+              <TravelGuideCard
+                key={i}
+                priority={i <= 2}
+                title={i === 1 ? "1-Day Paris Trip" : i === 2 ? "1-Day Rome Trip" : i === 3 ? "3-Day London Trip" : i === 4 ? "Tokyo Explore" : "NYC City Tour"}
+                city={i === 1 ? "Paris" : i === 2 ? "Rome" : i === 3 ? "London" : i === 4 ? "Tokyo" : "New York"}
+                spotsCount={i * 5}
+                imageUrl={
+                  i === 1
+                    ? "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500&q=80"
+                    : i === 2
+                      ? "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=500&q=80"
+                      : i === 3
+                        ? "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=500&q=80"
+                        : i === 4
+                          ? "https://images.unsplash.com/photo-1540959733332-e94e270b4d4a?w=500&q=80"
+                          : "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=500&q=80"
+                }
+              />
+            ))
           )}
         </div>
-
-        {feedData.featuredBusinesses.length > 0 ? (
-          <Suspense fallback={
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-64 bg-gray-100 rounded-xl animate-pulse" />
-              ))}
-            </div>
-          }>
-            <FeaturedCarousel businesses={feedData.featuredBusinesses} />
-          </Suspense>
-        ) : (
-          <div className="bg-white rounded-xl p-12 text-center">
-            <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-              <MapPin className="h-8 w-8 text-slate-400" />
-            </div>
-            <h3 className="font-semibold text-slate-900 mb-2">
-              Încă nu există locuri recomandate
-            </h3>
-            <p className="text-slate-600 text-sm">
-              Revino curând pentru recomandări noi
-            </p>
-          </div>
-        )}
       </section>
 
-      {/* News/Events Section - "Happening Nearby" */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Se întâmplă în apropiere</h2>
-          {feedData.cityPosts.length > 0 && (
-            <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors">
-              Vezi toate
-            </button>
+      {/* My Trips */}
+      <section className="space-y-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Călătoriile mele</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {vacations.length > 0 ? (
+            vacations.map((vacation) => (
+              <TripSummaryCard
+                key={vacation.id}
+                title={vacation.title}
+                startDate={vacation.startDate}
+                endDate={vacation.endDate}
+                spotsCount={0}
+                imageUrl={vacation.coverImage}
+                onClick={() => {
+                  selectVacation(vacation.id)
+                  router.push('/plan')
+                }}
+              />
+            ))
+          ) : (
+            <div
+              onClick={() => router.push('/plan')}
+              className="col-span-full p-16 border-2 border-dashed border-slate-200 rounded-[32px] text-center cursor-pointer hover:bg-slate-50 transition-colors"
+            >
+              <p className="text-slate-400 font-medium">Nu ai nicio călătorie planificată.</p>
+              <p className="text-blue-600 font-bold mt-2">Începe una nouă acum!</p>
+            </div>
           )}
         </div>
-
-        {feedData.cityPosts.length > 0 ? (
-          <div className="space-y-3">
-            {feedData.cityPosts.map((post) => (
-              <NewsCard key={post.id} post={post} />
-            ))}
-          </div>
-        ) : (
-          <div className="airbnb-card p-12 text-center">
-            <div className="h-16 w-16 rounded-full bg-mova-light-gray flex items-center justify-center mx-auto mb-4">
-              <Calendar className="h-8 w-8 text-mova-gray" />
-            </div>
-            <h3 className="font-semibold text-mova-dark mb-2 text-lg">
-              Încă nu există știri sau evenimente
-            </h3>
-            <p className="text-mova-gray text-sm">
-              Fii primul care împărtășește ceva ce se întâmplă în orașul tău
-            </p>
-            {/* Only show Create Post button for business owners */}
-            {isBusinessOwner && (
-            <button className="mt-4 airbnb-button">
-              Creează postare
-            </button>
-            )}
-          </div>
-        )}
       </section>
-
-      {/* Promotions Section (if available) */}
-      {feedData.promotions.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-mova-dark">Oferte speciale</h2>
-            <button className="text-mova-blue text-sm font-semibold hover:underline transition-colors">
-              Vezi toate
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {feedData.promotions.slice(0, 4).map((promotion) => (
-              <div
-                key={promotion.id}
-                className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border-2 border-amber-200"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-bold">
-                    {promotion.discount_percentage}% OFF
-                  </span>
-                  <span className="text-xs text-slate-600">
-                    Valabil până pe {format(new Date(promotion.valid_until), "d MMM")}
-                  </span>
-                </div>
-                <h3 className="font-bold text-slate-900 mb-2">{promotion.title}</h3>
-                {promotion.description && (
-                  <p className="text-sm text-slate-600 line-clamp-2">
-                    {promotion.description}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   )
 }

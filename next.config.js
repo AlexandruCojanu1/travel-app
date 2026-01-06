@@ -23,6 +23,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'picsum.photos',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
   },
   // Alias mapbox-gl to maplibre-gl for react-map-gl compatibility
@@ -37,6 +41,7 @@ const nextConfig = {
   async redirects() {
     return []
   },
+  transpilePackages: ['framer-motion'],
 }
 
 module.exports = nextConfig

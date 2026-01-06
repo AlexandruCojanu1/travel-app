@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight, Camera } from 'lucide-react'
-import { Dialog, DialogContent } from '@/components/shared/ui/dialog'
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/shared/ui/dialog'
 import { Button } from '@/components/shared/ui/button'
 import { createClient } from '@/lib/supabase/client'
 
@@ -227,6 +227,8 @@ export function Gallery({ businessId }: GalleryProps) {
         {selectedIndex !== null && (
           <Dialog open={true} onOpenChange={closeLightbox}>
             <DialogContent className="max-w-7xl w-full h-[90vh] p-0 bg-black/95 border-0">
+              <DialogTitle className="sr-only">Business Photo Gallery</DialogTitle>
+              <DialogDescription className="sr-only">View full size photos of the business</DialogDescription>
               <div className="relative w-full h-full flex items-center justify-center">
                 {/* Close Button */}
                 <Button

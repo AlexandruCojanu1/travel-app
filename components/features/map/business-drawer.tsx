@@ -10,11 +10,13 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
 } from '@/components/shared/ui/drawer'
 import { Button } from '@/components/shared/ui/button'
 import { AddToTripDrawer } from '@/components/features/trip/add-to-trip-drawer'
 import { BookingDialog } from '@/components/features/booking/booking-dialog'
 import { useTripStore } from '@/store/trip-store'
+import { useUIStore } from '@/store/ui-store'
 import type { MapBusiness } from '@/services/business/business.service'
 
 interface BusinessDrawerProps {
@@ -28,13 +30,15 @@ export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProp
   const [isAddToTripOpen, setIsAddToTripOpen] = useState(false)
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false)
   const { getDaysCount } = useTripStore()
+  const { openBusinessDrawer } = useUIStore()
 
   if (!business) return null
 
   const isHotel = business.category === 'Hotel'
 
   const handleViewDetails = () => {
-    router.push(`/business/${business.id}`)
+    onClose()
+    openBusinessDrawer(business.id)
   }
 
   const handleAddToPlan = () => {
@@ -58,6 +62,7 @@ export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProp
         <DrawerContent className="max-h-[50vh]">
           <DrawerHeader className="sr-only">
             <DrawerTitle>{business.name}</DrawerTitle>
+            <DrawerDescription>Previzualizare business.</DrawerDescription>
           </DrawerHeader>
 
           <div className="px-4 pb-6 overflow-y-auto">

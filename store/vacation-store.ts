@@ -90,6 +90,10 @@ export const useVacationStore = create<VacationState>()(
 
                         if (error) {
                             console.error('[VacationStore] Error loading vacations:', error)
+                            // If it's a 406 or missing column error, handle it gracefully
+                            if (error.code === 'PGRST301' || error.message?.includes('406')) {
+                                console.warn('[VacationStore] RLS or schema issue detected')
+                            }
                             set({ isLoading: false, vacations: [] })
                             return
                         }
@@ -113,8 +117,8 @@ export const useVacationStore = create<VacationState>()(
                         set({ vacations, isLoading: false })
                         console.log('[VacationStore] Done loading vacations')
                     } catch (error) {
-                        console.error('[VacationStore] Error loading vacations:', error)
-                        clearTimeout(timeoutId)
+                        console.error('[VacationStore] Unexpected error loading vacations:', error)
+                        if (timeoutId) clearTimeout(timeoutId)
                         set({ isLoading: false, vacations: [] })
                     }
                 },

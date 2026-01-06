@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense, lazy } from "react"
+import { useSearchParams } from "next/navigation"
 import { Calendar, MapPin, DollarSign, Share2, Edit, Plus, Sparkles, ArrowLeft, Loader2 } from "lucide-react"
 import { useTripStore } from "@/store/trip-store"
 import { useVacationStore } from "@/store/vacation-store"
@@ -12,6 +13,11 @@ import { Button } from "@/components/shared/ui/button"
 import { format } from "date-fns"
 import { ro } from "date-fns/locale"
 import { createClient } from "@/lib/supabase/client"
+import { useUIStore } from "@/store/ui-store"
+import { HomeHeader } from "@/components/features/feed/home-header"
+import { TravelGuideCard } from "@/components/features/feed/travel-guide-card"
+import { TripSummaryCard } from "@/components/features/feed/trip-summary-card"
+import { getCityFeed } from "@/services/feed/feed.service"
 
 // Lazy load heavy trip components
 const BudgetMeter = lazy(() => import("@/components/features/trip/budget-meter").then(m => ({ default: m.BudgetMeter })))
@@ -20,6 +26,22 @@ const TimelineView = lazy(() => import("@/components/features/trip/timeline-view
 type ViewMode = 'selector' | 'planner'
 
 export default function PlanPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+        <p className="text-gray-600">Se încarcă planificarea...</p>
+      </div>
+    }>
+      <PlanPageContent />
+    </Suspense>
+  )
+}
+
+function PlanPageContent() {
+  const searchParams = useSearchParams()
+  const action = searchParams.get('action')
+
   const {
     tripDetails,
     budget,
@@ -39,37 +61,63 @@ export default function PlanPage() {
   } = useVacationStore()
 
   const { setCity } = useAppStore()
+  const { openBusinessDrawer } = useUIStore()
 
   const [viewMode, setViewMode] = useState<ViewMode>('selector')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditBudgetOpen, setIsEditBudgetOpen] = useState(false)
   const [isLoadingTrip, setIsLoadingTrip] = useState(false)
 
+  const [profile, setProfile] = useState<{ avatar_url: string | null; full_name: string | null } | null>(null)
+  const [feedData, setFeedData] = useState<any>(null)
+
+  // Handle action parameter on mount
+  useEffect(() => {
+    if (action === 'new') {
+      setIsCreateDialogOpen(true)
+    }
+  }, [action])
+
+  // Load profile and feed data
+  useEffect(() => {
+    async function loadData() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('avatar_url, full_name')
+          .eq('id', user.id)
+          .single()
+        if (profileData) setProfile(profileData)
+
+        const feed = await getCityFeed(user.id) // Or use a default city ID
+        setFeedData(feed)
+      }
+    }
+    loadData()
+  }, [])
+
   // Check if we should go directly to planner (if there's an active vacation)
   useEffect(() => {
     if (activeVacationId && vacations.length > 0 && viewMode === 'selector') {
       const activeVacation = getActiveVacation()
       if (activeVacation) {
-        // Load trip data for active vacation
         loadVacationTrip(activeVacation.id)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeVacationId, vacations.length])
 
   // Function to load trip data for a specific vacation
   const loadVacationTrip = async (vacationId: string) => {
     setIsLoadingTrip(true)
-
     try {
       const vacation = vacations.find(v => v.id === vacationId) || getActiveVacation()
-
       if (!vacation) {
         setIsLoadingTrip(false)
         return
       }
 
-      // Initialize trip store with vacation data
       initTrip(
         {
           cityId: vacation.cityId,
@@ -84,7 +132,6 @@ export default function PlanPage() {
         }
       )
 
-      // Sync city with app store for Explore page
       const supabase = createClient()
       const { data: cityData } = await supabase
         .from('cities')
@@ -92,13 +139,8 @@ export default function PlanPage() {
         .eq('id', vacation.cityId)
         .single()
 
-      if (cityData) {
-        setCity(cityData)
-      }
-
-      // Load trip items from database
+      if (cityData) setCity(cityData)
       await loadTripFromDatabase()
-
       setViewMode('planner')
     } catch (error) {
       console.error('Error loading vacation trip:', error)
@@ -117,7 +159,6 @@ export default function PlanPage() {
     setViewMode('selector')
   }
 
-  // Loading trip state (VacationSelector handles its own loading state)
   if (isLoadingTrip) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
@@ -127,46 +168,75 @@ export default function PlanPage() {
     )
   }
 
-  // Vacation Selector View
+  // Dashboard View (Selector)
   if (viewMode === 'selector') {
     return (
-      <VacationSelector onVacationSelected={handleVacationSelected} />
-    )
-  }
+      <div className="w-full px-4 sm:px-6 lg:px-12 space-y-12 pb-32 pt-6">
+        {/* Travel Guides */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Ghiduri de călătorie</h2>
+            <Sparkles className="h-5 w-5 text-blue-600 animate-pulse" />
+          </div>
+          <div className="flex gap-6 overflow-x-auto pb-6 px-2 no-scrollbar scroll-smooth">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <TravelGuideCard
+                key={i}
+                priority={i === 1}
+                title={i === 1 ? "Paris Essential" : i === 2 ? "Rome Explorer" : "London Highlights"}
+                city={i === 1 ? "Paris" : i === 2 ? "Rome" : "London"}
+                spotsCount={i === 1 ? 9 : i === 2 ? 7 : 19}
+                imageUrl={
+                  i === 1
+                    ? "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500&q=80"
+                    : i === 2
+                      ? "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=500&q=80"
+                      : "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=500&q=80"
+                }
+                onClick={() => {
+                  if (i === 1) openBusinessDrawer('df3e9652-3296-48eb-bf38-0248caab8e42')
+                  else openBusinessDrawer('df3e9652-3296-48eb-bf38-0248caab8e42')
+                }}
+              />
+            ))}
+          </div>
+        </section>
 
-  // Planner View - Empty State (no trip details)
-  if (!tripDetails) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="text-center max-w-md">
-          <div className="h-24 w-24 rounded-airbnb-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/25">
-            <Sparkles className="h-12 w-12 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            Începe să-ți planifici călătoria
-          </h2>
-          <p className="text-gray-500 mb-8">
-            Creează-ți itinerariul perfect, stabilește un buget și urmărește-ți cheltuielile într-un singur loc.
-          </p>
-          <div className="flex flex-col gap-3">
-            <Button
+        {/* My Trips */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Călătoriile mele</h2>
+            <button
               onClick={() => setIsCreateDialogOpen(true)}
-              size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg"
+              className="p-2 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100 transition-colors"
             >
-              <Plus className="h-5 w-5 mr-2" />
-              Începe o călătorie nouă
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleBackToSelector}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Înapoi la vacanțe
-            </Button>
+              <Plus className="h-5 w-5" />
+            </button>
           </div>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2">
+            {vacations.length > 0 ? (
+              vacations.map((vacation) => (
+                <TripSummaryCard
+                  key={vacation.id}
+                  title={vacation.title}
+                  startDate={vacation.startDate}
+                  endDate={vacation.endDate}
+                  spotsCount={0}
+                  imageUrl={vacation.coverImage}
+                  onClick={() => handleVacationSelected(vacation.id)}
+                />
+              ))
+            ) : (
+              <div
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="col-span-full p-16 border-2 border-dashed border-slate-200 rounded-[32px] text-center cursor-pointer hover:bg-slate-50 transition-colors"
+              >
+                <p className="text-slate-400 font-medium">Nu ai nicio călătorie planificată.</p>
+                <p className="text-blue-600 font-bold mt-2">Creează una nouă!</p>
+              </div>
+            )}
+          </div>
+        </section>
 
         <CreateTripDialog
           isOpen={isCreateDialogOpen}
@@ -176,7 +246,16 @@ export default function PlanPage() {
     )
   }
 
-  // Active Planner State
+  // Planner View
+  if (!tripDetails) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+        <p className="text-gray-600">Se inițializează planificarea...</p>
+      </div>
+    )
+  }
+
   const daysCount = getDaysCount()
   const spent = spentBudget()
   const placesCount = items.length

@@ -1,136 +1,75 @@
 "use client"
 
+import React, { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Compass, Calendar, Bookmark, User } from "lucide-react"
-import { motion, useAnimation } from "framer-motion"
-import { useEffect, useRef, useState } from "react"
-import { useTripStore } from "@/store/trip-store"
+import { Briefcase, Plus, Map } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { CreateMenu } from "./create-menu"
 
 const navItems = [
   {
-    label: "Home",
+    label: "Călătorii",
     href: "/home",
-    icon: Home,
+    icon: Briefcase,
   },
   {
-    label: "Explore",
-    href: "/explore",
-    icon: Compass,
-  },
-  {
-    label: "Plan",
+    label: "Creează",
     href: "/plan",
-    icon: Calendar,
+    icon: Plus,
+    isSpecial: true,
   },
   {
-    label: "Bookings",
-    href: "/bookings",
-    icon: Bookmark,
-  },
-  {
-    label: "Profile",
-    href: "/profile",
-    icon: User,
+    label: "Explorează",
+    href: "/explore",
+    icon: Map,
   },
 ]
 
 export function BottomNav() {
   const pathname = usePathname()
-  const { items } = useTripStore()
-  const planIconControls = useAnimation()
-  const [hasNewItem, setHasNewItem] = useState(false)
-
-  // Track items count for notification badge
-  const itemsCount = items.length
-  const prevItemsCountRef = useRef(itemsCount)
-
-  // Trigger bounce animation when item is added
-  useEffect(() => {
-    if (itemsCount > prevItemsCountRef.current) {
-      setHasNewItem(true)
-      planIconControls.start({
-        scale: [1, 1.2, 1],
-        transition: { duration: 0.4, ease: 'easeOut' },
-      })
-      
-      // Reset badge after animation
-      setTimeout(() => {
-        setHasNewItem(false)
-      }, 2000)
-    }
-    prevItemsCountRef.current = itemsCount
-  }, [itemsCount, planIconControls])
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false)
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 block md:hidden safe-area-bottom">
-      <div className="bg-white border-t border-gray-200 shadow-airbnb-lg">
-        <div className="mx-auto max-w-screen-xl">
-          <div className="flex items-center justify-around px-2 py-2 safe-area-x">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href
-              const Icon = item.icon
+    <>
+      <div className="fixed bottom-8 left-0 right-0 z-50 flex justify-center px-4 safe-area-bottom pointer-events-none md:hidden">
+        <nav className="bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-[40px] px-4 py-2 flex items-center justify-around pointer-events-auto max-w-sm w-full">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href
+            const Icon = item.icon
 
+            if (item.isSpecial) {
               return (
-                <Link
+                <button
                   key={item.href}
-                  href={item.href}
-                  className="relative flex flex-col items-center justify-center min-w-[64px] min-h-[56px] group"
+                  onClick={() => setIsCreateMenuOpen(true)}
+                  className="relative h-14 w-14 rounded-full bg-black flex items-center justify-center text-white hover:scale-105 transition-transform shadow-lg shrink-0"
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="bottomNavIndicator"
-                      className="absolute inset-0 rounded-airbnb bg-mova-light-gray"
-                      initial={false}
-                      transition={{
-                        type: "spring",
-                        stiffness: 380,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                  
-                  <div className="relative z-10 flex flex-col items-center gap-1">
-                    <div className="relative">
-                      <motion.div
-                        animate={item.href === '/plan' ? planIconControls : {}}
-                        className={cn(
-                          "transition-colors duration-200",
-                          isActive
-                            ? "text-mova-blue"
-                            : "text-mova-gray group-hover:text-mova-dark"
-                        )}
-                      >
-                        <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
-                      </motion.div>
-                      {/* Notification Badge */}
-                      {item.href === '/plan' && hasNewItem && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                          className="absolute -top-1 -right-1 h-3 w-3 bg-mova-blue rounded-full border-2 border-white"
-                        />
-                      )}
-                    </div>
-                    <span
-                      className={cn(
-                        "text-xs font-semibold transition-colors duration-200",
-                        isActive
-                          ? "text-mova-blue"
-                          : "text-mova-gray group-hover:text-mova-dark"
-                      )}
-                    >
-                      {item.label}
-                    </span>
-                  </div>
-                </Link>
+                  <Plus className="h-8 w-8" strokeWidth={3} />
+                </button>
               )
-            })}
-          </div>
-        </div>
+            }
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "relative flex items-center justify-center h-14 px-4 rounded-full transition-all duration-300",
+                  isActive ? "text-black" : "text-slate-400 hover:text-slate-600"
+                )}
+              >
+                <Icon className={cn("h-7 w-7", isActive ? "stroke-[2.5]" : "stroke-2")} />
+              </Link>
+            )
+          })}
+        </nav>
       </div>
-    </nav>
+
+      <CreateMenu
+        isOpen={isCreateMenuOpen}
+        onClose={() => setIsCreateMenuOpen(false)}
+      />
+    </>
   )
 }

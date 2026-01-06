@@ -10,12 +10,16 @@ interface GlobalSearchProps {
   variant?: 'static' | 'floating'
   className?: string
   onSearch?: (query: string) => void
+  showFilter?: boolean
+  showSearchIcon?: boolean
 }
 
 export function GlobalSearch({
   variant = 'static',
   className,
   onSearch,
+  showFilter = true,
+  showSearchIcon = true,
 }: GlobalSearchProps) {
   const { query, setQuery } = useSearchStore()
   const [localQuery, setLocalQuery] = useState(query)
@@ -71,7 +75,7 @@ export function GlobalSearch({
           )}
         >
           {/* Search Icon */}
-          <Search className="h-5 w-5 text-gray-400 flex-shrink-0" />
+          {showSearchIcon && <Search className="h-5 w-5 text-gray-400 flex-shrink-0" />}
 
           {/* Input */}
           <input
@@ -94,13 +98,15 @@ export function GlobalSearch({
           )}
 
           {/* Filter Button */}
-          <button
-            onClick={() => setIsFilterSheetOpen(true)}
-            className="flex-shrink-0 text-gray-400 hover:text-mova-blue transition-colors"
-            aria-label="Open filters"
-          >
-            <Sliders className="h-5 w-5" />
-          </button>
+          {showFilter && (
+            <button
+              onClick={() => setIsFilterSheetOpen(true)}
+              className="flex-shrink-0 text-gray-400 hover:text-mova-blue transition-colors"
+              aria-label="Open filters"
+            >
+              <Sliders className="h-5 w-5" />
+            </button>
+          )}
         </div>
       </div>
 

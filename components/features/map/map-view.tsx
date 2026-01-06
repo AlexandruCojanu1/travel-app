@@ -57,6 +57,7 @@ interface MapViewProps {
     description: string
     category: string
   }>
+  showNavigationControls?: boolean
 }
 
 type ClusterFeature = {
@@ -104,6 +105,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
   recreationAreas = [],
   onNatureReserveSelect,
   onRecreationAreaSelect,
+  showNavigationControls = true,
 }, ref) => {
   const mapRef = useRef<MapRef>(null)
   const [viewState, setViewState] = useState({
@@ -144,14 +146,14 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
     const points: PointFeature[] = businesses
       .filter((business) => {
         // Validate coordinates
-        const isValid = 
-          business.latitude != null && 
+        const isValid =
+          business.latitude != null &&
           business.longitude != null &&
           !isNaN(business.latitude) &&
           !isNaN(business.longitude) &&
           business.latitude >= -90 && business.latitude <= 90 &&
           business.longitude >= -180 && business.longitude <= 180
-        
+
         if (!isValid) {
           // Invalid coordinates filtered out silently
         }
@@ -177,10 +179,10 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
   // Get clusters for current map bounds and zoom
   const { clusters, bounds } = useMemo(() => {
     const map = mapRef.current
-    
+
     // Use viewState for initial bounds if map is not ready
     let boundsArray: [number, number, number, number]
-    
+
     try {
       if (map) {
         const mapBounds = map.getMap().getBounds()
@@ -350,6 +352,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
         style={{ width: '100%', height: '100%' }}
         maxZoom={19}
         minZoom={3}
+        attributionControl={false}
       >
         {/* Render clusters and individual markers */}
         {clusters.map((cluster) => {
@@ -542,12 +545,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
         )}
 
         {/* Map Controls - Must be direct children of Map component */}
-        <NavigationControl position="top-right" showCompass={false} />
-        <GeolocateControl 
-          position="bottom-right"
-          positionOptions={{ enableHighAccuracy: true }}
-          trackUserLocation={true}
-        />
+        {showNavigationControls && <NavigationControl position="top-right" showCompass={false} />}
 
 
 

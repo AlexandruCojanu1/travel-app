@@ -31,12 +31,12 @@ export function Header() {
   // Prevent hydration mismatch by ensuring client-side state
   useEffect(() => {
     setMounted(true)
-    
+
     // Get user data for avatar
     async function loadUserData() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (user) {
         // Get initials from email or name
         const name = user.user_metadata?.full_name || user.email || 'User'
@@ -47,14 +47,14 @@ export function Header() {
           .toUpperCase()
           .slice(0, 2) || 'U'
         setUserInitials(initials)
-        
+
         // Try to get avatar from profile
         const { data: profile } = await supabase
           .from('profiles')
           .select('avatar_url, full_name')
           .eq('id', user.id)
           .single()
-        
+
         if (profile?.avatar_url) {
           setAvatarUrl(profile.avatar_url)
         } else if (profile?.full_name) {
@@ -65,14 +65,14 @@ export function Header() {
         }
       }
     }
-    
+
     loadUserData()
   }, [])
 
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
-        <div className="mx-auto w-full max-w-screen-xl overflow-hidden">
+        <div className="w-full overflow-hidden">
           <div className="flex h-16 md:h-20 items-center justify-between px-4 md:px-8 gap-4">
             {/* Left Side - Logo & City Selector */}
             <div className="flex items-center gap-4">
@@ -84,6 +84,7 @@ export function Header() {
                     alt="MOVA Logo"
                     width={40}
                     height={40}
+                    priority
                     className="object-contain"
                   />
                 </div>
@@ -95,7 +96,7 @@ export function Header() {
                 className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-airbnb hover:bg-mova-light-gray transition-colors group"
               >
                 <MapPin className="h-4 w-4 text-mova-gray group-hover:text-mova-blue transition-colors" />
-                <span 
+                <span
                   className="text-sm font-semibold text-mova-dark group-hover:text-mova-blue transition-colors"
                   suppressHydrationWarning
                 >
@@ -105,50 +106,50 @@ export function Header() {
               </button>
             </div>
 
-          {/* Desktop Navigation Links - Hidden on Mobile */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href
+            {/* Desktop Navigation Links - Hidden on Mobile */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href
 
-              return (
-                <Link key={link.href} href={link.href}>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "relative px-5 py-2.5 text-sm font-semibold transition-colors rounded-airbnb",
-                      isActive
-                        ? "text-mova-blue bg-mova-light-gray hover:bg-gray-100"
-                        : "text-mova-gray hover:text-mova-dark hover:bg-mova-light-gray"
-                    )}
-                  >
-                    {link.label}
-                  </Button>
-                </Link>
-              )
-            })}
-          </nav>
+                return (
+                  <Link key={link.href} href={link.href}>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "relative px-5 py-2.5 text-sm font-semibold transition-colors rounded-airbnb",
+                        isActive
+                          ? "text-mova-blue bg-mova-light-gray hover:bg-gray-100"
+                          : "text-mova-gray hover:text-mova-dark hover:bg-mova-light-gray"
+                      )}
+                    >
+                      {link.label}
+                    </Button>
+                  </Link>
+                )
+              })}
+            </nav>
 
-          {/* Right Side - Notifications & User Avatar */}
-          <div className="flex items-center gap-3">
-            <NotificationsBell />
-            <Link href="/profile">
-              <Avatar className="h-10 w-10 ring-2 ring-gray-200 hover:ring-mova-blue transition-all cursor-pointer rounded-airbnb">
-                <AvatarImage 
-                  src={avatarUrl || undefined} 
-                  alt="User" 
-                />
-                <AvatarFallback className="bg-mova-blue text-white text-sm font-semibold">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
+            {/* Right Side - Notifications & User Avatar */}
+            <div className="flex items-center gap-3">
+              <NotificationsBell />
+              <Link href="/profile">
+                <Avatar className="h-10 w-10 ring-2 ring-gray-200 hover:ring-mova-blue transition-all cursor-pointer rounded-airbnb">
+                  <AvatarImage
+                    src={avatarUrl || undefined}
+                    alt="User"
+                  />
+                  <AvatarFallback className="bg-mova-blue text-white text-sm font-semibold">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    {/* City Selector Modal - Only render on client */}
-    {mounted && <CitySelector />}
-  </>
+      {/* City Selector Modal - Only render on client */}
+      {mounted && <CitySelector />}
+    </>
   )
 }

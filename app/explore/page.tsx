@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef, Suspense, lazy } from "react"
-import { MapPin, Loader2, Navigation, Bus, LocateIcon } from "lucide-react"
-import { motion } from "framer-motion"
+import { MapPin, Loader2, Navigation, Bus, LocateIcon, Search, SlidersHorizontal, ChevronRight, LayoutGrid } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { useAppStore } from "@/store/app-store"
 import { useSearchStore } from "@/store/search-store"
 import { GlobalSearch } from "@/components/features/map/search/global-search"
@@ -12,436 +12,316 @@ import { Button } from "@/components/shared/ui/button"
 import { logger } from "@/lib/logger"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { FilterSheet } from "@/components/features/map/search/filter-sheet"
 
 // Lazy load heavy map components
 const MapView = lazy(() => import("@/components/features/map/map-view").then(m => ({ default: m.MapView })))
 const BusinessDrawer = lazy(() => import("@/components/features/map/business-drawer").then(m => ({ default: m.BusinessDrawer })))
-const NatureDrawer = lazy(() => import("@/components/features/map/nature-drawer").then(m => ({ default: m.NatureDrawer })))
-const RecreationDrawer = lazy(() => import("@/components/features/map/recreation-drawer").then(m => ({ default: m.RecreationDrawer })))
 
 export default function ExplorePage() {
-  const { currentCity, openCitySelector } = useAppStore()
-  const { query, filters, sortBy } = useSearchStore()
-  const [businesses, setBusinesses] = useState<MapBusiness[]>([])
-  const [natureReserves, setNatureReserves] = useState<Array<{
-    name: string
-    latitude: number
-    longitude: number
-    description: string
-    area_hectares: number
-    iucn_category: string
-    reserve_type: string
-  }>>([])
-  const [recreationAreas, setRecreationAreas] = useState<Array<{
-    name: string
-    latitude: number
-    longitude: number
-    description: string
-    category: string
-  }>>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [activeFilter, setActiveFilter] = useState("All")
-  const [selectedBusiness, setSelectedBusiness] = useState<MapBusiness | null>(null)
-  const [selectedNatureReserve, setSelectedNatureReserve] = useState<{
-    name: string
-    latitude: number
-    longitude: number
-    description: string
-    area_hectares: number
-    iucn_category: string
-    reserve_type: string
-  } | null>(null)
-  const [selectedRecreationArea, setSelectedRecreationArea] = useState<{
-    name: string
-    latitude: number
-    longitude: number
-    description: string
-    category: string
-  } | null>(null)
-  const [showSearchArea, setShowSearchArea] = useState(false)
-  const [mapBounds, setMapBounds] = useState<{
-    north: number
-    south: number
-    east: number
-    west: number
-  } | null>(null)
-  const [initialCenter, setInitialCenter] = useState<{
-    lat: number
-    lng: number
-  } | null>(null)
-  const [showTransit, setShowTransit] = useState(false)
-  const [isLocating, setIsLocating] = useState(false)
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const mapViewRef = useRef<{ centerToLocation: (lat: number, lng: number) => void } | null>(null)
+    const { currentCity } = useAppStore()
+    const { query, filters, sortBy } = useSearchStore()
+    const [businesses, setBusinesses] = useState<MapBusiness[]>([])
+    const [isLoading, setIsLoading] = useState(false)
+    const [activeFilter, setActiveFilter] = useState("All")
+    const [selectedBusiness, setSelectedBusiness] = useState<MapBusiness | null>(null)
 
-  // Fetch businesses when city, filter, search query, or filters change
-  useEffect(() => {
-    async function loadBusinesses() {
-      if (!currentCity) return
+    const [showSearchArea, setShowSearchArea] = useState(false)
+    const [mapBounds, setMapBounds] = useState<{
+        north: number
+        south: number
+        east: number
+        west: number
+    } | null>(null)
+    const [initialCenter, setInitialCenter] = useState<{
+        lat: number
+        lng: number
+    } | null>(null)
+    const [showTransit, setShowTransit] = useState(false)
+    const [isLocating, setIsLocating] = useState(false)
+    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+    const mapViewRef = useRef<{ centerToLocation: (lat: number, lng: number) => void } | null>(null)
 
-      setIsLoading(true)
-      try {
-        // Use search if there's a query or active filters
-        const hasSearchQuery = query.trim().length > 0
-        const hasFilters =
-          filters.categories.length > 0 ||
-          filters.amenities.length > 0 ||
-          filters.difficulty !== null ||
-          filters.priceRange[0] > 0 ||
-          filters.priceRange[1] < 10000
+    const [isFilterOpen, setIsFilterOpen] = useState(false)
+    const [mounted, setMounted] = useState(false)
+    useEffect(() => {
+        setMounted(true)
+        // Prevent body scroll on explore page
+        document.body.style.overflow = 'hidden'
+        return () => {
+            document.body.style.overflow = ''
+        }
+    }, [])
 
-        if (hasSearchQuery || hasFilters) {
-          // Use advanced search
-          const results = await searchBusinesses(
-            currentCity.id,
-            filters,
-            query,
-            sortBy
-          )
-          logger.log('Explore: searchBusinesses returned', { count: results.length, cityId: currentCity.id })
-          
-          // Convert to MapBusiness format (only those with coordinates)
-          const mapBusinesses: MapBusiness[] = results
-            .filter((b) => {
-              const hasCoords = b.latitude != null && b.longitude != null
-              if (!hasCoords) {
-                logger.warn('Explore: Business without coordinates', { businessId: b.id, businessName: b.name })
-              }
-              return hasCoords
-            })
-            .map((b) => ({
-              id: b.id,
-              name: b.name,
-              category: b.category,
-              latitude: b.latitude!,
-              longitude: b.longitude!,
-              rating: b.rating,
-              image_url: b.image_url,
-              address: b.address,
-              price_level: getPriceLevel(b.category),
-            }))
-          logger.log('Explore: Converted to MapBusiness', { count: mapBusinesses.length })
-          setBusinesses(mapBusinesses)
-        } else {
-          // Use simple category filter
-          const category = activeFilter === "All" ? undefined : activeFilter
-          const data = await getBusinessesForMap(currentCity.id, category)
-          logger.log('Explore: getBusinessesForMap returned', { count: data.length, cityId: currentCity.id })
-          setBusinesses(data)
+    // Fetch businesses
+    useEffect(() => {
+        async function loadBusinesses() {
+            if (!currentCity) return
+
+            setIsLoading(true)
+            try {
+                const hasSearchQuery = query.trim().length > 0
+                const hasFilters =
+                    filters.categories.length > 0 ||
+                    filters.amenities.length > 0 ||
+                    filters.difficulty !== null ||
+                    filters.priceRange[0] > 0 ||
+                    filters.priceRange[1] < 10000
+
+                if (hasSearchQuery || hasFilters) {
+                    const results = await searchBusinesses(currentCity.id, filters, query, sortBy)
+                    const mapBusinesses: MapBusiness[] = results
+                        .filter((b) => b.latitude != null && b.longitude != null)
+                        .map((b) => ({
+                            id: b.id,
+                            name: b.name,
+                            category: b.category,
+                            latitude: b.latitude!,
+                            longitude: b.longitude!,
+                            rating: b.rating,
+                            image_url: b.image_url,
+                            address: b.address,
+                            price_level: b.category === 'Hotels' ? '€€€' : b.category === 'Food' ? '€€' : '€',
+                        }))
+                    setBusinesses(mapBusinesses)
+                } else {
+                    const category = activeFilter === "All" ? undefined : activeFilter
+                    const data = await getBusinessesForMap(currentCity.id, category)
+                    setBusinesses(data)
+                }
+
+                setInitialCenter({
+                    lat: currentCity.latitude,
+                    lng: currentCity.longitude,
+                })
+            } catch (error) {
+                logger.error("Error loading businesses", error)
+            } finally {
+                setIsLoading(false)
+            }
         }
 
-        setInitialCenter({
-          lat: currentCity.latitude,
-          lng: currentCity.longitude,
-        })
-      } catch (error) {
-        logger.error("Error loading businesses", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+        loadBusinesses()
+    }, [currentCity?.id, activeFilter, query, filters, sortBy])
 
-    loadBusinesses()
-
-    // Nature reserves and recreation areas are already in businesses table
-    // No need to load separately
-    setNatureReserves([])
-    setRecreationAreas([])
-  }, [currentCity?.id, currentCity?.name, activeFilter, query, filters, sortBy])
-
-  // Helper function to get price level
-  const getPriceLevel = (category: string): string => {
-    const priceLevels: Record<string, string> = {
-      Hotels: '€€€',
-      Food: '€€',
-      Activities: '€',
-      Nature: 'Free',
-    }
-    return priceLevels[category] || '€€'
-  }
-
-  // Don't auto-open city selector - let user choose when to change city
-  // The header already has a city selector button
-
-  // Handle map movement to show "Search this area" button
-  const handleMapMove = useCallback(
-    (bounds: { north: number; south: number; east: number; west: number }) => {
-      setMapBounds(bounds)
-
-      // Check if user has moved significantly from initial city center
-      if (initialCenter) {
-        const centerLat = (bounds.north + bounds.south) / 2
-        const centerLng = (bounds.east + bounds.west) / 2
-
-        const latDiff = Math.abs(centerLat - initialCenter.lat)
-        const lngDiff = Math.abs(centerLng - initialCenter.lng)
-
-        // Show search button if moved more than ~0.01 degrees (~1km)
-        const hasMoved = latDiff > 0.01 || lngDiff > 0.01
-        setShowSearchArea(hasMoved)
-      }
-    },
-    [initialCenter]
-  )
-
-  // Handle search area button click
-  const handleSearchArea = useCallback(async () => {
-    if (!currentCity || !mapBounds) return
-
-    setIsLoading(true)
-    setShowSearchArea(false)
-
-    try {
-      const category = activeFilter === "All" ? undefined : activeFilter
-      // Note: You could implement searchBusinessesInBounds here if you want
-      // For now, we'll just re-fetch with the current filter
-      const data = await getBusinessesForMap(currentCity.id, category)
-      setBusinesses(data)
-    } catch (error) {
-      logger.error("Error searching area", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [currentCity, mapBounds, activeFilter])
-
-
-  // Show city selector prompt if no city selected
-  if (!currentCity) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 px-4">
-        <div className="text-center max-w-md">
-          <div className="h-20 w-20 rounded-airbnb-lg bg-mova-blue flex items-center justify-center mx-auto mb-6 shadow-airbnb-lg">
-            <MapPin className="h-10 w-10 text-white" />
-          </div>
-          <h3 className="text-2xl font-bold text-mova-dark mb-3">
-            Alege Destinația
-          </h3>
-          <p className="text-mova-gray mb-6">
-            Selectează un oraș pentru a explora locuri și experiențe uimitoare pe hartă
-          </p>
-          <button
-            onClick={openCitySelector}
-            className="airbnb-button px-8 py-4"
-          >
-            Selectează Oraș
-          </button>
-        </div>
-      </div>
+    const handleMapMove = useCallback(
+        (bounds: { north: number; south: number; east: number; west: number }) => {
+            setMapBounds(bounds)
+            if (initialCenter) {
+                const centerLat = (bounds.north + bounds.south) / 2
+                const centerLng = (bounds.east + bounds.west) / 2
+                const hasMoved = Math.abs(centerLat - initialCenter.lat) > 0.01 || Math.abs(centerLng - initialCenter.lng) > 0.01
+                setShowSearchArea(hasMoved)
+            }
+        },
+        [initialCenter]
     )
-  }
 
-  return (
-    <div className="relative h-screen w-full overflow-hidden">
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[60] bg-white px-4 py-2 rounded-full shadow-airbnb-md flex items-center gap-2 border border-gray-200">
-          <Loader2 className="h-4 w-4 animate-spin text-mova-blue" />
-          <span className="text-sm font-semibold text-mova-dark">Se încarcă...</span>
-        </div>
-      )}
+    const handleSearchArea = useCallback(async () => {
+        if (!currentCity || !mapBounds) return
+        setIsLoading(true)
+        setShowSearchArea(false)
+        try {
+            const category = activeFilter === "All" ? undefined : activeFilter
+            const data = await getBusinessesForMap(currentCity.id, category)
+            setBusinesses(data)
+        } catch (error) {
+            logger.error("Error searching area", error)
+        } finally {
+            setIsLoading(false)
+        }
+    }, [currentCity, mapBounds, activeFilter])
 
-      {/* Top Bar - Search and Filters Grouped - Below Header - Compact */}
-      <div className="absolute top-16 left-0 right-0 z-40 bg-white/98 backdrop-blur-md border-b border-gray-200/80 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2">
-          <div className="flex flex-col gap-2">
-            {/* Search Bar and Transport Button - Centered */}
-            <div className="flex items-center justify-center gap-3">
-              {/* Global Search Bar - Centered */}
-              <div className="w-full max-w-2xl">
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <GlobalSearch variant="floating" />
-                </motion.div>
-              </div>
-              
-              {/* Transport and Location Buttons - On same line */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <Button
+    const handleLocate = useCallback(() => {
+        if (!navigator.geolocation) {
+            toast.error('Geolocation nu este suportat')
+            return
+        }
+        setIsLocating(true)
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+                mapViewRef.current?.centerToLocation(pos.coords.latitude, pos.coords.longitude)
+                setIsLocating(false)
+            },
+            () => {
+                toast.error('Nu am putut obține locația')
+                setIsLocating(false)
+            },
+            { enableHighAccuracy: true }
+        )
+    }, [])
+
+    if (!currentCity) return null
+
+    const isMobile = mounted && window.innerWidth < 768
+
+    return (
+        <div className="fixed inset-0 top-[64px] md:top-[80px] w-full overflow-hidden bg-white z-0">
+            {/* Map Backdrop */}
+            <div className="absolute inset-0 z-0">
+                {initialCenter && (
+                    <Suspense fallback={
+                        <div className="flex items-center justify-center h-full bg-slate-50">
+                            <Loader2 className="h-8 w-8 animate-spin text-mova-blue" />
+                        </div>
+                    }>
+                        <MapView
+                            ref={mapViewRef}
+                            businesses={businesses}
+                            initialLatitude={initialCenter.lat}
+                            initialLongitude={initialCenter.lng}
+                            initialZoom={13}
+                            onBusinessSelect={setSelectedBusiness}
+                            selectedBusinessId={selectedBusiness?.id || null}
+                            onMapMove={handleMapMove}
+                            cityName={currentCity?.name}
+                            showTransit={showTransit}
+                            userLocation={userLocation}
+                            natureReserves={[]}
+                            recreationAreas={[]}
+                            onNatureReserveSelect={() => { }}
+                            onRecreationAreaSelect={() => { }}
+                            showNavigationControls={!isMobile}
+                        />
+                    </Suspense>
+                )}
+            </div>
+
+            {/* Floating UI Container */}
+            <div className="absolute inset-0 z-10 pointer-events-none px-4 md:px-6 lg:px-10 py-4 md:py-8 flex flex-col items-center">
+
+                {/* Top: Search and Primary Controls */}
+                <div className="w-full max-w-4xl space-y-4 pointer-events-auto">
+                    <div className="flex flex-row items-center justify-center gap-2">
+                        {/* Search Bar - Airbnb Style */}
+                        <div className="flex-1 max-w-2xl">
+                            <div className="bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl rounded-full px-3 py-0.5 md:px-4 md:py-1 flex items-center gap-2">
+                                <GlobalSearch
+                                    variant="floating"
+                                    className="border-none shadow-none p-0 h-auto bg-transparent focus-within:ring-0 flex-1"
+                                    showFilter={!isMobile}
+                                    showSearchIcon={true}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Manual Filter Toggle for Mobile */}
+                        {isMobile && (
+                            <button
+                                onClick={() => setIsFilterOpen(true)}
+                                className="h-11 w-11 shrink-0 rounded-full bg-white shadow-xl flex items-center justify-center text-slate-900 border border-slate-200"
+                            >
+                                <SlidersHorizontal className="h-5 w-5" />
+                            </button>
+                        )}
+
+                        {/* Utility Buttons (Desktop Only) */}
+                        <div className="hidden md:flex items-center gap-2">
+                            <ControlBadge
+                                active={showTransit}
+                                onClick={() => setShowTransit(!showTransit)}
+                                icon={<Bus className="h-4 w-4" />}
+                                label="Transit"
+                            />
+                            <ControlBadge
+                                active={isLocating}
+                                onClick={handleLocate}
+                                icon={isLocating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateIcon className="h-4 w-4" />}
+                                label="Locație"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filters Bar - Desktop Only */}
+                    <div className="hidden md:flex items-center justify-center gap-2 md:-mt-2">
+                        <QuickFilters
+                            activeFilter={activeFilter}
+                            onFilterChange={setActiveFilter}
+                            className="bg-transparent border-none p-0"
+                        />
+                    </div>
+                </div>
+
+                {/* Center UI: Search Area Button */}
+                <AnimatePresence>
+                    {showSearchArea && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="absolute top-44 md:top-36 pointer-events-auto"
+                        >
+                            <Button
+                                onClick={handleSearchArea}
+                                className="bg-slate-900 text-white hover:bg-black rounded-full shadow-2xl px-6 py-6 font-bold flex items-center gap-2 border border-white/20"
+                            >
+                                <Navigation className="h-4 w-4 fill-white" />
+                                Caută în această zonă
+                            </Button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Loading Indicator */}
+            {isLoading && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-slate-200">
+                    <Loader2 className="h-3 w-3 animate-spin text-mova-blue" />
+                    <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">Se încarcă</span>
+                </div>
+            )}
+
+            {/* Mobile Utility Buttons (Bottom Right) */}
+            <div className="absolute bottom-32 right-4 md:hidden z-20 space-y-3 pointer-events-auto">
+                <button
                     onClick={() => setShowTransit(!showTransit)}
                     className={cn(
-                      "shadow-airbnb-lg px-4 py-2.5 rounded-full font-semibold flex items-center gap-2 transition-all cursor-pointer",
-                      showTransit 
-                        ? 'bg-mova-blue text-white hover:bg-[#2563EB] shadow-mova-blue/30' 
-                        : 'bg-white/95 backdrop-blur-sm text-mova-dark hover:bg-white border-2 border-mova-blue/30 hover:border-mova-blue'
+                        "h-12 w-12 rounded-2xl flex items-center justify-center shadow-xl border border-white/20 transition-all",
+                        showTransit ? "bg-mova-blue text-white" : "bg-white text-slate-900 shadow-md"
                     )}
-                  >
-                    <Bus className={cn("h-4 w-4 flex-shrink-0", showTransit ? "text-white" : "text-mova-blue")} />
-                    <span className="text-sm whitespace-nowrap hidden md:inline">
-                      {showTransit ? 'Ascunde Transport' : 'Transport'}
-                    </span>
-                    <span className="text-sm whitespace-nowrap md:hidden">
-                      {showTransit ? 'Ascunde' : 'Transport'}
-                    </span>
-                  </Button>
-                </motion.div>
-
-                {/* My Location Button */}
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.15 }}
                 >
-                  <Button
-                    onClick={() => {
-                      if (!navigator.geolocation) {
-                        toast.error('Geolocation nu este suportat de browser-ul tău')
-                        return
-                      }
-                      
-                      setIsLocating(true)
-                      navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                          const { latitude, longitude } = position.coords
-                          // Store user location for marker
-                          setUserLocation({ lat: latitude, lng: longitude })
-                          // Update map center
-                          setInitialCenter({ lat: latitude, lng: longitude })
-                          // Also trigger map center if ref is available
-                          if (mapViewRef.current) {
-                            mapViewRef.current.centerToLocation(latitude, longitude)
-                          }
-                          setIsLocating(false)
-                        },
-                        (error) => {
-                          logger.error('Error getting location', error)
-                          toast.error('Nu am putut obține locația ta. Te rugăm să verifici permisiunile.')
-                          setIsLocating(false)
-                        },
-                        {
-                          enableHighAccuracy: true,
-                          timeout: 10000,
-                          maximumAge: 0,
-                        }
-                      )
-                    }}
-                    disabled={isLocating}
-                    className={cn(
-                      "shadow-airbnb-lg px-4 py-2.5 rounded-full font-semibold flex items-center gap-2 transition-all cursor-pointer",
-                      "bg-white/95 backdrop-blur-sm text-mova-dark hover:bg-white border-2 border-mova-blue/30 hover:border-mova-blue",
-                      isLocating && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {isLocating ? (
-                      <Loader2 className="h-4 w-4 flex-shrink-0 text-mova-blue animate-spin" />
-                    ) : (
-                      <MapPin className="h-4 w-4 flex-shrink-0 text-mova-blue" />
-                    )}
-                    <span className="text-sm whitespace-nowrap hidden md:inline">
-                      {isLocating ? 'Se localizează...' : 'Locația mea'}
-                    </span>
-                    <span className="text-sm whitespace-nowrap md:hidden">
-                      {isLocating ? '...' : 'Locație'}
-                    </span>
-                  </Button>
-                </motion.div>
-              </div>
-            </div>
-            
-            {/* Quick Filters and Search Area Button - Centered */}
-            <div className="flex items-center justify-center gap-4 overflow-x-auto scrollbar-hide pb-1">
-              <div className="flex items-center gap-2.5 justify-center">
-                <QuickFilters
-                  activeFilter={activeFilter}
-                  onFilterChange={setActiveFilter}
-                />
-              </div>
-              {showSearchArea && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex-shrink-0"
+                    <Bus className="h-6 w-6" />
+                </button>
+                <button
+                    onClick={handleLocate}
+                    className="h-12 w-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center shadow-xl border border-white/20 shadow-md"
                 >
-                  <Button
-                    onClick={handleSearchArea}
-                    size="sm"
-                    className="bg-mova-blue text-white hover:bg-[#2563EB] shadow-airbnb-md px-4 py-2 rounded-full font-semibold flex items-center gap-2 whitespace-nowrap"
-                  >
-                    <Navigation className="h-4 w-4" />
-                    <span className="text-sm hidden sm:inline">Caută în această zonă</span>
-                    <span className="text-sm sm:hidden">Zonă</span>
-                  </Button>
-                </motion.div>
-              )}
+                    {isLocating ? <Loader2 className="h-6 w-6 animate-spin text-mova-blue" /> : <LocateIcon className="h-6 w-6" />}
+                </button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Map View */}
-      {initialCenter && (
-        <div className="absolute inset-0" style={{ top: '120px', bottom: '80px' }}>
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-full">
-              <Loader2 className="h-8 w-8 animate-spin text-mova-blue" />
-            </div>
-          }>
-            <MapView
-              ref={mapViewRef}
-              businesses={businesses}
-              initialLatitude={initialCenter.lat}
-              initialLongitude={initialCenter.lng}
-              initialZoom={12}
-              bottomNavHeight={80}
-              onBusinessSelect={setSelectedBusiness}
-              selectedBusinessId={selectedBusiness?.id || null}
-              onMapMove={handleMapMove}
-              cityName={currentCity?.name}
-              showTransit={showTransit}
-              userLocation={userLocation}
-              natureReserves={natureReserves}
-              recreationAreas={recreationAreas}
-              onNatureReserveSelect={(reserve) => {
-                setSelectedBusiness(null)
-                setSelectedRecreationArea(null)
-                setSelectedNatureReserve(reserve)
-              }}
-              onRecreationAreaSelect={(area) => {
-                setSelectedBusiness(null)
-                setSelectedNatureReserve(null)
-                setSelectedRecreationArea(area)
-              }}
+            {/* Filter Sheet for Mobile */}
+            <FilterSheet
+                isOpen={isFilterOpen}
+                onOpenChange={setIsFilterOpen}
             />
-          </Suspense>
+
+            {/* Business Details Drawer */}
+            <Suspense fallback={null}>
+                <BusinessDrawer
+                    business={selectedBusiness}
+                    isOpen={!!selectedBusiness}
+                    onClose={() => setSelectedBusiness(null)}
+                />
+            </Suspense>
         </div>
-      )}
+    )
+}
 
-
-      {/* Business Details Drawer */}
-      <Suspense fallback={null}>
-        <BusinessDrawer
-          business={selectedBusiness}
-          isOpen={!!selectedBusiness}
-          onClose={() => setSelectedBusiness(null)}
-        />
-      </Suspense>
-
-      {/* Nature Reserve Drawer */}
-      <Suspense fallback={null}>
-        <NatureDrawer
-          reserve={selectedNatureReserve}
-          isOpen={!!selectedNatureReserve}
-          onClose={() => setSelectedNatureReserve(null)}
-        />
-      </Suspense>
-
-      {/* Recreation Area Drawer */}
-      <Suspense fallback={null}>
-        <RecreationDrawer
-          area={selectedRecreationArea}
-          isOpen={!!selectedRecreationArea}
-          onClose={() => setSelectedRecreationArea(null)}
-        />
-      </Suspense>
-    </div>
-  )
+function ControlBadge({ active, onClick, icon, label }: { active?: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+    return (
+        <button
+            onClick={onClick}
+            className={cn(
+                "px-4 py-2.5 rounded-full flex items-center gap-2 transition-all shadow-xl font-bold text-sm border whitespace-nowrap",
+                active
+                    ? "bg-slate-900 text-white border-slate-900/10 shadow-slate-900/20"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+            )}
+        >
+            {icon}
+            {label}
+        </button>
+    )
 }

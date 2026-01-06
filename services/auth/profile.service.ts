@@ -36,14 +36,14 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
 
   try {
     console.log('getUserProfile: Fetching profile for user:', userId)
-    
+
     // First, verify user is authenticated
     const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !authUser || authUser.id !== userId) {
       throw new Error('Not authenticated or user mismatch')
     }
-    
+
     // Fetch profile
     const { data: fetchedProfile, error: profileError } = await supabase
       .from('profiles')
@@ -52,7 +52,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
       .single()
 
     let profile = fetchedProfile || null
-    
+
     if (profileError) {
       console.error('getUserProfile: Profile fetch error:', profileError)
       console.error('getUserProfile: Error details:', {
@@ -61,16 +61,16 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
         details: profileError.details,
         hint: profileError.hint
       })
-      
+
       // If profile doesn't exist (PGRST116 = no rows returned), try to create it
       if (profileError.code === 'PGRST116') {
         logger.log('getUserProfile: Profile not found, attempting to create', { userId })
-        
+
         // Get user email from auth (we already have authUser from above)
         if (!authUser) {
           throw new Error('User not found in auth')
         }
-        
+
         // Try to create profile (without email if column doesn't exist)
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
@@ -80,12 +80,12 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
           })
           .select()
           .single()
-        
+
         if (createError || !newProfile) {
           logger.error('getUserProfile: Failed to create profile', createError, { userId })
           throw new Error(`Profile not found and could not be created: ${createError?.message || 'Unknown error'}`)
         }
-        
+
         logger.log('getUserProfile: Profile created successfully', { userId })
         profile = newProfile
       } else {
@@ -114,11 +114,14 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
       .from('user_preferences')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle() // Use maybeSingle to avoid 406/PGRST116 when no record exists
 
-    // Don't throw if preferences don't exist yet (can be null)
-    if (prefsError && prefsError.code !== 'PGRST116') {
-      logger.error('getUserProfile: Error fetching preferences', prefsError, { userId })
+    if (prefsError) {
+      if (prefsError.code === '406' || prefsError.message?.includes('406')) {
+        logger.log('getUserProfile: Preferences RLS/406 issue handled', { userId })
+      } else {
+        logger.error('getUserProfile: Error fetching preferences', prefsError, { userId })
+      }
     } else {
       logger.log('getUserProfile: Preferences fetched', { userId, found: !!preferences })
     }

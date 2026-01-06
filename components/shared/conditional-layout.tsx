@@ -4,6 +4,9 @@ import { usePathname } from 'next/navigation'
 import { ReactNode } from 'react'
 import { Header } from './header'
 import { BottomNav } from './bottom-nav'
+import { Footer } from './footer'
+import { BusinessDetailsDrawer } from '@/components/features/business/public/business-details-drawer'
+import { cn } from '@/lib/utils'
 
 interface ConditionalLayoutProps {
   children: ReactNode
@@ -19,6 +22,8 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const isLandingPage = pathname === '/'
   const isOnboardingPage = pathname === '/onboarding'
 
+  const isHomePage = pathname === '/home' || pathname === '/plan'
+
   // For business portal, auth, landing, or onboarding, render children without global layout
   if (isBusinessPortal || isAuthPage || isLandingPage || isOnboardingPage) {
     return <>{children}</>
@@ -28,12 +33,22 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   return (
     <>
       <Header />
-      <main className="min-h-screen pb-20 md:pb-0 w-full">
-        <div className="w-full">
+      <main className={cn(
+        "min-h-screen w-full flex flex-col pt-16 md:pt-20",
+        isHomePage && "pb-32 md:pb-0",
+        pathname === '/explore' && "h-screen overflow-hidden pb-0"
+      )}>
+        <div className={cn("flex-1 w-full", pathname === '/explore' && "overflow-hidden")}>
           {children}
         </div>
+        {!isLandingPage && !isOnboardingPage && !isAuthPage && !pathname?.startsWith('/explore') && (
+          <div className="hidden md:block">
+            <Footer />
+          </div>
+        )}
       </main>
       <BottomNav />
+      <BusinessDetailsDrawer />
     </>
   )
 }
