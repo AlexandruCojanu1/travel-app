@@ -3,27 +3,21 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronDown, MapPin } from "lucide-react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar"
-import { Button } from "@/components/shared/ui/button"
-import { CitySelector } from "./city-selector"
-import { NotificationsBell } from "./notifications-bell"
-import { useAppStore } from "@/store/app-store"
+import PillNav from '../ui/pill-nav'
 import { createClient } from "@/lib/supabase/client"
 
 const navLinks = [
   { label: "Acasă", href: "/home" },
-  { label: "Explorează", href: "/explore" },
   { label: "Planifică", href: "/plan" },
+  { label: "Explorează", href: "/explore" },
   { label: "Rezervări", href: "/bookings" },
-  { label: "Profil", href: "/profile" },
 ]
 
 export function Header() {
   const pathname = usePathname()
-  const { currentCity, openCitySelector } = useAppStore()
   const [mounted, setMounted] = useState(false)
   const [userInitials, setUserInitials] = useState("U")
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -71,12 +65,45 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
-        <div className="w-full overflow-hidden">
-          <div className="flex h-16 md:h-20 items-center justify-between px-4 md:px-8 gap-4">
-            {/* Left Side - Logo & City Selector */}
-            <div className="flex items-center gap-4">
-              {/* Logo */}
+      <header className={cn(
+        "sticky top-0 z-50 w-full transition-all duration-300",
+        "bg-white border-b border-gray-200 shadow-sm md:border-none md:shadow-none md:bg-transparent md:pointer-events-none"
+      )}>
+        <div className="w-full">
+          {/* Desktop Navigation Group (Centered) */}
+          <div className="hidden md:flex md:pointer-events-auto fixed top-6 left-1/2 -translate-x-1/2 z-[100] items-center gap-3">
+            <PillNav
+              items={navLinks}
+              logo="/images/mova-logo.png"
+              logoAlt="MOVA Logo"
+              baseColor="#003CFF" // MOVA Blue Container
+              pillColor="#ffffff" // White pill background
+              pillTextColor="#003CFF" // Blue Text on White Pill
+              hoveredPillTextColor="#ffffff" // White Text on Blue Hover Circle
+            />
+
+            {/* Desktop User Avatar - Next to PillNav */}
+            <Link href="/profile" className="ml-2">
+              <Avatar className="h-11 w-11 transition-all cursor-pointer rounded-full border border-white/20 shadow-xl ring-2 ring-black/5 hover:scale-105 active:scale-95">
+                <AvatarImage
+                  src={avatarUrl || undefined}
+                  alt="User"
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-mova-blue text-white text-sm font-semibold">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          </div>
+
+          <div className={cn(
+            "flex items-center justify-between px-4 h-16 md:hidden",
+            "md:pointer-events-auto"
+          )}>
+
+            {/* Left Side - Logo (Mobile Only) */}
+            <div className="flex items-center gap-4 md:hidden">
               <Link href="/home" className="flex items-center gap-2 group">
                 <div className="flex h-10 w-10 items-center justify-center rounded-airbnb bg-white shadow-airbnb transition-transform group-hover:scale-105 overflow-hidden">
                   <Image
@@ -89,56 +116,17 @@ export function Header() {
                   />
                 </div>
               </Link>
-
-              {/* City Selector Trigger */}
-              <button
-                onClick={openCitySelector}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-airbnb hover:bg-mova-light-gray transition-colors group"
-              >
-                <MapPin className="h-4 w-4 text-mova-gray group-hover:text-mova-blue transition-colors" />
-                <span
-                  className="text-sm font-semibold text-mova-dark group-hover:text-mova-blue transition-colors"
-                  suppressHydrationWarning
-                >
-                  {mounted ? (currentCity?.name || "Select City") : "Select City"}
-                </span>
-                <ChevronDown className="h-4 w-4 text-mova-gray group-hover:text-mova-blue transition-colors" />
-              </button>
             </div>
 
-            {/* Desktop Navigation Links - Hidden on Mobile */}
-            <nav className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href
-
-                return (
-                  <Link key={link.href} href={link.href}>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "relative px-5 py-2.5 text-sm font-semibold transition-colors rounded-airbnb",
-                        isActive
-                          ? "text-mova-blue bg-mova-light-gray hover:bg-gray-100"
-                          : "text-mova-gray hover:text-mova-dark hover:bg-mova-light-gray"
-                      )}
-                    >
-                      {link.label}
-                    </Button>
-                  </Link>
-                )
-              })}
-            </nav>
-
-            {/* Right Side - Notifications & User Avatar */}
-            <div className="flex items-center gap-3">
-              <NotificationsBell />
+            {/* Right Side - Mobile Avatar Only (No Notifications) */}
+            <div className="flex items-center gap-3 md:hidden">
               <Link href="/profile">
-                <Avatar className="h-10 w-10 ring-2 ring-gray-200 hover:ring-mova-blue transition-all cursor-pointer rounded-airbnb">
+                <Avatar className="h-9 w-9 border border-gray-200">
                   <AvatarImage
                     src={avatarUrl || undefined}
                     alt="User"
                   />
-                  <AvatarFallback className="bg-mova-blue text-white text-sm font-semibold">
+                  <AvatarFallback className="bg-mova-blue text-white text-xs">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>
@@ -148,8 +136,7 @@ export function Header() {
         </div>
       </header>
 
-      {/* City Selector Modal - Only render on client */}
-      {mounted && <CitySelector />}
+      {/* City Selector Removed */}
     </>
   )
 }

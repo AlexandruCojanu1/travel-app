@@ -59,23 +59,23 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
             const loginRedirect = role ? `${redirectTo}?role=${role}` : redirectTo
             const result = await login(validated.data, loginRedirect)
             console.log('🔐 Login result:', result)
-            
+
             // If result exists and has error, show it
             if (result && !result.success) {
               console.error('❌ Login failed:', result.error)
               setErrors({ submit: result.error || 'Login failed' })
               return
             }
-            
+
             // Use redirect from server action result
             // The server action already checked onboarding and business status
             const redirectPath = result?.redirect || redirectTo
-            
+
             console.log('🔄 Redirecting to:', redirectPath)
-            
+
             // Refresh router to ensure cookies are loaded
             router.refresh()
-            
+
             // Wait for cookies to be properly set and propagated
             // Server action sets cookies, but we need to wait for them to be available
             setTimeout(() => {
@@ -84,9 +84,9 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
           } catch (err: any) {
             console.error('❌ Login error:', err)
             // Next.js redirect throws a special error - this is expected
-            if (err?.message === 'NEXT_REDIRECT' || 
-                err?.digest?.startsWith('NEXT_REDIRECT') ||
-                (err instanceof Error && err.message.includes('NEXT_REDIRECT'))) {
+            if (err?.message === 'NEXT_REDIRECT' ||
+              err?.digest?.startsWith('NEXT_REDIRECT') ||
+              (err instanceof Error && err.message.includes('NEXT_REDIRECT'))) {
               // Redirect is happening - use window.location as fallback
               const redirectPath = role ? `/onboarding?role=${role}` : '/onboarding'
               window.location.href = redirectPath
@@ -112,27 +112,27 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
         startTransition(async () => {
           try {
             // Determine redirect path: if redirectTo is business onboarding, use it; otherwise use /onboarding with role
-            const signupRedirect = redirectTo.includes('/business-portal') 
-              ? redirectTo 
+            const signupRedirect = redirectTo.includes('/business-portal')
+              ? redirectTo
               : (role ? `/onboarding?role=${role}` : '/onboarding')
             console.log('📝 Signup attempt started, redirect to:', signupRedirect, 'role:', role)
             const result = await signup(validated.data, signupRedirect)
             console.log('📝 Signup result:', result)
-            
+
             // If result exists and has error, show it
             if (result && !result.success) {
               console.error('❌ Signup failed:', result.error)
               setErrors({ submit: result.error || 'Signup failed' })
               return
             }
-            
+
             // Use redirect from result if provided, otherwise use signupRedirect
             const redirectPath = result?.redirect || signupRedirect
             console.log('🔄 Redirecting to:', redirectPath)
-            
+
             // Refresh router to ensure cookies are loaded
             router.refresh()
-            
+
             // Force a hard redirect with a delay to ensure cookies are set
             // This is necessary because Supabase cookies need time to propagate
             setTimeout(() => {
@@ -145,10 +145,13 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
           } catch (err: any) {
             console.error('❌ Signup error:', err)
             // Next.js redirect throws a special error - this is expected
-            if (err?.message === 'NEXT_REDIRECT' || 
-                err?.digest?.startsWith('NEXT_REDIRECT') ||
-                (err instanceof Error && err.message.includes('NEXT_REDIRECT'))) {
+            if (err?.message === 'NEXT_REDIRECT' ||
+              err?.digest?.startsWith('NEXT_REDIRECT') ||
+              (err instanceof Error && err.message.includes('NEXT_REDIRECT'))) {
               // Redirect is happening - use window.location as fallback
+              const signupRedirect = redirectTo.includes('/business-portal')
+                ? redirectTo
+                : (role ? `/onboarding?role=${role}` : '/onboarding')
               console.log('🔄 NEXT_REDIRECT detected, redirecting to:', signupRedirect)
               window.location.href = signupRedirect
               return
@@ -189,7 +192,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
               <FloatingLabelInput
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                label="Password"
+                label="Parola"
                 value={formData.password}
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                 error={errors.password}
@@ -216,7 +219,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
             <FloatingLabelInput
               id="fullName"
               type="text"
-              label="Full Name"
+              label="Nume Complet"
               value={formData.fullName}
               onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
               error={errors.fullName}
@@ -239,7 +242,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
               <FloatingLabelInput
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                label="Password"
+                label="Parola"
                 value={formData.password}
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                 error={errors.password}
@@ -275,7 +278,7 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
           <>
-            <span>{mode === 'login' ? 'Sign In' : 'Create Account'}</span>
+            <span>{mode === 'login' ? 'Autentificare' : 'Creează Cont'}</span>
             <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </>
         )}
@@ -292,13 +295,12 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
           className="text-sm text-mova-gray hover:text-mova-dark transition-colors"
         >
           {mode === 'login' ? (
-            <>Don't have an account? <span className="font-semibold text-mova-blue">Sign up</span></>
+            <>Nu ai cont? <span className="font-semibold text-mova-blue">Înregistrează-te</span></>
           ) : (
-            <>Already have an account? <span className="font-semibold text-mova-blue">Sign in</span></>
+            <>Ai deja cont? <span className="font-semibold text-mova-blue">Autentifică-te</span></>
           )}
         </button>
       </div>
     </form>
   )
 }
-

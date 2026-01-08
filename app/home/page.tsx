@@ -89,9 +89,43 @@ export default function HomePage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-12 space-y-12 pb-32 pt-6">
-      {/* Travel Guides */}
+      {/* My Trips */}
       <section className="space-y-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Ghiduri de călătorie</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Călătoriile mele</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {vacations.length > 0 ? (
+            vacations.map((vacation) => (
+              <TripSummaryCard
+                key={vacation.id}
+                title={vacation.title}
+                cityName={vacation.cityName}
+                startDate={vacation.startDate}
+                endDate={vacation.endDate}
+                spotsCount={0}
+                imageUrl={vacation.coverImage}
+                onClick={() => {
+                  selectVacation(vacation.id)
+                  router.push('/plan')
+                }}
+              />
+            ))
+          ) : (
+            <div
+              onClick={() => router.push('/plan')}
+              className="col-span-full p-16 border-2 border-dashed border-slate-200 rounded-[32px] text-center cursor-pointer hover:bg-slate-50 transition-colors"
+            >
+              <p className="text-slate-400 font-medium">Nu ai nicio călătorie planificată.</p>
+              <p className="text-blue-600 font-bold mt-2">Începe una nouă acum!</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Feed / Activities */}
+      <section className="space-y-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">
+          Activități din {currentCity?.name || 'orașul tău'}
+        </h2>
         <div className="flex gap-6 overflow-x-auto pb-6 px-2 no-scrollbar scroll-smooth -mx-4 sm:mx-0">
           {feedData?.featuredBusinesses && feedData.featuredBusinesses.length > 0 ? (
             feedData.featuredBusinesses.map((biz) => (
@@ -126,37 +160,6 @@ export default function HomePage() {
                 }
               />
             ))
-          )}
-        </div>
-      </section>
-
-      {/* My Trips */}
-      <section className="space-y-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Călătoriile mele</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vacations.length > 0 ? (
-            vacations.map((vacation) => (
-              <TripSummaryCard
-                key={vacation.id}
-                title={vacation.title}
-                startDate={vacation.startDate}
-                endDate={vacation.endDate}
-                spotsCount={0}
-                imageUrl={vacation.coverImage}
-                onClick={() => {
-                  selectVacation(vacation.id)
-                  router.push('/plan')
-                }}
-              />
-            ))
-          ) : (
-            <div
-              onClick={() => router.push('/plan')}
-              className="col-span-full p-16 border-2 border-dashed border-slate-200 rounded-[32px] text-center cursor-pointer hover:bg-slate-50 transition-colors"
-            >
-              <p className="text-slate-400 font-medium">Nu ai nicio călătorie planificată.</p>
-              <p className="text-blue-600 font-bold mt-2">Începe una nouă acum!</p>
-            </div>
           )}
         </div>
       </section>

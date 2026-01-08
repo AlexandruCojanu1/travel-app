@@ -38,7 +38,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body className="antialiased">
+      <body className="antialiased relative min-h-screen">
+        {/* Faded Background Pattern */}
+        <div
+          className="fixed inset-0 z-[-1] opacity-[0.08] pointer-events-none"
+          style={{
+            backgroundImage: "url('/images/travel-pattern.svg')",
+            backgroundRepeat: "repeat",
+            backgroundSize: "400px" // Adjust size as needed for a nice pattern
+          }}
+        />
+
         <ConditionalLayout>
           {children}
         </ConditionalLayout>
