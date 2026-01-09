@@ -5,14 +5,22 @@ import type { Database } from '@/types/database.types'
 type Profile = Database['public']['Tables']['profiles']['Row']
 type UserPreferences = Database['public']['Tables']['user_preferences']['Row']
 type SavedBusiness = Database['public']['Tables']['saved_businesses']['Row']
+type City = Database['public']['Tables']['cities']['Row'] // Added City type for home_city
 
 export interface UserProfileData {
-  profile: Profile
-  preferences: UserPreferences | null
+  id: string
+  email: string
+  full_name?: string
+  avatar_url?: string
+  home_city_id?: string
+  home_city?: City
+  onboarding_data?: any
+  onboarding_completed?: boolean
+  persona?: string
   stats: {
     tripsCount: number
-    reviewsCount: number
     savedPlacesCount: number
+    reviewsCount: number
   }
 }
 
@@ -158,8 +166,33 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
 
     logger.log('getUserProfile: Stats fetched', { userId, tripsCount, reviewsCount, savedPlacesCount })
 
+    // Merge metadata (source of truth for onboarding if migration missing)
+    const metadata = authUser.user_metadata || {}
+
+    // Construct final data, prioritizing metadata for onboarding fields
+    const finalProfile = {
+      ...profile,
+      // If profile table is missing these columns, they will be undefined in `profile`
+      // So we fallback to metadata
+      onboarding_data: profile?.onboarding_data || metadata.onboarding_data || {},
+      onboarding_completed: profile?.onboarding_completed || metadata.onboarding_completed || false,
+      persona: profile?.persona || metadata.persona || 'Explorer'
+    }
+
     return {
-      profile,
+      // @ts-ignore - mismatch between Profile type and our extended interface, but runtime safe
+      profile: finalProfile,
+      // Also return these at top level for easy access as defined in interface
+      id: userId,
+      email: authUser.email || '',
+      full_name: profile?.full_name || metadata.full_name,
+      avatar_url: profile?.avatar_url || metadata.avatar_url,
+      home_city_id: profile?.home_city_id || metadata.home_city_id,
+      // home_city // This would need a join or separate fetch if not in profile join
+      onboarding_data: finalProfile.onboarding_data,
+      onboarding_completed: finalProfile.onboarding_completed,
+      persona: finalProfile.persona,
+
       preferences: preferences || null,
       stats: {
         tripsCount,

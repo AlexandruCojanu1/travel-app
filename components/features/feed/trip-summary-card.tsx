@@ -97,7 +97,7 @@ export function TripSummaryCard({ title, cityName, startDate, endDate, spotsCoun
 
             {/* Trip Info */}
             <div className="flex flex-col justify-center flex-1">
-                <h3 className="text-[#003CFF] font-black text-xl leading-tight mb-2 tracking-tight">
+                <h3 className="text-primary font-black text-xl leading-tight mb-2 tracking-tight">
                     {title}
                 </h3>
                 <div className="space-y-0.5">

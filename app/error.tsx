@@ -19,21 +19,21 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="max-w-md w-full text-center space-y-6">
-        <div className="h-20 w-20 rounded-airbnb-lg bg-blue-50 flex items-center justify-center mx-auto">
-          <AlertCircle className="h-10 w-10 text-red-600" />
+        <div className="h-20 w-20 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto">
+          <AlertCircle className="h-10 w-10 text-destructive" />
         </div>
-        
+
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-mova-dark">
+          <h1 className="text-3xl font-bold text-foreground">
             Something went wrong!
           </h1>
-          <p className="text-mova-gray">
+          <p className="text-muted-foreground">
             We're sorry, but something unexpected happened. Please try again.
           </p>
           {error.digest && (
-            <p className="text-xs text-mova-gray mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               Error ID: {error.digest}
             </p>
           )}
@@ -42,7 +42,6 @@ export default function Error({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
             onClick={reset}
-            className="airbnb-button"
           >
             Try Again
           </Button>

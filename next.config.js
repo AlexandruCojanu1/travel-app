@@ -41,6 +41,14 @@ const nextConfig = {
   async redirects() {
     return []
   },
+  async rewrites() {
+    return [
+      {
+        source: '/',
+        destination: '/landing.html',
+      },
+    ]
+  },
   transpilePackages: ['framer-motion'],
 }
 

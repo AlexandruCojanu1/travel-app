@@ -80,7 +80,7 @@ export default function HomePage() {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4">
         <p className="text-red-500 mb-4">{error}</p>
-        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-blue-600 text-white rounded-xl">
+        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-primary text-white rounded-xl">
           Reîncearcă
         </button>
       </div>
@@ -101,7 +101,7 @@ export default function HomePage() {
                 cityName={vacation.cityName}
                 startDate={vacation.startDate}
                 endDate={vacation.endDate}
-                spotsCount={0}
+                spotsCount={vacation.spotsCount}
                 imageUrl={vacation.coverImage}
                 onClick={() => {
                   selectVacation(vacation.id)
@@ -115,7 +115,7 @@ export default function HomePage() {
               className="col-span-full p-16 border-2 border-dashed border-slate-200 rounded-[32px] text-center cursor-pointer hover:bg-slate-50 transition-colors"
             >
               <p className="text-slate-400 font-medium">Nu ai nicio călătorie planificată.</p>
-              <p className="text-blue-600 font-bold mt-2">Începe una nouă acum!</p>
+              <p className="text-primary font-bold mt-2">Începe una nouă acum!</p>
             </div>
           )}
         </div>

@@ -12,6 +12,7 @@ export interface Vacation {
     endDate: string // ISO date string
     budgetTotal: number
     currency: 'RON' | 'EUR' | 'USD'
+    spotsCount: number
     status: 'planning' | 'active' | 'completed'
     coverImage?: string
     createdAt: string
@@ -22,6 +23,7 @@ interface VacationState {
     vacations: Vacation[]
     activeVacationId: string | null
     isLoading: boolean
+    userId: string | null // Track ownership of data
 
     // Actions
     loadVacations: () => Promise<void>
@@ -29,6 +31,8 @@ interface VacationState {
     updateVacation: (id: string, updates: Partial<Vacation>) => Promise<{ success: boolean; error?: string }>
     deleteVacation: (id: string) => Promise<{ success: boolean; error?: string }>
     selectVacation: (id: string) => void
+    clearActiveVacation: () => void
+    reset: () => void
 
     // Getters
     getActiveVacation: () => Vacation | null
@@ -42,6 +46,16 @@ export const useVacationStore = create<VacationState>()(
                 vacations: [],
                 activeVacationId: null,
                 isLoading: false,
+                userId: null,
+
+                reset: () => {
+                    set({
+                        vacations: [],
+                        activeVacationId: null,
+                        isLoading: false,
+                        userId: null
+                    })
+                },
 
                 loadVacations: async () => {
                     // Prevent multiple simultaneous requests
@@ -79,10 +93,17 @@ export const useVacationStore = create<VacationState>()(
                             return
                         }
 
+                        // Security: Check if data belongs to this user
+                        const state = get()
+                        if (state.userId && state.userId !== user.id) {
+                            console.log('[VacationStore] User mismatch detected, resetting user data')
+                            get().reset()
+                        }
+
                         console.log('[VacationStore] User found, fetching trips...')
                         const { data, error } = await supabase
                             .from('trips')
-                            .select('*, cities(id, name, latitude, longitude)')
+                            .select('*, cities(id, name, latitude, longitude), trip_items(count)')
                             .eq('user_id', user.id)
                             .order('created_at', { ascending: false })
 
@@ -108,13 +129,14 @@ export const useVacationStore = create<VacationState>()(
                             endDate: trip.end_date,
                             budgetTotal: trip.budget_total || 0,
                             currency: 'RON',
+                            spotsCount: (trip.trip_items && trip.trip_items[0]) ? trip.trip_items[0].count : 0,
                             status: trip.status || 'planning',
                             coverImage: trip.cover_image,
                             createdAt: trip.created_at,
                             updatedAt: trip.updated_at || trip.created_at,
                         }))
 
-                        set({ vacations, isLoading: false })
+                        set({ vacations, isLoading: false, userId: user.id })
                         console.log('[VacationStore] Done loading vacations')
                     } catch (error) {
                         console.error('[VacationStore] Unexpected error loading vacations:', error)
@@ -159,6 +181,7 @@ export const useVacationStore = create<VacationState>()(
                             endDate: data.end_date,
                             budgetTotal: data.budget_total || 0,
                             currency: 'RON',
+                            spotsCount: 0,
                             status: (data.status as 'planning' | 'active' | 'completed') || 'planning',
                             createdAt: data.created_at,
                             updatedAt: data.updated_at || data.created_at,
@@ -258,6 +281,10 @@ export const useVacationStore = create<VacationState>()(
 
                         syncCity()
                     }
+                },
+
+                clearActiveVacation: () => {
+                    set({ activeVacationId: null })
                 },
 
                 getActiveVacation: () => {

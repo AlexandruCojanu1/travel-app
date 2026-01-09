@@ -45,23 +45,26 @@ const config: Config = {
         ring: "hsl(var(--ring))",
         // MOVA brand colors from logo gradient
         // Gradient: Blue → Teal → Yellow-Green → Orange
-        'mova-blue': '#3B82F6',      // Vibrant blue (M)
+        'mova-blue': '#003CFF',      // MOVE Blue
         'mova-teal': '#14B8A6',      // Teal/cyan (o)
         'mova-green': '#10B981',     // Yellow-green (v)
         'mova-orange': '#F97316',    // Warm orange (a)
         // Primary brand color (using blue as main)
-        'mova-primary': '#3B82F6',
+        'mova-primary': '#003CFF',
         // Secondary colors
-        'mova-dark': '#1E293B',      // Dark slate for text
+        'mova-dark': '#000000',      // Black for text (MOVE simplified)
         'mova-gray': '#64748B',      // Medium gray
         'mova-light-gray': '#F1F5F9', // Light background
-        'mova-light-blue': '#DBEAFE', // Light blue tint
+        'mova-light-blue': '#E5E9FF', // Light blue tint (adjusted for #003CFF)
         // Legacy support (mapped to MOVA colors)
-        'airbnb-red': '#3B82F6',     // Mapped to mova-blue
-        'airbnb-dark': '#1E293B',    // Mapped to mova-dark
+        'airbnb-red': '#003CFF',     // Mapped to mova-blue
+        'airbnb-dark': '#000000',    // Mapped to mova-dark
         'airbnb-gray': '#64748B',    // Mapped to mova-gray
         'airbnb-light-gray': '#F1F5F9', // Mapped to mova-light-gray
-        'airbnb-light-red': '#DBEAFE', // Mapped to mova-light-blue
+        'airbnb-light-red': '#E5E9FF', // Mapped to mova-light-blue
+      },
+      fontFamily: {
+        sans: ["var(--font-dm-sans)", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

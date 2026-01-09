@@ -1,23 +1,24 @@
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import { DM_Sans } from "next/font/google"
 import { Toaster } from "sonner"
 import "./globals.css"
 import { ConditionalLayout } from "@/components/shared/conditional-layout"
+import { AuthListener } from "@/components/auth/auth-listener"
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-dm-sans",
 })
 
 export const metadata: Metadata = {
-  title: "MOVA - Your Premium Travel Companion",
-  description: "Mobile-first travel platform for discovering and booking amazing experiences",
+  title: "MOVE - Your Premium Travel Companion",
+  description: "Planifică vacanța perfectă cu MOVE. Itinerarii personalizate și experiențe de neuitat.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "MOVA",
+    title: "MOVE",
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -28,7 +29,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   interactiveWidget: "resizes-content",
-  themeColor: "#3B82F6", // MOVA blue
+  themeColor: "#003CFF", // MOVE blue
 }
 
 export default function RootLayout({
@@ -37,8 +38,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={dmSans.variable} suppressHydrationWarning>
       <body className="antialiased relative min-h-screen">
+        <AuthListener />
         {/* Faded Background Pattern */}
         <div
           className="fixed inset-0 z-[-1] opacity-[0.08] pointer-events-none"

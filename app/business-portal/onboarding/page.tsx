@@ -455,7 +455,7 @@ export default function BusinessOnboardingPage() {
         // Verify user is authenticated before calling server action
         const supabase = createClient()
         const { data: { user: currentUser }, error: authCheckError } = await supabase.auth.getUser()
-        
+
         if (authCheckError || !currentUser) {
           console.error("Business onboarding: Auth check failed:", authCheckError)
           setServerError("Sesiunea a expirat. Te rugăm să te autentifici din nou.")
@@ -465,7 +465,7 @@ export default function BusinessOnboardingPage() {
           }, 2000)
           return
         }
-        
+
         console.log("Business onboarding: User verified before createBusiness:", currentUser.id)
 
         // Use API route instead of server action for better cookie handling
@@ -481,7 +481,7 @@ export default function BusinessOnboardingPage() {
             userId: currentUser.id,
           }),
         })
-        
+
         const result = await response.json()
 
         console.log("Business onboarding: Create business result:", JSON.stringify(result, null, 2))
@@ -489,7 +489,7 @@ export default function BusinessOnboardingPage() {
         if (result && result.success) {
           console.log("Business onboarding: Business created successfully, redirecting to dashboard", result)
           toast.success("Business-ul a fost creat cu succes!")
-          
+
           // Use window.location for hard redirect immediately (no setTimeout)
           window.location.href = '/business-portal/dashboard'
         } else {
@@ -565,7 +565,7 @@ export default function BusinessOnboardingPage() {
                   <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <Building2 className="h-10 w-10 text-white" />
                   </div>
-                  <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                  <h2 className="text-3xl font-bold text-foreground mb-2">
                     Spune-ne despre business-ul tău
                   </h2>
                   <p className="text-slate-600">
@@ -575,7 +575,7 @@ export default function BusinessOnboardingPage() {
 
                 {/* Business Name */}
                 <div>
-                  <label className="block text-sm font-semibold text-mova-dark mb-2">
+                  <label className="block text-sm font-semibold text-foreground mb-2">
                     Numele Business-ului *
                   </label>
                   <input
@@ -589,8 +589,8 @@ export default function BusinessOnboardingPage() {
                     className={cn(
                       "w-full px-4 py-3 rounded-xl border-2 transition-all",
                       errors.name
-                        ? "border-red-300 bg-blue-50 focus:border-red-500 focus:ring-red-200"
-                        : "border-slate-200 bg-white focus:border-blue-500 focus:ring-blue-200"
+                        ? "border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-200"
+                        : "border-slate-200 bg-white focus:border-primary focus:ring-primary-20"
                     )}
                   />
                   {errors.name && (
@@ -600,7 +600,7 @@ export default function BusinessOnboardingPage() {
 
                 {/* Category Selection */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  <label className="block text-sm font-semibold text-foreground mb-3">
                     Categoria Business-ului *
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto overflow-x-hidden">
@@ -615,13 +615,13 @@ export default function BusinessOnboardingPage() {
                         className={cn(
                           "p-4 rounded-xl border-2 transition-all text-left",
                           formData.category === cat.value
-                            ? "border-mova-blue bg-mova-light-blue shadow-airbnb-md"
+                            ? "border-primary bg-primary/10 shadow-md"
                             : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm"
                         )}
                       >
                         <div className="text-2xl mb-2">{cat.icon}</div>
-                        <div className="font-semibold text-mova-dark text-sm">{cat.label}</div>
-                        <div className="text-xs text-mova-gray mt-1">{cat.description}</div>
+                        <div className="font-semibold text-foreground text-sm">{cat.label}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{cat.description}</div>
                       </button>
                     ))}
                   </div>
@@ -632,8 +632,8 @@ export default function BusinessOnboardingPage() {
 
                 {/* Tagline */}
                 <div>
-                  <label className="block text-sm font-semibold text-mova-dark mb-2">
-                    Tagline (Descriere scurtă) <span className="text-xs text-slate-500">(Max 100 caractere)</span>
+                  <label className="block text-sm font-semibold text-foreground mb-2">
+                    Tagline (Descriere scurtă) <span className="text-xs text-muted-foreground">(Max 100 caractere)</span>
                   </label>
                   <input
                     type="text"
@@ -645,7 +645,7 @@ export default function BusinessOnboardingPage() {
                     }}
                     placeholder="e.g., Cea mai bună experiență culinară din oraș"
                     maxLength={100}
-                    className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                   <p className="mt-1 text-xs text-slate-500">
                     {formData.tagline?.length || 0}/100 caractere
@@ -654,7 +654,7 @@ export default function BusinessOnboardingPage() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-semibold text-mova-dark mb-2">
+                  <label className="block text-sm font-semibold text-foreground mb-2">
                     Descriere Detaliată *
                   </label>
                   <textarea
@@ -664,17 +664,17 @@ export default function BusinessOnboardingPage() {
                     }
                     placeholder="Povestea locului, misiune, ce face business-ul tău special..."
                     rows={4}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
                   />
                 </div>
 
                 {/* Contact Information */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 border-b pb-2">Informații de Contact</h3>
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Informații de Contact</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         <Phone className="inline h-4 w-4 mr-1" />
                         Telefon (Opțional)
                       </label>
@@ -685,11 +685,11 @@ export default function BusinessOnboardingPage() {
                           setFormData((prev) => ({ ...prev, phone: e.target.value }))
                         }
                         placeholder="+40 123 456 789"
-                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         <Mail className="inline h-4 w-4 mr-1" />
                         Email Public (Opțional)
                       </label>
@@ -700,13 +700,13 @@ export default function BusinessOnboardingPage() {
                           setFormData((prev) => ({ ...prev, email: e.target.value }))
                         }
                         placeholder="contact@example.com"
-                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-mova-dark mb-2">
+                    <label className="block text-sm font-semibold text-foreground mb-2">
                       <Globe className="inline h-4 w-4 mr-1" />
                       Website (Opțional)
                     </label>
@@ -717,18 +717,18 @@ export default function BusinessOnboardingPage() {
                         setFormData((prev) => ({ ...prev, website: e.target.value }))
                       }
                       placeholder="https://example.com"
-                      className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Social Media */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 border-b pb-2">Social Media</h3>
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Social Media</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         <Facebook className="inline h-4 w-4 mr-1" />
                         Facebook (Opțional)
                       </label>
@@ -742,11 +742,11 @@ export default function BusinessOnboardingPage() {
                           }))
                         }
                         placeholder="https://facebook.com/..."
-                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         <Instagram className="inline h-4 w-4 mr-1" />
                         Instagram (Opțional)
                       </label>
@@ -760,11 +760,11 @@ export default function BusinessOnboardingPage() {
                           }))
                         }
                         placeholder="https://instagram.com/..."
-                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         TikTok (Opțional)
                       </label>
                       <input
@@ -777,7 +777,7 @@ export default function BusinessOnboardingPage() {
                           }))
                         }
                         placeholder="https://tiktok.com/@..."
-                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                   </div>
@@ -785,11 +785,11 @@ export default function BusinessOnboardingPage() {
 
                 {/* Visual Identity */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 border-b pb-2">Identitate Vizuală</h3>
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Identitate Vizuală</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Logo URL (Opțional)
                       </label>
                       <input
@@ -799,11 +799,11 @@ export default function BusinessOnboardingPage() {
                           setFormData((prev) => ({ ...prev, logo_url: e.target.value }))
                         }
                         placeholder="https://example.com/logo.png"
-                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Cover Image URL (Opțional)
                       </label>
                       <input
@@ -813,7 +813,7 @@ export default function BusinessOnboardingPage() {
                           setFormData((prev) => ({ ...prev, cover_image_url: e.target.value }))
                         }
                         placeholder="https://example.com/cover.jpg"
-                        className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                   </div>
@@ -824,7 +824,7 @@ export default function BusinessOnboardingPage() {
                   <h3 className="text-lg font-semibold text-slate-900 border-b pb-2">Program de Funcționare</h3>
 
                   <div>
-                    <label className="block text-sm font-semibold text-mova-dark mb-2">
+                    <label className="block text-sm font-semibold text-foreground mb-2">
                       Tip Program
                     </label>
                     <select
@@ -838,7 +838,7 @@ export default function BusinessOnboardingPage() {
                           }
                         }))
                       }
-                      className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
+                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     >
                       <option value="">Selectează tip program</option>
                       <option value="24/7">24/7</option>
@@ -850,12 +850,12 @@ export default function BusinessOnboardingPage() {
 
                   {formData.operating_hours?.type && formData.operating_hours.type !== '24/7' && formData.operating_hours.type !== 'by_appointment' && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Orare Specifice
                       </label>
                       {['Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă', 'Duminică'].map((day) => (
                         <div key={day} className="flex items-center gap-2">
-                          <span className="w-24 text-sm text-slate-700">{day}:</span>
+                          <span className="w-24 text-sm text-foreground">{day}:</span>
                           <input
                             type="text"
                             value={(formData.operating_hours?.schedule as any)?.[day.toLowerCase()] || ""}
@@ -872,7 +872,7 @@ export default function BusinessOnboardingPage() {
                               }))
                             }
                             placeholder="09:00-18:00"
-                            className="flex-1 px-4 py-2 rounded-lg border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="flex-1 px-4 py-2 rounded-lg border-2 border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                           />
                         </div>
                       ))}
@@ -882,10 +882,10 @@ export default function BusinessOnboardingPage() {
 
                 {/* General Facilities */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 border-b pb-2">Facilități Generale</h3>
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Facilități Generale</h3>
 
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-blue-300">
+                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
                       <input
                         type="checkbox"
                         checked={formData.facilities?.accepts_card || false}
@@ -895,13 +895,13 @@ export default function BusinessOnboardingPage() {
                             facilities: { ...prev.facilities, accepts_card: e.target.checked }
                           }))
                         }
-                        className="rounded"
+                        className="rounded text-primary focus:ring-primary"
                       />
                       <CreditCard className="h-4 w-4" />
                       <span className="text-sm font-semibold">Acceptă Card</span>
                     </label>
 
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-blue-300">
+                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
                       <input
                         type="checkbox"
                         checked={formData.facilities?.wifi || false}
@@ -911,13 +911,13 @@ export default function BusinessOnboardingPage() {
                             facilities: { ...prev.facilities, wifi: e.target.checked }
                           }))
                         }
-                        className="rounded"
+                        className="rounded text-primary focus:ring-primary"
                       />
                       <Wifi className="h-4 w-4" />
                       <span className="text-sm font-semibold">WiFi Gratuit</span>
                     </label>
 
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-blue-300">
+                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
                       <input
                         type="checkbox"
                         checked={formData.facilities?.wheelchair_accessible || false}
@@ -927,13 +927,13 @@ export default function BusinessOnboardingPage() {
                             facilities: { ...prev.facilities, wheelchair_accessible: e.target.checked }
                           }))
                         }
-                        className="rounded"
+                        className="rounded text-primary focus:ring-primary"
                       />
                       <Users className="h-4 w-4" />
                       <span className="text-sm font-semibold">Accesibilitate</span>
                     </label>
 
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-blue-300">
+                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
                       <input
                         type="checkbox"
                         checked={formData.facilities?.pet_friendly || false}
@@ -943,10 +943,42 @@ export default function BusinessOnboardingPage() {
                             facilities: { ...prev.facilities, pet_friendly: e.target.checked }
                           }))
                         }
-                        className="rounded"
+                        className="rounded text-primary focus:ring-primary"
                       />
                       <Heart className="h-4 w-4" />
                       <span className="text-sm font-semibold">Pet Friendly</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
+                      <input
+                        type="checkbox"
+                        checked={formData.facilities?.parking || false}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            facilities: { ...prev.facilities, parking: e.target.checked }
+                          }))
+                        }
+                        className="rounded text-primary focus:ring-primary"
+                      />
+                      <Car className="h-4 w-4" />
+                      <span className="text-sm font-semibold">Parcare</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
+                      <input
+                        type="checkbox"
+                        checked={formData.facilities?.air_conditioning || false}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            facilities: { ...prev.facilities, air_conditioning: e.target.checked }
+                          }))
+                        }
+                        className="rounded text-primary focus:ring-primary"
+                      />
+                      <Wind className="h-4 w-4" />
+                      <span className="text-sm font-semibold">Aer Condiționat</span>
                     </label>
 
                     <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-blue-300">
@@ -1120,10 +1152,10 @@ export default function BusinessOnboardingPage() {
                   <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-green-600 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <Star className="h-10 w-10 text-white" />
                   </div>
-                  <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                  <h2 className="text-3xl font-bold text-foreground mb-2">
                     Detalii Specifice Business
                   </h2>
-                  <p className="text-slate-600">
+                  <p className="text-muted-foreground">
                     Adaugă informații specifice pentru business-ul tău de tip {BUSINESS_CATEGORIES.find(c => c.value === formData.category)?.label || formData.category}
                   </p>
                 </div>
@@ -1132,7 +1164,7 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Hotel' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Clasificare Stele
                       </label>
                       <div className="flex gap-2">
@@ -1144,15 +1176,15 @@ export default function BusinessOnboardingPage() {
                             className={cn(
                               "p-3 rounded-lg border-2 transition-all",
                               formData.star_rating === stars
-                                ? "border-blue-500 bg-blue-50"
-                                : "border-slate-200 hover:border-blue-300"
+                                ? "border-primary bg-primary/10"
+                                : "border-border hover:border-primary/50"
                             )}
                           >
                             <Star className={cn(
                               "h-6 w-6",
                               formData.star_rating && formData.star_rating >= stars
                                 ? "fill-yellow-400 text-yellow-400"
-                                : "text-slate-300"
+                                : "text-muted-foreground/30"
                             )} />
                           </button>
                         ))}
@@ -1161,7 +1193,7 @@ export default function BusinessOnboardingPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-mova-dark mb-2">
+                        <label className="block text-sm font-semibold text-foreground mb-2">
                           <Clock className="inline h-4 w-4 mr-1" />
                           Ora Check-in
                         </label>
@@ -1171,11 +1203,11 @@ export default function BusinessOnboardingPage() {
                           onChange={(e) =>
                             setFormData((prev) => ({ ...prev, check_in_time: e.target.value }))
                           }
-                          className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-mova-dark mb-2">
+                        <label className="block text-sm font-semibold text-foreground mb-2">
                           <Clock className="inline h-4 w-4 mr-1" />
                           Ora Check-out
                         </label>
@@ -1185,18 +1217,18 @@ export default function BusinessOnboardingPage() {
                           onChange={(e) =>
                             setFormData((prev) => ({ ...prev, check_out_time: e.target.value }))
                           }
-                          className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Facilități
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {AMENITIES_OPTIONS.map((amenity) => (
-                          <label key={amenity} className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 hover:border-blue-300 cursor-pointer">
+                          <label key={amenity} className="flex items-center gap-2 p-3 rounded-lg border-2 border-border hover:border-primary/50 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={formData.amenities?.includes(amenity) || false}
@@ -1209,7 +1241,7 @@ export default function BusinessOnboardingPage() {
                                     : current.filter(a => a !== amenity)
                                 }))
                               }}
-                              className="rounded"
+                              className="rounded border-border text-primary focus:ring-primary"
                             />
                             <span className="text-sm">{amenity}</span>
                           </label>
@@ -1223,12 +1255,12 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Restaurant' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Tip Bucătărie
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {CUISINE_OPTIONS.map((cuisine) => (
-                          <label key={cuisine} className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 hover:border-blue-300 cursor-pointer">
+                          <label key={cuisine} className="flex items-center gap-2 p-3 rounded-lg border-2 border-border hover:border-primary/50 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={formData.cuisine_type?.includes(cuisine) || false}
@@ -1241,7 +1273,7 @@ export default function BusinessOnboardingPage() {
                                     : current.filter(c => c !== cuisine)
                                 }))
                               }}
-                              className="rounded"
+                              className="rounded border-border text-primary focus:ring-primary"
                             />
                             <span className="text-sm">{cuisine}</span>
                           </label>
@@ -1250,7 +1282,7 @@ export default function BusinessOnboardingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Nivel Preț
                       </label>
                       <div className="flex gap-3">
@@ -1262,8 +1294,8 @@ export default function BusinessOnboardingPage() {
                             className={cn(
                               "px-6 py-3 rounded-xl border-2 font-semibold transition-all",
                               formData.price_level === level
-                                ? "border-blue-500 bg-blue-50 text-blue-700"
-                                : "border-slate-200 hover:border-blue-300"
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border hover:border-primary/50"
                             )}
                           >
                             {level}
@@ -1273,14 +1305,14 @@ export default function BusinessOnboardingPage() {
                     </div>
 
                     <div>
-                      <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer">
+                      <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-border cursor-pointer">
                         <input
                           type="checkbox"
                           checked={formData.accepts_reservations || false}
                           onChange={(e) =>
                             setFormData(prev => ({ ...prev, accepts_reservations: e.target.checked }))
                           }
-                          className="rounded"
+                          className="rounded border-border text-primary focus:ring-primary"
                         />
                         <span className="text-sm font-semibold">Acceptă Rezervări</span>
                       </label>
@@ -1292,12 +1324,12 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Cafe' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Specialitate
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {['Specialty Coffee', 'To Go', 'Brunch', 'Co-working friendly'].map((spec) => (
-                          <label key={spec} className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 hover:border-blue-300 cursor-pointer">
+                          <label key={spec} className="flex items-center gap-2 p-3 rounded-lg border-2 border-border hover:border-primary/50 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={formData.specialty?.includes(spec) || false}
@@ -1310,7 +1342,7 @@ export default function BusinessOnboardingPage() {
                                     : current.filter((s: string) => s !== spec).join(', ')
                                 }))
                               }}
-                              className="rounded"
+                              className="rounded border-border text-primary focus:ring-primary"
                             />
                             <span className="text-sm">{spec}</span>
                           </label>
@@ -1319,7 +1351,7 @@ export default function BusinessOnboardingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Nivel Preț
                       </label>
                       <div className="flex gap-3">
@@ -1331,8 +1363,8 @@ export default function BusinessOnboardingPage() {
                             className={cn(
                               "px-6 py-3 rounded-xl border-2 font-semibold transition-all",
                               formData.price_level === level
-                                ? "border-blue-500 bg-blue-50 text-blue-700"
-                                : "border-slate-200 hover:border-blue-300"
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border hover:border-primary/50"
                             )}
                           >
                             {level}
@@ -1342,7 +1374,7 @@ export default function BusinessOnboardingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Link Meniu (Opțional)
                       </label>
                       <input
@@ -1352,7 +1384,7 @@ export default function BusinessOnboardingPage() {
                           setFormData(prev => ({ ...prev, menu_url: e.target.value }))
                         }
                         placeholder="https://example.com/menu.pdf"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20"
                       />
                     </div>
                   </div>
@@ -1362,7 +1394,7 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Nature' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Nivel Dificultate
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1374,8 +1406,8 @@ export default function BusinessOnboardingPage() {
                             className={cn(
                               "px-4 py-3 rounded-xl border-2 font-semibold transition-all",
                               formData.difficulty === diff
-                                ? "border-blue-500 bg-blue-50 text-blue-700"
-                                : "border-slate-200 hover:border-blue-300"
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border hover:border-primary/50"
                             )}
                           >
                             {diff}
@@ -1386,7 +1418,7 @@ export default function BusinessOnboardingPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-mova-dark mb-2">
+                        <label className="block text-sm font-semibold text-foreground mb-2">
                           Lungime (km)
                         </label>
                         <input
@@ -1398,11 +1430,11 @@ export default function BusinessOnboardingPage() {
                           placeholder="5.2"
                           min="0"
                           step="0.1"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-mova-dark mb-2">
+                        <label className="block text-sm font-semibold text-foreground mb-2">
                           Elevație (m)
                         </label>
                         <input
@@ -1413,11 +1445,11 @@ export default function BusinessOnboardingPage() {
                           }
                           placeholder="500"
                           min="0"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-mova-dark mb-2">
+                        <label className="block text-sm font-semibold text-foreground mb-2">
                           Durată (ore)
                         </label>
                         <input
@@ -1429,13 +1461,13 @@ export default function BusinessOnboardingPage() {
                           placeholder="3.5"
                           min="0"
                           step="0.5"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Condiții Traseu (Opțional)
                       </label>
                       <textarea
@@ -1445,7 +1477,7 @@ export default function BusinessOnboardingPage() {
                         }
                         placeholder="Starea actuală a traseului, avertismente, etc."
                         rows={3}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 resize-none"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
                       />
                     </div>
                   </div>
@@ -1455,15 +1487,15 @@ export default function BusinessOnboardingPage() {
                 {formData.category === 'Spa' && (
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-mova-dark mb-2">
+                      <label className="block text-sm font-semibold text-foreground mb-2">
                         Servicii Spa
                       </label>
-                      <p className="text-sm text-slate-600 mb-4">
+                      <p className="text-sm text-muted-foreground mb-4">
                         Adaugă serviciile oferite cu prețuri (ex: Masaj Relaxare - 150 RON, 60 min)
                       </p>
                       <div className="space-y-3">
                         {(formData.spa_services || []).map((service, index) => (
-                          <div key={index} className="p-4 border-2 border-slate-200 rounded-xl space-y-3">
+                          <div key={index} className="p-4 border-2 border-border rounded-xl space-y-3">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <input
                                 type="text"
@@ -1474,7 +1506,7 @@ export default function BusinessOnboardingPage() {
                                   setFormData(prev => ({ ...prev, spa_services: newServices }))
                                 }}
                                 placeholder="Nume serviciu (ex: Masaj Relaxare)"
-                                className="px-4 py-2 rounded-lg border-2 border-slate-200"
+                                className="px-4 py-2 rounded-lg border-2 border-border bg-card focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
                               />
                               <input
                                 type="number"
@@ -1485,7 +1517,7 @@ export default function BusinessOnboardingPage() {
                                   setFormData(prev => ({ ...prev, spa_services: newServices }))
                                 }}
                                 placeholder="Preț (RON)"
-                                className="px-4 py-2 rounded-lg border-2 border-slate-200"
+                                className="px-4 py-2 rounded-lg border-2 border-border bg-card focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
                               />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1498,7 +1530,7 @@ export default function BusinessOnboardingPage() {
                                   setFormData(prev => ({ ...prev, spa_services: newServices }))
                                 }}
                                 placeholder="Durată (minute)"
-                                className="px-4 py-2 rounded-lg border-2 border-slate-200"
+                                className="px-4 py-2 rounded-lg border-2 border-border bg-card focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
                               />
                               <button
                                 type="button"
@@ -1506,7 +1538,7 @@ export default function BusinessOnboardingPage() {
                                   const newServices = (formData.spa_services || []).filter((_, i) => i !== index)
                                   setFormData(prev => ({ ...prev, spa_services: newServices }))
                                 }}
-                                className="px-4 py-2 rounded-lg border-2 border-red-200 text-red-600 hover:bg-blue-50"
+                                className="px-4 py-2 rounded-lg border-2 border-destructive/20 text-destructive hover:bg-destructive/10 transition-colors"
                               >
                                 <X className="h-4 w-4 inline mr-1" />
                                 Șterge
@@ -1522,7 +1554,7 @@ export default function BusinessOnboardingPage() {
                               spa_services: [...(prev.spa_services || []), { name: "", price: 0, duration: 0 }]
                             }))
                           }}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 hover:border-blue-500 hover:text-blue-600"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary transition-all"
                         >
                           + Adaugă Serviciu
                         </button>
@@ -1533,8 +1565,8 @@ export default function BusinessOnboardingPage() {
 
                 {/* Other Categories - Generic Message */}
                 {!['Hotel', 'Restaurant', 'Cafe', 'Nature', 'Spa'].includes(formData.category) && formData.category && (
-                  <div className="p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                    <p className="text-sm text-blue-800">
+                  <div className="p-6 bg-primary/10 border-2 border-primary/20 rounded-xl">
+                    <p className="text-sm text-primary">
                       Câmpurile specifice pentru categoria <strong>{BUSINESS_CATEGORIES.find(c => c.value === formData.category)?.label}</strong> vor fi implementate în curând.
                       Poți continua cu pașii următori pentru a finaliza înregistrarea business-ului.
                     </p>
@@ -1543,8 +1575,8 @@ export default function BusinessOnboardingPage() {
 
                 {/* No Category Selected */}
                 {!formData.category && (
-                  <div className="p-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
-                    <p className="text-sm text-yellow-800">
+                  <div className="p-6 bg-yellow-500/10 border-2 border-yellow-500/20 rounded-xl">
+                    <p className="text-sm text-yellow-600">
                       Te rugăm să selectezi o categorie în pasul anterior pentru a vedea câmpurile specifice.
                     </p>
                   </div>
@@ -1565,10 +1597,10 @@ export default function BusinessOnboardingPage() {
                   <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-pink-600 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <ImageIcon className="h-10 w-10 text-white" />
                   </div>
-                  <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                  <h2 className="text-3xl font-bold text-foreground mb-2">
                     Adaugă Fotografii
                   </h2>
-                  <p className="text-slate-600">
+                  <p className="text-muted-foreground">
                     Prezintă business-ul tău cu imagini frumoase
                   </p>
                 </div>
@@ -1576,7 +1608,7 @@ export default function BusinessOnboardingPage() {
                 <div className="space-y-6">
                   {/* Primary Image */}
                   <div>
-                    <label className="block text-sm font-semibold text-mova-dark mb-2">
+                    <label className="block text-sm font-semibold text-foreground mb-2">
                       URL Imagine Principală *
                     </label>
                     <input
@@ -1590,19 +1622,19 @@ export default function BusinessOnboardingPage() {
                       className={cn(
                         "w-full px-4 py-3 rounded-xl border-2 transition-all",
                         errors.image_url
-                          ? "border-red-300 bg-blue-50 focus:border-red-500"
-                          : "border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                          ? "border-destructive/50 bg-destructive/10 focus:border-destructive"
+                          : "border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20"
                       )}
                     />
                     {errors.image_url && (
-                      <p className="mt-1 text-sm text-red-600">{errors.image_url}</p>
+                      <p className="mt-1 text-sm text-destructive">{errors.image_url}</p>
                     )}
                     {formData.image_url && (
                       <div className="mt-3">
                         <img
                           src={formData.image_url}
                           alt="Preview"
-                          className="w-full h-48 object-cover rounded-xl border-2 border-slate-200"
+                          className="w-full h-48 object-cover rounded-xl border-2 border-border"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                           }}
@@ -1613,7 +1645,7 @@ export default function BusinessOnboardingPage() {
 
                   {/* Additional Images */}
                   <div>
-                    <label className="block text-sm font-semibold text-mova-dark mb-2">
+                    <label className="block text-sm font-semibold text-foreground mb-2">
                       Imagini Adiționale (Opțional)
                     </label>
                     <div className="space-y-3">
@@ -1628,7 +1660,7 @@ export default function BusinessOnboardingPage() {
                               setFormData(prev => ({ ...prev, image_urls: newUrls }))
                             }}
                             placeholder="https://example.com/image2.jpg"
-                            className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                            className="flex-1 px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20"
                           />
                           <button
                             type="button"
@@ -1638,7 +1670,7 @@ export default function BusinessOnboardingPage() {
                                 image_urls: prev.image_urls.filter((_, i) => i !== index)
                               }))
                             }}
-                            className="px-4 py-3 rounded-xl border-2 border-red-200 text-red-600 hover:bg-blue-50"
+                            className="px-4 py-3 rounded-xl border-2 border-destructive/20 text-destructive hover:bg-destructive/10"
                           >
                             <X className="h-5 w-5" />
                           </button>
@@ -1653,13 +1685,13 @@ export default function BusinessOnboardingPage() {
                               image_urls: [...prev.image_urls, ""]
                             }))
                           }}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 hover:border-blue-500 hover:text-blue-600 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary transition-all"
                         >
                           + Adaugă Altă Imagine
                         </button>
                       )}
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-muted-foreground">
                       Poți adăuga până la 10 imagini în total (1 principală + 9 adiționale)
                     </p>
                   </div>
@@ -1680,50 +1712,50 @@ export default function BusinessOnboardingPage() {
                   <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-green-600 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <CheckCircle2 className="h-10 w-10 text-white" />
                   </div>
-                  <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                  <h2 className="text-3xl font-bold text-foreground mb-2">
                     Revizuire & Finalizare
                   </h2>
-                  <p className="text-slate-600">
+                  <p className="text-muted-foreground">
                     Revizuiește informațiile înainte de a crea business-ul
                   </p>
                 </div>
 
-                <div className="bg-slate-50 rounded-xl p-6 space-y-4">
+                <div className="bg-muted/10 rounded-xl p-6 space-y-4">
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-3">Informații Business</h3>
+                    <h3 className="font-semibold text-foreground mb-3">Informații Business</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-slate-600">Nume:</span>
-                        <span className="font-semibold text-slate-900">{formData.name}</span>
+                        <span className="text-muted-foreground">Nume:</span>
+                        <span className="font-semibold text-foreground">{formData.name}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-600">Categorie:</span>
-                        <span className="font-semibold text-slate-900">
+                        <span className="text-muted-foreground">Categorie:</span>
+                        <span className="font-semibold text-foreground">
                           {BUSINESS_CATEGORIES.find(c => c.value === formData.category)?.label}
                         </span>
                       </div>
                       {formData.description && (
                         <div>
-                          <span className="text-slate-600">Descriere:</span>
-                          <p className="text-slate-900 mt-1">{formData.description}</p>
+                          <span className="text-muted-foreground">Descriere:</span>
+                          <p className="text-foreground mt-1">{formData.description}</p>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-3">Locație</h3>
+                    <h3 className="font-semibold text-foreground mb-3">Locație</h3>
                     <div className="space-y-2 text-sm">
                       {formData.address_line && (
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Adresă:</span>
-                          <span className="font-semibold text-slate-900">{formData.address_line}</span>
+                          <span className="text-muted-foreground">Adresă:</span>
+                          <span className="font-semibold text-foreground">{formData.address_line}</span>
                         </div>
                       )}
                       {formData.latitude && formData.longitude && (
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Coordonate:</span>
-                          <span className="font-semibold text-slate-900">
+                          <span className="text-muted-foreground">Coordonate:</span>
+                          <span className="font-semibold text-foreground">
                             {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
                           </span>
                         </div>
@@ -1733,22 +1765,22 @@ export default function BusinessOnboardingPage() {
 
                   {formData.category === 'Hotel' && formData.star_rating && (
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-3">Detalii Hotel</h3>
+                      <h3 className="font-semibold text-foreground mb-3">Detalii Hotel</h3>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Clasificare Stele:</span>
-                          <span className="font-semibold text-slate-900">{formData.star_rating} stele</span>
+                          <span className="text-muted-foreground">Clasificare Stele:</span>
+                          <span className="font-semibold text-foreground">{formData.star_rating} stele</span>
                         </div>
                         {formData.check_in_time && (
                           <div className="flex justify-between">
-                            <span className="text-slate-600">Check-in:</span>
-                            <span className="font-semibold text-slate-900">{formData.check_in_time}</span>
+                            <span className="text-muted-foreground">Check-in:</span>
+                            <span className="font-semibold text-foreground">{formData.check_in_time}</span>
                           </div>
                         )}
                         {formData.check_out_time && (
                           <div className="flex justify-between">
-                            <span className="text-slate-600">Check-out:</span>
-                            <span className="font-semibold text-slate-900">{formData.check_out_time}</span>
+                            <span className="text-muted-foreground">Check-out:</span>
+                            <span className="font-semibold text-foreground">{formData.check_out_time}</span>
                           </div>
                         )}
                       </div>
@@ -1757,11 +1789,11 @@ export default function BusinessOnboardingPage() {
 
                   {formData.image_url && (
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-3">Imagine Principală</h3>
+                      <h3 className="font-semibold text-foreground mb-3">Imagine Principală</h3>
                       <img
                         src={formData.image_url}
                         alt="Business preview"
-                        className="w-full h-48 object-cover rounded-xl border-2 border-slate-200"
+                        className="w-full h-48 object-cover rounded-xl border-2 border-border"
                       />
                     </div>
                   )}
@@ -1772,13 +1804,13 @@ export default function BusinessOnboardingPage() {
 
           {/* Server Error */}
           {serverError && (
-            <div className="mt-4 p-4 bg-blue-50 border-2 border-red-200 rounded-xl">
-              <p className="text-sm text-red-600">{serverError}</p>
+            <div className="mt-4 p-4 bg-destructive/10 border-2 border-destructive/20 rounded-xl">
+              <p className="text-sm text-destructive">{serverError}</p>
             </div>
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
             <button
               type="button"
               onClick={handleBack}
@@ -1786,8 +1818,8 @@ export default function BusinessOnboardingPage() {
               className={cn(
                 "flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all",
                 step === 1 || isPending
-                  ? "text-slate-400 cursor-not-allowed"
-                  : "text-slate-700 hover:bg-slate-100"
+                  ? "text-muted-foreground/50 cursor-not-allowed"
+                  : "text-muted-foreground hover:bg-muted"
               )}
             >
               <ArrowLeft className="h-4 w-4" />
@@ -1799,7 +1831,7 @@ export default function BusinessOnboardingPage() {
                 type="button"
                 onClick={handleNext}
                 disabled={isPending}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continuă
                 <ArrowRight className="h-4 w-4" />
@@ -1809,7 +1841,7 @@ export default function BusinessOnboardingPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isPending}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isPending ? (
                   <>
@@ -1830,3 +1862,4 @@ export default function BusinessOnboardingPage() {
     </div>
   )
 }
+

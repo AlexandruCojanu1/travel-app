@@ -30,7 +30,7 @@ const PillNav = ({
     items,
     className = '',
     ease = 'power3.easeOut',
-    baseColor = '#003CFF', // Default to MOVA Blue
+    baseColor = '#003CFF', // Default to MOVE Blue
     pillColor = '#ffffff',
     hoveredPillTextColor = '#ffffff',
     pillTextColor = '#003CFF', // Default text blue

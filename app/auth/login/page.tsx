@@ -52,10 +52,10 @@ export default function LoginPage({
                   className="object-contain"
                 />
               </div>
-              <h1 className="text-2xl font-bold text-mova-blue">
-                Bun venit la MOVA
+              <h1 className="text-2xl font-bold text-primary">
+                Bun venit la MOVE
               </h1>
-              <p className="text-mova-gray text-sm mt-2">Autentifică-te pentru a continua</p>
+              <p className="text-muted-foreground text-sm mt-2">Autentifică-te pentru a continua</p>
             </div>
 
             <AuthForm redirectTo={redirectTo} defaultMode={defaultMode} role={role} />

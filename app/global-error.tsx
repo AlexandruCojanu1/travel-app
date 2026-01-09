@@ -12,7 +12,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Log critical errors
-    logger.error('Global application error', error, { 
+    logger.error('Global application error', error, {
       digest: error.digest,
       level: 'fatal',
     })
@@ -20,21 +20,21 @@ export default function GlobalError({
   return (
     <html>
       <body>
-        <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
           <div className="max-w-md w-full text-center space-y-6">
-            <div className="h-20 w-20 rounded-airbnb-lg bg-blue-50 flex items-center justify-center mx-auto">
+            <div className="h-20 w-20 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto">
               <span className="text-4xl">⚠️</span>
             </div>
-            
+
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-mova-dark">
+              <h1 className="text-3xl font-bold text-foreground">
                 Application Error
               </h1>
-              <p className="text-mova-gray">
+              <p className="text-muted-foreground">
                 A critical error occurred. Please refresh the page.
               </p>
               {error.digest && (
-                <p className="text-xs text-mova-gray mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   Error ID: {error.digest}
                 </p>
               )}
@@ -42,7 +42,7 @@ export default function GlobalError({
 
             <button
               onClick={reset}
-              className="airbnb-button px-6 py-3"
+              className="bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-all px-6 py-3"
             >
               Try Again
             </button>

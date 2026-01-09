@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, lazy } from "react"
 import { useSearchParams } from "next/navigation"
-import { Calendar, MapPin, DollarSign, Share2, Edit, Plus, Sparkles, ArrowLeft, Loader2 } from "lucide-react"
+import { Calendar, MapPin, DollarSign, Share2, Edit, Plus, Sparkles, ArrowLeft, Loader2, Trash2 } from "lucide-react"
 import { useTripStore } from "@/store/trip-store"
 import { useVacationStore } from "@/store/vacation-store"
 import { useAppStore } from "@/store/app-store"
@@ -29,7 +29,7 @@ export default function PlanPage() {
   return (
     <Suspense fallback={
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
         <p className="text-gray-600">Se încarcă planificarea...</p>
       </div>
     }>
@@ -51,13 +51,23 @@ function PlanPageContent() {
     updateBudget,
     loadTripFromDatabase,
     initTrip,
+    deleteCurrentTrip,
+    tripId,
   } = useTripStore()
+
+  const handleDeleteTrip = async () => {
+    if (window.confirm('Ești sigur că vrei să ștergi acest plan? Această acțiune este ireversibilă.')) {
+      await deleteCurrentTrip()
+      setViewMode('selector')
+    }
+  }
 
   const {
     vacations,
     activeVacationId,
     selectVacation,
     getActiveVacation,
+    clearActiveVacation,
   } = useVacationStore()
 
   const { setCity } = useAppStore()
@@ -100,13 +110,16 @@ function PlanPageContent() {
 
   // Check if we should go directly to planner (if there's an active vacation)
   useEffect(() => {
-    if (activeVacationId && vacations.length > 0 && viewMode === 'selector') {
-      const activeVacation = getActiveVacation()
-      if (activeVacation) {
-        loadVacationTrip(activeVacation.id)
+    if (activeVacationId && vacations.length > 0) {
+      // If we are not in planner OR if we are but looking at wrong trip
+      if (viewMode === 'selector' || (tripId && tripId !== activeVacationId)) {
+        const activeVacation = getActiveVacation()
+        if (activeVacation) {
+          loadVacationTrip(activeVacation.id)
+        }
       }
     }
-  }, [activeVacationId, vacations.length])
+  }, [activeVacationId, vacations.length, viewMode, tripId])
 
   // Function to load trip data for a specific vacation
   const loadVacationTrip = async (vacationId: string) => {
@@ -129,7 +142,8 @@ function PlanPageContent() {
         {
           total: vacation.budgetTotal,
           currency: vacation.currency,
-        }
+        },
+        vacation.id
       )
 
       const supabase = createClient()
@@ -140,7 +154,7 @@ function PlanPageContent() {
         .single()
 
       if (cityData) setCity(cityData)
-      await loadTripFromDatabase()
+      await loadTripFromDatabase(vacation.id)
       setViewMode('planner')
     } catch (error) {
       console.error('Error loading vacation trip:', error)
@@ -156,6 +170,7 @@ function PlanPageContent() {
 
   // Handle going back to selector
   const handleBackToSelector = () => {
+    clearActiveVacation()
     setViewMode('selector')
   }
 
@@ -172,35 +187,7 @@ function PlanPageContent() {
   if (viewMode === 'selector') {
     return (
       <div className="w-full px-4 sm:px-6 lg:px-12 space-y-12 pb-32 pt-6">
-        {/* Travel Guides */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Ghiduri de călătorie</h2>
-            <Sparkles className="h-5 w-5 text-blue-600 animate-pulse" />
-          </div>
-          <div className="flex gap-6 overflow-x-auto pb-6 px-2 no-scrollbar scroll-smooth">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <TravelGuideCard
-                key={i}
-                priority={i === 1}
-                title={i === 1 ? "Paris Essential" : i === 2 ? "Rome Explorer" : "London Highlights"}
-                city={i === 1 ? "Paris" : i === 2 ? "Rome" : "London"}
-                spotsCount={i === 1 ? 9 : i === 2 ? 7 : 19}
-                imageUrl={
-                  i === 1
-                    ? "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500&q=80"
-                    : i === 2
-                      ? "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=500&q=80"
-                      : "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=500&q=80"
-                }
-                onClick={() => {
-                  if (i === 1) openBusinessDrawer('df3e9652-3296-48eb-bf38-0248caab8e42')
-                  else openBusinessDrawer('df3e9652-3296-48eb-bf38-0248caab8e42')
-                }}
-              />
-            ))}
-          </div>
-        </section>
+
 
         {/* My Trips */}
         <section className="space-y-6">
@@ -208,7 +195,7 @@ function PlanPageContent() {
             <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Călătoriile mele</h2>
             <button
               onClick={() => setIsCreateDialogOpen(true)}
-              className="p-2 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100 transition-colors"
+              className="p-2 bg-secondary/50 rounded-full text-primary hover:bg-secondary transition-colors"
             >
               <Plus className="h-5 w-5" />
             </button>
@@ -221,7 +208,7 @@ function PlanPageContent() {
                   title={vacation.title}
                   startDate={vacation.startDate}
                   endDate={vacation.endDate}
-                  spotsCount={0}
+                  spotsCount={vacation.spotsCount}
                   imageUrl={vacation.coverImage}
                   onClick={() => handleVacationSelected(vacation.id)}
                 />
@@ -232,7 +219,7 @@ function PlanPageContent() {
                 className="col-span-full p-16 border-2 border-dashed border-slate-200 rounded-[32px] text-center cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <p className="text-slate-400 font-medium">Nu ai nicio călătorie planificată.</p>
-                <p className="text-blue-600 font-bold mt-2">Creează una nouă!</p>
+                <p className="text-primary font-bold mt-2">Creează una nouă!</p>
               </div>
             )}
           </div>
@@ -368,6 +355,14 @@ function PlanPageContent() {
         >
           <Edit className="h-4 w-4" />
           Editează bugetul
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleDeleteTrip}
+          className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+        >
+          <Trash2 className="h-4 w-4" />
+          Șterge
         </Button>
         <Button
           variant="outline"
