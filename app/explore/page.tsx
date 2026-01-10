@@ -116,7 +116,7 @@ export default function ExplorePage() {
     const isMobile = mounted && window.innerWidth < 768
 
     return (
-        <div className="fixed inset-0 top-[64px] md:top-[80px] w-full overflow-hidden bg-white z-0">
+        <div className="fixed inset-0 top-0 md:top-[80px] w-full overflow-hidden bg-white z-0">
             {/* Map Backdrop */}
             <div className="absolute inset-0 z-0">
                 {initialCenter && (
@@ -141,6 +141,7 @@ export default function ExplorePage() {
                             onNatureReserveSelect={() => { }}
                             onRecreationAreaSelect={() => { }}
                             showNavigationControls={!isMobile}
+                            bottomNavHeight={0}
                         />
                     </Suspense>
                 )}

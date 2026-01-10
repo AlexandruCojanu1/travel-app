@@ -11,15 +11,15 @@ export type ActionResult = { success: boolean; error?: string; redirect?: string
 export async function login(data: LoginInput, redirectPath?: string): Promise<ActionResult> {
   try {
     const validated = loginSchema.parse(data)
-    
+
     let supabase
     try {
       supabase = await createClient()
     } catch (clientError: any) {
       if (clientError.message?.includes('Missing Supabase environment variables')) {
-        return { 
-          success: false, 
-          error: 'Configuration error: Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.' 
+        return {
+          success: false,
+          error: 'Configuration error: Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.'
         }
       }
       throw clientError
@@ -55,36 +55,36 @@ export async function login(data: LoginInput, redirectPath?: string): Promise<Ac
     revalidatePath('/home')
     revalidatePath('/onboarding')
 
-    // Check if user has completed onboarding first
+    // Check if user has completed onboarding
+    // First check profiles table
     const { data: profile } = await supabase
       .from('profiles')
       .select('home_city_id, role')
       .eq('id', authData.user.id)
       .single()
 
-    // If onboarding not complete, return redirect path for client to handle
-    if (!profile || !profile.home_city_id || !profile.role) {
-      // Include role in redirect if available from redirectPath
-      const onboardingRedirect = redirectPath?.includes('role=') 
-        ? redirectPath 
+    // Also check user metadata as fallback (onboarding saves here too)
+    const userMetadata = authData.user.user_metadata
+    const metadataHasOnboarding = userMetadata?.onboarding_completed || userMetadata?.home_city_id
+
+    // User needs onboarding if: no profile home_city_id AND no metadata confirmation
+    const needsOnboarding = !profile?.home_city_id && !metadataHasOnboarding
+
+    console.log('Login check:', {
+      profileHomeCityId: profile?.home_city_id,
+      metadataHasOnboarding,
+      needsOnboarding
+    })
+
+    if (needsOnboarding) {
+      const onboardingRedirect = redirectPath?.includes('role=')
+        ? redirectPath
         : '/onboarding'
       return { success: true, redirect: onboardingRedirect }
     }
 
-    // Check if user has businesses - redirect to business portal if yes
-    const { data: businesses } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('owner_user_id', authData.user.id)
-      .limit(1)
-
-    if (businesses && businesses.length > 0) {
-      return { success: true, redirect: '/business-portal/dashboard' }
-    }
-
-    // Use redirectPath if provided, otherwise default to /home
+    // Always redirect to /home - users can navigate to business dashboard if needed
     const finalRedirect = redirectPath || '/home'
-    // Return redirect path for client to handle
     return { success: true, redirect: finalRedirect }
   } catch (error: any) {
     // Next.js redirect throws a special error - don't treat it as an error
@@ -100,15 +100,15 @@ export async function login(data: LoginInput, redirectPath?: string): Promise<Ac
 export async function signup(data: SignupInput, redirectPath?: string): Promise<ActionResult> {
   try {
     const validated = signupSchema.parse(data)
-    
+
     let supabase
     try {
       supabase = await createClient()
     } catch (clientError: any) {
       if (clientError.message?.includes('Missing Supabase environment variables')) {
-        return { 
-          success: false, 
-          error: 'Configuration error: Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.' 
+        return {
+          success: false,
+          error: 'Configuration error: Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.'
         }
       }
       throw clientError
@@ -126,6 +126,26 @@ export async function signup(data: SignupInput, redirectPath?: string): Promise<
 
     if (error) {
       return { success: false, error: error.message }
+    }
+
+    // IMPORTANT: After signUp, we need to explicitly sign in to establish the session
+    // This is because signUp might not auto-login (depends on email confirmation settings)
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: validated.email,
+      password: validated.password,
+    })
+
+    if (signInError) {
+      console.warn('signup: Auto sign-in failed:', signInError)
+      // Don't fail the signup, just redirect to login
+      return { success: true, redirect: '/auth/login' }
+    }
+
+    // Refresh session to ensure cookies are set
+    try {
+      await supabase.auth.getSession()
+    } catch (e) {
+      console.warn('signup: Session refresh failed:', e)
     }
 
     // Use redirectPath if provided (for business signup), otherwise default to /onboarding (for traveler)
@@ -146,15 +166,15 @@ export async function signup(data: SignupInput, redirectPath?: string): Promise<
 export async function completeOnboarding(data: OnboardingInput): Promise<ActionResult> {
   try {
     const validated = onboardingSchema.parse(data)
-    
+
     let supabase
     try {
       supabase = await createClient()
     } catch (clientError: any) {
       console.error('completeOnboarding: Error creating Supabase client:', clientError)
-      return { 
-        success: false, 
-        error: 'Configuration error: Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.' 
+      return {
+        success: false,
+        error: 'Configuration error: Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.'
       }
     }
 
@@ -167,70 +187,71 @@ export async function completeOnboarding(data: OnboardingInput): Promise<ActionR
         console.warn('completeOnboarding: Session refresh warning:', sessionError)
         // If session is expired or invalid, return error
         if (sessionError.message?.includes('expired') || sessionError.message?.includes('invalid') || sessionError.message?.includes('JWT')) {
-          return { 
-            success: false, 
-            error: 'Sesiunea a expirat. Te rugăm să te autentifici din nou.' 
+          return {
+            success: false,
+            error: 'Sesiunea a expirat. Te rugăm să te autentifici din nou.'
           }
         }
       } else {
         session = currentSession
       }
-      
+
       // If no session, return error
       if (!session) {
         console.error('completeOnboarding: No session found')
-        return { 
-          success: false, 
-          error: 'Nu ești autentificat. Te rugăm să te autentifici din nou.' 
+        return {
+          success: false,
+          error: 'Nu ești autentificat. Te rugăm să te autentifici din nou.'
         }
       }
     } catch (sessionRefreshError) {
       console.warn('completeOnboarding: Failed to refresh session:', sessionRefreshError)
-      return { 
-        success: false, 
-        error: 'Eroare la verificarea sesiunii. Te rugăm să te autentifici din nou.' 
+      return {
+        success: false,
+        error: 'Eroare la verificarea sesiunii. Te rugăm să te autentifici din nou.'
       }
     }
 
     // Get user with detailed error logging
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError) {
       console.error('completeOnboarding: Auth error:', userError)
       // Check if it's a session error - might need to refresh
       if (userError.message?.includes('session') || userError.message?.includes('JWT') || userError.message?.includes('expired')) {
-        return { 
-          success: false, 
-          error: 'Sesiunea a expirat sau nu este disponibilă. Te rugăm să te autentifici din nou.' 
+        return {
+          success: false,
+          error: 'Sesiunea a expirat sau nu este disponibilă. Te rugăm să te autentifici din nou.'
         }
       }
       // Check if it's an AuthSessionMissingError
       if (userError.name === 'AuthSessionMissingError' || userError.status === 400) {
-        return { 
-          success: false, 
-          error: 'Nu ești autentificat. Te rugăm să te autentifici din nou.' 
+        return {
+          success: false,
+          error: 'Nu ești autentificat. Te rugăm să te autentifici din nou.'
         }
       }
-      return { 
-        success: false, 
-        error: `Eroare de autentificare: ${userError.message || 'User not authenticated'}` 
+      return {
+        success: false,
+        error: `Eroare de autentificare: ${userError.message || 'User not authenticated'}`
       }
     }
-    
+
     if (!user) {
       console.error('completeOnboarding: No user returned from getUser()')
-      return { 
-        success: false, 
-        error: 'Nu ești autentificat. Te rugăm să te autentifici din nou.' 
+      return {
+        success: false,
+        error: 'Nu ești autentificat. Te rugăm să te autentifici din nou.'
       }
     }
-    
+
     console.log('completeOnboarding: User authenticated:', user.id)
 
     console.log('completeOnboarding: Upserting profile:', {
       userId: user.id,
       homeCityId: validated.homeCityId,
-      role: validated.role
+      role: validated.role,
+      persona: validated.persona
     })
 
     const { error } = await supabase
@@ -239,6 +260,9 @@ export async function completeOnboarding(data: OnboardingInput): Promise<ActionR
         id: user.id,
         home_city_id: validated.homeCityId,
         role: validated.role,
+        persona: validated.persona,
+        onboarding_data: validated.onboarding_data as any, // Cast for JSONB
+        onboarding_completed: true,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'id',
@@ -246,17 +270,17 @@ export async function completeOnboarding(data: OnboardingInput): Promise<ActionR
 
     if (error) {
       console.error('completeOnboarding: Error upserting profile:', error)
-      return { 
-        success: false, 
-        error: `Eroare la salvare: ${error.message || 'Failed to save profile'}` 
+      return {
+        success: false,
+        error: `Eroare la salvare: ${error.message || 'Failed to save profile'}`
       }
     }
 
     console.log('completeOnboarding: Profile saved successfully, redirecting to /home')
-    
+
     revalidatePath('/home')
     revalidatePath('/onboarding')
-    
+
     return { success: true, redirect: '/home' }
   } catch (error: any) {
     console.error('completeOnboarding: Exception:', error)

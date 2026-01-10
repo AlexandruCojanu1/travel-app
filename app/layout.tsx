@@ -29,7 +29,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   interactiveWidget: "resizes-content",
-  themeColor: "#003CFF", // MOVE blue
+  themeColor: "#FF3B30", // MOVE Red
 }
 
 export default function RootLayout({

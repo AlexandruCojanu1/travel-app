@@ -25,6 +25,9 @@ export const onboardingSchema = z.object({
   role: z.enum(['tourist', 'local'], {
     errorMap: () => ({ message: 'Role must be either tourist or local' }),
   }),
+  persona: z.string().optional(),
+  onboarding_data: z.record(z.any()).optional(),
+  onboarding_completed: z.boolean().optional(),
 })
 
 export type LoginInput = z.infer<typeof loginSchema>

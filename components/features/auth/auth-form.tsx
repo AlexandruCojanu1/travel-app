@@ -67,20 +67,29 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
               return
             }
 
-            // Use redirect from server action result
-            // The server action already checked onboarding and business status
-            const redirectPath = result?.redirect || redirectTo
+            // CRITICAL: Sign in on CLIENT SIDE to establish session cookies properly
+            // Server actions can't reliably set cookies in all cases
+            console.log('🔐 Signing in on client side to establish session...')
+            const supabaseClient = (await import('@/lib/supabase/client')).createClient()
+            const { error: clientSignInError } = await supabaseClient.auth.signInWithPassword({
+              email: validated.data.email,
+              password: validated.data.password,
+            })
 
+            if (clientSignInError) {
+              console.error('❌ Client sign-in failed:', clientSignInError)
+              setErrors({ submit: clientSignInError.message })
+              return
+            }
+
+            console.log('✅ Client session established successfully')
+
+            // Use redirect from server action result
+            const redirectPath = result?.redirect || redirectTo
             console.log('🔄 Redirecting to:', redirectPath)
 
-            // Refresh router to ensure cookies are loaded
-            router.refresh()
-
-            // Wait for cookies to be properly set and propagated
-            // Server action sets cookies, but we need to wait for them to be available
-            setTimeout(() => {
-              window.location.href = redirectPath
-            }, 800)
+            // Force a hard redirect to ensure fresh state
+            window.location.href = redirectPath
           } catch (err: any) {
             console.error('❌ Login error:', err)
             // Next.js redirect throws a special error - this is expected
@@ -126,22 +135,30 @@ export function AuthForm({ redirectTo = '/home', defaultMode = 'login', role }: 
               return
             }
 
+            // CRITICAL: Sign in on CLIENT SIDE to establish session cookies properly
+            // Server actions can't reliably set cookies in all cases
+            console.log('🔐 Signing in on client side to establish session...')
+            const supabaseClient = (await import('@/lib/supabase/client')).createClient()
+            const { error: clientSignInError } = await supabaseClient.auth.signInWithPassword({
+              email: validated.data.email,
+              password: validated.data.password,
+            })
+
+            if (clientSignInError) {
+              console.error('❌ Client sign-in failed:', clientSignInError)
+              // Still redirect to login so user can sign in manually
+              window.location.href = '/auth/login'
+              return
+            }
+
+            console.log('✅ Client session established successfully')
+
             // Use redirect from result if provided, otherwise use signupRedirect
             const redirectPath = result?.redirect || signupRedirect
             console.log('🔄 Redirecting to:', redirectPath)
 
-            // Refresh router to ensure cookies are loaded
-            router.refresh()
-
-            // Force a hard redirect with a delay to ensure cookies are set
-            // This is necessary because Supabase cookies need time to propagate
-            setTimeout(() => {
-              if (typeof window !== 'undefined') {
-                // Use window.location.href for hard redirect
-                // This ensures a full page reload with fresh cookies
-                window.location.href = redirectPath
-              }
-            }, 500)
+            // Force a hard redirect
+            window.location.href = redirectPath
           } catch (err: any) {
             console.error('❌ Signup error:', err)
             // Next.js redirect throws a special error - this is expected

@@ -15,14 +15,22 @@ import { useUIStore } from "@/store/ui-store"
 export default function HomePage() {
   const router = useRouter()
   const { currentCity, setCity } = useAppStore()
-  const { vacations, loadVacations, selectVacation } = useVacationStore()
+  const { vacations, loadVacations, selectVacation, getActiveVacation } = useVacationStore()
   const { openBusinessDrawer } = useUIStore()
   const [isLoading, setIsLoading] = useState(true)
+  const [viewMode, setViewMode] = useState<'home' | 'travel'>('home')
+
   const [profile, setProfile] = useState<{ avatar_url: string | null; full_name: string | null } | null>(null)
   const [homeContext, setHomeContext] = useState<HomeContext | null>(null)
+
+  // Feed data now depends on viewMode
   const [feedData, setFeedData] = useState<CityFeedData | null>(null)
+  const [isFeedLoading, setIsFeedLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const activeVacation = getActiveVacation()
+
+  // Initial Load
   useEffect(() => {
     async function initialize() {
       setIsLoading(true)
@@ -46,22 +54,30 @@ export default function HomePage() {
         const context = await getHomeContext(user.id)
         setHomeContext(context)
 
-        if (!context.homeCityId || !context.role) {
+        // Only redirect to onboarding if no home_city_id set
+        // home_city_id is the indicator that onboarding was completed
+        if (!context.homeCityId) {
           router.push('/onboarding')
           return
         }
 
+        // Set default city to home context
         if (context.homeCity) {
           setCity(context.homeCity)
         }
 
+        // CRITICAL: Reset vacation store before loading to prevent cross-user data leak
+        useVacationStore.getState().reset()
+
         // Load vacations and feed data
         const [_, feed] = await Promise.all([
           loadVacations(),
-          context.homeCityId ? getCityFeed(context.homeCityId) : Promise.resolve(null)
-        ])
-
+          context.homeCityId ? getCityFeed(context.homeCityId!) : Promise.resolve(null)
+        ]);
         if (feed) setFeedData(feed)
+
+        // If there is an active vacation starting today/soon, maybe prompt to switch?
+        // For now, logic defaults to 'home'.
 
       } catch (err) {
         logger.error('Error initializing home page', err)
@@ -73,6 +89,37 @@ export default function HomePage() {
 
     initialize()
   }, [router, setCity, loadVacations])
+
+  // React to ViewMode changes
+  useEffect(() => {
+    async function switchContext() {
+      if (!homeContext) return
+
+      setIsFeedLoading(true)
+      try {
+        if (viewMode === 'home' && homeContext.homeCityId) {
+          const feed = await getCityFeed(homeContext.homeCityId)
+          if (feed) setFeedData(feed)
+          if (homeContext.homeCity) setCity(homeContext.homeCity)
+        } else if (viewMode === 'travel' && activeVacation) {
+          // Fetch feed for vacation city
+          const feed = await getCityFeed(activeVacation.cityId)
+          if (feed) setFeedData(feed)
+          // Note: setCity() for Travel App Store might update map, etc.
+          // We need to fetch full city object if not in store, typically getViewMode handles it?
+          // For now relying on store actions or partial update.
+        }
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setIsFeedLoading(false)
+      }
+    }
+
+    if (!isLoading) {
+      switchContext()
+    }
+  }, [viewMode, homeContext, activeVacation?.cityId, isLoading])
 
   if (isLoading) return <FeedSkeleton />
 
@@ -91,7 +138,7 @@ export default function HomePage() {
     <div className="w-full px-4 sm:px-6 lg:px-12 space-y-12 pb-32 pt-6">
       {/* My Trips */}
       <section className="space-y-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Călătoriile mele</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-muted-foreground">Călătoriile mele</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vacations.length > 0 ? (
             vacations.map((vacation) => (
@@ -107,14 +154,15 @@ export default function HomePage() {
                   selectVacation(vacation.id)
                   router.push('/plan')
                 }}
+                className="bg-white/95 backdrop-blur-md border border-white/20 shadow-sm hover:bg-white transition-colors [&_h3]:text-slate-900 [&_p]:text-slate-600"
               />
             ))
           ) : (
             <div
               onClick={() => router.push('/plan')}
-              className="col-span-full p-16 border-2 border-dashed border-slate-200 rounded-[32px] text-center cursor-pointer hover:bg-slate-50 transition-colors"
+              className="col-span-full p-16 border-2 border-dashed border-border rounded-[32px] text-center cursor-pointer hover:bg-secondary/20 transition-colors"
             >
-              <p className="text-slate-400 font-medium">Nu ai nicio călătorie planificată.</p>
+              <p className="text-muted-foreground font-medium">Nu ai nicio călătorie planificată.</p>
               <p className="text-primary font-bold mt-2">Începe una nouă acum!</p>
             </div>
           )}
@@ -123,45 +171,83 @@ export default function HomePage() {
 
       {/* Feed / Activities */}
       <section className="space-y-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">
-          Activități din {currentCity?.name || 'orașul tău'}
-        </h2>
-        <div className="flex gap-6 overflow-x-auto pb-6 px-2 no-scrollbar scroll-smooth -mx-4 sm:mx-0">
-          {feedData?.featuredBusinesses && feedData.featuredBusinesses.length > 0 ? (
-            feedData.featuredBusinesses.map((biz) => (
-              <TravelGuideCard
-                key={biz.id}
-                title={`1-Day ${biz.name} Trip`}
-                city={currentCity?.name || 'România'}
-                spotsCount={7}
-                imageUrl={biz.image_url || 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=500&q=80'}
-                onClick={() => openBusinessDrawer(biz.id)}
-              />
-            ))
-          ) : (
-            // Fallback guides
-            [1, 2, 3, 4, 5].map((i) => (
-              <TravelGuideCard
-                key={i}
-                priority={i <= 2}
-                title={i === 1 ? "1-Day Paris Trip" : i === 2 ? "1-Day Rome Trip" : i === 3 ? "3-Day London Trip" : i === 4 ? "Tokyo Explore" : "NYC City Tour"}
-                city={i === 1 ? "Paris" : i === 2 ? "Rome" : i === 3 ? "London" : i === 4 ? "Tokyo" : "New York"}
-                spotsCount={i * 5}
-                imageUrl={
-                  i === 1
-                    ? "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500&q=80"
-                    : i === 2
-                      ? "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=500&q=80"
-                      : i === 3
-                        ? "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=500&q=80"
-                        : i === 4
-                          ? "https://images.unsplash.com/photo-1540959733332-e94e270b4d4a?w=500&q=80"
-                          : "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=500&q=80"
-                }
-              />
-            ))
-          )}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-muted-foreground">
+            {viewMode === 'home'
+              ? `Activități în ${currentCity?.name || 'Orașul Tău'}`
+              : `Activități în ${activeVacation?.cityName || 'Vacanță'}`
+            }
+          </h2>
+
+          <div className="flex items-center gap-3">
+            {/* Vacation Selector (Only in Travel Mode & Multiple Trips) */}
+            {viewMode === 'travel' && vacations.length > 1 && (
+              <select
+                value={activeVacation?.id || ''}
+                onChange={(e) => selectVacation(e.target.value)}
+                className="h-10 pl-3 pr-8 rounded-xl border border-border bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
+                style={{ backgroundImage: 'none' }} // Removing default arrow to simple style or use Chevrons if desired, but default is safer for now
+              >
+                {vacations.map(v => (
+                  <option key={v.id} value={v.id}>
+                    {v.cityName} ({new Date(v.startDate).toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' })})
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Context Toggle */}
+            <div className="flex bg-slate-100 p-1 rounded-xl shrink-0">
+              <button
+                onClick={() => setViewMode('home')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'home'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                🏡 Acasă
+              </button>
+              <button
+                onClick={() => setViewMode('travel')}
+                disabled={!activeVacation}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${viewMode === 'travel'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                  }`}
+              >
+                ✈️ În vacanță
+                {!activeVacation && <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-500 font-normal">No active trip</span>}
+              </button>
+            </div>
+          </div>
         </div>
+
+        {isFeedLoading ? (
+          <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 px-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="min-w-[280px] h-[320px] bg-slate-100 rounded-[24px] animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 px-2 no-scrollbar scroll-smooth -mx-4 sm:mx-0">
+            {feedData?.featuredBusinesses && feedData.featuredBusinesses.length > 0 ? (
+              feedData.featuredBusinesses.map((biz) => (
+                <TravelGuideCard
+                  key={biz.id}
+                  title={`${biz.name}`} // Simplified title
+                  city={viewMode === 'home' ? (currentCity?.name || 'Home') : (activeVacation?.cityName || 'Trip')}
+                  spotsCount={7} // Default spots count
+                  imageUrl={biz.image_url || 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=500&q=80'}
+                  onClick={() => openBusinessDrawer(biz.id)}
+                />
+              ))
+            ) : (
+              <div className="w-full text-center py-10 bg-slate-50 rounded-[24px]">
+                <p className="text-slate-500">Nu am găsit activități momentan pentru {viewMode === 'home' ? 'orașul tău' : 'această vacanță'}.</p>
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </div>
   )

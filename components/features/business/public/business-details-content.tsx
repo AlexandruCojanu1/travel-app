@@ -136,13 +136,46 @@ export function BusinessDetailsContent({ business, onClose, isFullPage = false }
                 isFullPage && "max-w-4xl mx-auto"
             )}>
                 <div className="flex items-center justify-center gap-4 pointer-events-auto">
-                    <button className="flex items-center gap-3 px-10 pt-4 pb-4.5 bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 hover:scale-105 transition-all active:scale-95 group">
+                    <button
+                        onClick={async () => {
+                            try {
+                                const supabase = await import('@/lib/supabase/client').then(mod => mod.createClient())
+                                const { data: { user } } = await supabase.auth.getUser()
+
+                                if (!user) {
+                                    toast.error('Trebuie să fii autentificat pentru a salva!')
+                                    return
+                                }
+
+                                const { saveBusinessForUser } = await import('@/services/auth/profile.service')
+                                await saveBusinessForUser(user.id, business.id)
+
+                                toast.success('Adăugat la favorite!', {
+                                    description: 'Locația a fost salvată în lista ta.'
+                                })
+                            } catch (error) {
+                                console.error('Save error:', error)
+                                toast.error('Eroare la salvare', {
+                                    description: 'Locația este deja salvată sau a apărut o eroare.'
+                                })
+                            }
+                        }}
+                        className="flex items-center gap-3 px-8 pt-4 pb-4.5 bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 hover:scale-105 transition-all active:scale-95 group"
+                    >
                         <Bookmark className="h-6 w-6 text-slate-900 group-hover:fill-slate-900 stroke-[2.5]" />
-                        <span className="font-black text-slate-900 text-xl tracking-tight">Save</span>
+                        <span className="font-black text-slate-900 text-lg tracking-tight">Salvează</span>
                     </button>
-                    <button className="flex items-center gap-3 px-10 pt-4 pb-4.5 bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 hover:scale-105 transition-all active:scale-95 group">
-                        <Navigation className="h-6 w-6 text-slate-900 group-hover:fill-slate-900 stroke-[2.5]" />
-                        <span className="font-black text-slate-900 text-xl tracking-tight">Direction</span>
+                    <button
+                        onClick={() => {
+                            // Open Google Maps Directions
+                            const address = business.address || business.name;
+                            const query = encodeURIComponent(address);
+                            window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, '_blank');
+                        }}
+                        className="flex items-center gap-3 px-8 pt-4 pb-4.5 bg-slate-900 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-900 hover:scale-105 transition-all active:scale-95 group"
+                    >
+                        <Navigation className="h-6 w-6 text-white group-hover:fill-white stroke-[2.5]" />
+                        <span className="font-black text-white text-lg tracking-tight">Indicații</span>
                     </button>
                 </div>
             </div>

@@ -65,69 +65,70 @@ export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProp
             <DrawerDescription>Previzualizare business.</DrawerDescription>
           </DrawerHeader>
 
-          <div className="px-4 pb-6 overflow-y-auto">
+          <div className="px-5 pb-8 overflow-y-auto">
             <div className="flex gap-4">
               {/* Business Image */}
-              <div className="relative w-24 h-24 flex-shrink-0 rounded-airbnb overflow-hidden bg-mova-light-gray">
+              <div className="relative w-28 h-28 flex-shrink-0 rounded-2xl overflow-hidden bg-muted shadow-sm">
                 {business.image_url ? (
                   <Image
                     src={business.image_url}
                     alt={business.name}
                     fill
                     className="object-cover"
-                    sizes="96px"
+                    sizes="112px"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <span className="text-xs">No image</span>
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    <span className="text-xs">Fără img</span>
                   </div>
                 )}
               </div>
 
               {/* Business Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-lg mb-1 truncate text-mova-dark">
-                  {business.name}
-                </h3>
+              <div className="flex-1 min-w-0 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-xl leading-tight text-foreground truncate pl-1">
+                    {business.name}
+                  </h3>
 
-                {/* Category Badge */}
-                <div className="inline-block px-2.5 py-1 bg-mova-light-gray rounded-airbnb text-xs text-mova-dark font-semibold mb-2">
-                  {business.category}
+                  {/* Category Badge & Rating Row */}
+                  <div className="flex items-center gap-2 mt-1.5 mb-2 pl-1">
+                    <div className="inline-flex px-2.5 py-0.5 bg-secondary/30 rounded-full text-xs text-primary font-semibold">
+                      {business.category}
+                    </div>
+                    {business.rating && (
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span className="text-xs font-bold text-foreground">{business.rating.toFixed(1)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Address */}
+                  {business.address && (
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed pl-1 mb-3">
+                      {business.address}
+                    </p>
+                  )}
                 </div>
 
-                {/* Rating */}
-                {business.rating && (
-                  <div className="flex items-center gap-1 mb-2">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-semibold text-mova-dark">{business.rating.toFixed(1)}</span>
-                    <span className="text-xs text-mova-gray">/5.0</span>
-                  </div>
-                )}
-
-                {/* Address */}
-                {business.address && (
-                  <p className="text-xs text-mova-gray mb-3 line-clamp-2">
-                    {business.address}
-                  </p>
-                )}
-
                 {/* Action Buttons */}
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2">
                   <Button
                     onClick={handleAddToPlan}
                     size="sm"
                     variant="outline"
-                    className="flex-1 flex items-center justify-center gap-2"
+                    className="flex-1 border-primary/20 text-primary hover:text-primary hover:bg-primary/5 rounded-xl h-9 text-xs font-semibold"
                   >
-                    <Plus className="h-4 w-4" />
-                    {isHotel ? 'Book Now' : 'Add to Plan'}
+                    <Plus className="h-3.5 w-3.5 mr-1.5" />
+                    {isHotel ? 'Rezervă' : 'Adaugă'}
                   </Button>
                   <Button
                     onClick={handleViewDetails}
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 bg-primary text-white hover:bg-primary/90 rounded-xl h-9 text-xs font-semibold shadow-md shadow-primary/20"
                   >
-                    View Details
+                    Detalii
                   </Button>
                 </div>
               </div>

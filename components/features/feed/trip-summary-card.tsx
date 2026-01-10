@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { format, differenceInDays } from 'date-fns'
 import { ro } from 'date-fns/locale'
 
+import { cn } from "@/lib/utils"
+
 interface TripSummaryCardProps {
     title: string
     cityName?: string
@@ -13,6 +15,7 @@ interface TripSummaryCardProps {
     spotsCount: number
     imageUrl?: string | null
     onClick?: () => void
+    className?: string
 }
 
 const CITY_IMAGES: Record<string, string> = {
@@ -67,7 +70,7 @@ const CITY_IMAGES: Record<string, string> = {
 
 const DEFAULT_IMAGE = '/icons/city-generic.png'
 
-export function TripSummaryCard({ title, cityName, startDate, endDate, spotsCount, imageUrl, onClick }: TripSummaryCardProps) {
+export function TripSummaryCard({ title, cityName, startDate, endDate, spotsCount, imageUrl, onClick, className }: TripSummaryCardProps) {
     const start = new Date(startDate)
     const end = new Date(endDate)
     const days = differenceInDays(end, start) + 1
@@ -82,10 +85,13 @@ export function TripSummaryCard({ title, cityName, startDate, endDate, spotsCoun
     return (
         <div
             onClick={onClick}
-            className="flex items-center gap-4 p-4 bg-[#F2F6FF] rounded-[32px] cursor-pointer hover:shadow-md transition-all duration-300 w-full"
+            className={cn(
+                "flex items-center gap-4 p-4 glass-card cursor-pointer hover:bg-white/5 transition-all duration-300 w-full",
+                className
+            )}
         >
             {/* Trip Image */}
-            <div className="relative w-24 h-24 rounded-[24px] overflow-hidden bg-slate-200 flex-shrink-0">
+            <div className="relative w-24 h-24 rounded-[24px] overflow-hidden bg-muted flex-shrink-0">
                 <Image
                     src={displayImage}
                     alt={title}
@@ -101,10 +107,10 @@ export function TripSummaryCard({ title, cityName, startDate, endDate, spotsCoun
                     {title}
                 </h3>
                 <div className="space-y-0.5">
-                    <p className="text-[#899BBC] text-sm font-bold">
+                    <p className="text-muted-foreground text-sm font-bold">
                         {days} Zile {nights > 0 ? `${nights} Nopți` : ''}
                     </p>
-                    <p className="text-[#899BBC] text-sm font-bold">
+                    <p className="text-muted-foreground text-sm font-bold">
                         {spotsCount} Locații
                     </p>
                 </div>

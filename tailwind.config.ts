@@ -43,25 +43,39 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        // MOVA brand colors from logo gradient
-        // Gradient: Blue → Teal → Yellow-Green → Orange
-        'mova-blue': '#003CFF',      // MOVE Blue
-        'mova-teal': '#14B8A6',      // Teal/cyan (o)
-        'mova-green': '#10B981',     // Yellow-green (v)
-        'mova-orange': '#F97316',    // Warm orange (a)
-        // Primary brand color (using blue as main)
-        'mova-primary': '#003CFF',
+        // MOVA brand colors - REBRANDED (Pastel & Professional)
+        'mova-blue': '#364C84',      // Dark Blue (Primary)
+        'mova-teal': '#95B1EE',      // Light Blue (Secondary)
+        'mova-green': '#E7F1A8',     // Light Green (Highlight)
+        'mova-orange': '#95B1EE',    // Mapped to Light Blue for consistency in gradients
+
+        // NEW REBRAND COLORS (Pastel Theme)
+        'brand-primary': '#364C84',  // Dark Blue
+        'brand-cream': '#FFFDF5',    // Background
+        'brand-light-blue': '#95B1EE',
+        'brand-light-green': '#E7F1A8',
+
+        // MAPPING Old Dark/Red Theme to New Light/Pastel Theme
+        'brand-red': '#364C84',      // Main Accent -> Dark Blue
+        'brand-dark': '#364C84',     // Dark Background elements -> Dark Blue
+        'brand-cherry': '#95B1EE',   // Secondary Background -> Light Blue
+        'brand-white': '#FFFFFF',    // Text on dark -> White
+
+        // Primary brand color
+        'mova-primary': '#364C84',
+
         // Secondary colors
-        'mova-dark': '#000000',      // Black for text (MOVE simplified)
-        'mova-gray': '#64748B',      // Medium gray
-        'mova-light-gray': '#F1F5F9', // Light background
-        'mova-light-blue': '#E5E9FF', // Light blue tint (adjusted for #003CFF)
-        // Legacy support (mapped to MOVA colors)
-        'airbnb-red': '#003CFF',     // Mapped to mova-blue
-        'airbnb-dark': '#000000',    // Mapped to mova-dark
-        'airbnb-gray': '#64748B',    // Mapped to mova-gray
-        'airbnb-light-gray': '#F1F5F9', // Mapped to mova-light-gray
-        'airbnb-light-red': '#E5E9FF', // Mapped to mova-light-blue
+        'mova-dark': '#364C84',      // Text color
+        'mova-gray': '#64748B',      // Slate 500
+        'mova-light-gray': '#F1F5F9', // Slate 100
+        'mova-light-blue': '#95B1EE',
+
+        // Legacy support
+        'airbnb-red': '#364C84',
+        'airbnb-dark': '#FFFDF5',    // Backgrounds become Cream
+        'airbnb-gray': '#64748B',
+        'airbnb-light-gray': '#F1F5F9',
+        'airbnb-light-red': '#95B1EE',
       },
       fontFamily: {
         sans: ["var(--font-dm-sans)", "sans-serif"],

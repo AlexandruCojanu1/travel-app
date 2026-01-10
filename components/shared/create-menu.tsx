@@ -3,7 +3,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { X } from 'lucide-react'
+import { X, User, LucideIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -12,32 +12,48 @@ interface CreateMenuProps {
     onClose: () => void
 }
 
-const menuItems = [
-    {
-        id: 'new-trip',
-        title: 'Călătorie Nouă',
-        image: '/images/ui/menu/new_trip.png',
-        href: '/plan?action=new',
-        bgColor: 'bg-[#0A0A0A]',
-        textColor: 'text-white'
-    },
-    {
-        id: 'find-trip',
-        title: 'Noutăți',
-        image: '/images/ui/menu/find_trip.png',
-        href: '/home',
-        bgColor: 'bg-[#E0F7FF]',
-        textColor: 'text-[#0A2A3A]'
-    },
-    {
-        id: 'reservations',
-        title: 'Rezervări',
-        image: '/images/ui/menu/reservations.png',
-        href: '/bookings',
-        bgColor: 'bg-white',
-        textColor: 'text-[#1A1A1A]'
-    }
-]
+const menuItems: {
+    id: string
+    title: string
+    image?: string
+    icon?: LucideIcon
+    href: string
+    bgColor: string
+    textColor: string
+}[] = [
+        {
+            id: 'new-trip',
+            title: 'Călătorie Nouă',
+            image: '/images/ui/menu/new_trip.png',
+            href: '/plan?action=new',
+            bgColor: 'bg-[#0A0A0A]',
+            textColor: 'text-white'
+        },
+        {
+            id: 'find-trip',
+            title: 'Noutăți',
+            image: '/images/ui/menu/find_trip.png',
+            href: '/home',
+            bgColor: 'bg-[#E0F7FF]',
+            textColor: 'text-[#0A2A3A]'
+        },
+        {
+            id: 'reservations',
+            title: 'Rezervări',
+            image: '/images/ui/menu/reservations.png',
+            href: '/bookings',
+            bgColor: 'bg-white',
+            textColor: 'text-[#1A1A1A]'
+        },
+        {
+            id: 'profile',
+            title: 'Profil',
+            icon: User,
+            href: '/profile',
+            bgColor: 'bg-[#f4f4f5]',
+            textColor: 'text-[#18181b]'
+        }
+    ]
 
 export function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
     const router = useRouter()
@@ -89,13 +105,20 @@ export function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
                                     <span className="text-2xl font-bold tracking-tight">
                                         {item.title}
                                     </span>
-                                    <div className="relative w-28 h-28 -mr-6">
-                                        <Image
-                                            src={item.image}
-                                            alt={item.title}
-                                            fill
-                                            className="object-contain"
-                                        />
+                                    <div className="relative w-28 h-28 -mr-6 flex items-center justify-center">
+                                        {item.image ? (
+                                            <Image
+                                                src={item.image}
+                                                alt={item.title}
+                                                fill
+                                                sizes="(max-width: 768px) 150px, 150px"
+                                                className="object-contain"
+                                            />
+                                        ) : item.icon ? (
+                                            <div className="w-20 h-20 bg-black/5 rounded-full flex items-center justify-center">
+                                                <item.icon className="h-10 w-10 opacity-50" />
+                                            </div>
+                                        ) : null}
                                     </div>
                                 </motion.button>
                             ))}

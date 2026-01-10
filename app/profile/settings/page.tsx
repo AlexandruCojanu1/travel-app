@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  Lock, 
-  Shield, 
-  Globe, 
-  Bell, 
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Lock,
+  Shield,
+  Globe,
+  Bell,
   DollarSign,
   Trash2,
   Save,
@@ -41,7 +41,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  
+
   // Personal Information State
   const [personalInfo, setPersonalInfo] = useState({
     fullName: "",
@@ -93,21 +93,21 @@ export default function SettingsPage() {
 
         // Load profile data
         const profileData = await getUserProfile(user.id)
-        
+
         // Set personal information
         setPersonalInfo({
-          fullName: profileData.profile.full_name || "",
+          fullName: profileData.full_name || "",
           email: user.email || "",
-          phone: (profileData.profile as any).phone || "",
-          birthDate: (profileData.profile as any).birth_date || "",
-          gender: (profileData.profile as any).gender || "masculin",
+          phone: (profileData as any).phone || "",
+          birthDate: (profileData as any).birth_date || "",
+          gender: (profileData as any).gender || "masculin",
         })
 
         // Set two-factor authentication
-        setTwoFactorEnabled((profileData.profile as any).two_factor_enabled || false)
+        setTwoFactorEnabled((profileData as any).two_factor_enabled || false)
 
         // Set theme
-        const theme = (profileData.profile as any).theme || "light"
+        const theme = (profileData as any).theme || "light"
         setPreferences(prev => ({ ...prev, theme }))
 
         // Set preferences
@@ -161,7 +161,7 @@ export default function SettingsPage() {
     setIsSaving(true)
     setError(null)
     setSuccess(null)
-    
+
     try {
       const data: UpdateProfileData = {
         full_name: personalInfo.fullName || undefined,
@@ -171,7 +171,7 @@ export default function SettingsPage() {
       }
 
       const result = await updateProfile(data)
-      
+
       if (result.success) {
         setSuccess(result.message || "Informațiile personale au fost salvate cu succes!")
         setTimeout(() => setSuccess(null), 5000)
@@ -207,7 +207,7 @@ export default function SettingsPage() {
       }
 
       const result = await changePassword(data)
-      
+
       if (result.success) {
         setSuccess(result.message || "Parola a fost schimbată cu succes!")
         setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" })
@@ -240,7 +240,7 @@ export default function SettingsPage() {
       }
 
       const result = await updatePreferences(data)
-      
+
       if (result.success) {
         setSuccess(result.message || "Preferințele au fost salvate cu succes!")
         setTimeout(() => setSuccess(null), 5000)
@@ -261,7 +261,7 @@ export default function SettingsPage() {
 
     try {
       const result = await toggleTwoFactor(enabled)
-      
+
       if (result.success) {
         setTwoFactorEnabled(enabled)
         setSuccess(result.message || "Autentificarea în 2 pași a fost actualizată!")
@@ -279,7 +279,7 @@ export default function SettingsPage() {
     const confirmed = window.confirm(
       "Ești sigur că vrei să ștergi contul? Această acțiune este ireversibilă și toate datele tale vor fi șterse permanent."
     )
-    
+
     if (!confirmed) return
 
     setError(null)
@@ -287,7 +287,7 @@ export default function SettingsPage() {
 
     try {
       const result = await deleteAccount()
-      
+
       if (result.success) {
         if (result.redirect) {
           router.push(result.redirect)
@@ -304,11 +304,11 @@ export default function SettingsPage() {
     }
   }
 
-  const ToggleSwitch = ({ 
-    enabled, 
-    onChange, 
-    label 
-  }: { 
+  const ToggleSwitch = ({
+    enabled,
+    onChange,
+    label
+  }: {
     enabled: boolean
     onChange: (enabled: boolean) => void
     label: string
@@ -451,7 +451,7 @@ export default function SettingsPage() {
             <Select
               id="gender"
               value={personalInfo.gender}
-              onChange={(e) => setPersonalInfo({ ...personalInfo, gender: e.target.value })}
+              onChange={(e) => setPersonalInfo({ ...personalInfo, gender: e.target.value as "masculin" | "feminin" | "prefer-sa-nu-spun" })}
               className="w-full h-11 rounded-airbnb border border-gray-300 focus-visible:ring-2 focus-visible:ring-mova-blue focus-visible:ring-offset-2 focus-visible:border-mova-blue"
             >
               <option value="masculin">Masculin</option>
@@ -462,8 +462,8 @@ export default function SettingsPage() {
         </div>
 
         <div className="pt-4 border-t border-gray-200">
-          <Button 
-            onClick={handleSavePersonalInfo} 
+          <Button
+            onClick={handleSavePersonalInfo}
             disabled={isSaving}
             className="w-full md:w-auto"
           >
@@ -548,8 +548,8 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Button 
-                onClick={handleChangePassword} 
+              <Button
+                onClick={handleChangePassword}
                 disabled={isSaving}
                 className="w-full md:w-auto"
               >
@@ -605,7 +605,7 @@ export default function SettingsPage() {
             <Select
               id="theme"
               value={preferences.theme}
-              onChange={(e) => setPreferences({ ...preferences, theme: e.target.value })}
+              onChange={(e) => setPreferences({ ...preferences, theme: e.target.value as "light" | "dark" | "system" })}
               className="w-full h-11 rounded-airbnb border border-gray-300 focus-visible:ring-2 focus-visible:ring-mova-blue focus-visible:ring-offset-2 focus-visible:border-mova-blue"
             >
               <option value="light">Light</option>
@@ -635,7 +635,7 @@ export default function SettingsPage() {
         {/* Notifications */}
         <div className="pt-4 border-t border-gray-200 space-y-4">
           <h3 className="text-lg font-semibold text-mova-dark">Notificări</h3>
-          
+
           <div className="space-y-1">
             <h4 className="text-sm font-medium text-mova-gray mb-2">Notificări Push</h4>
             <ToggleSwitch
@@ -678,8 +678,8 @@ export default function SettingsPage() {
         </div>
 
         <div className="pt-4 border-t border-gray-200">
-          <Button 
-            onClick={handleSavePreferences} 
+          <Button
+            onClick={handleSavePreferences}
             disabled={isSaving}
             className="w-full md:w-auto"
           >

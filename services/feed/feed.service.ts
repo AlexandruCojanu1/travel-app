@@ -40,7 +40,7 @@ export async function getHomeContext(userId: string): Promise<HomeContext> {
 
     // If profile doesn't exist or error, return default
     if (profileError || !profile) {
-      logger.warn('Profile not found or error', profileError, { userId })
+      logger.warn('Profile not found or error', { error: profileError, userId })
       return {
         userId,
         homeCity: null,
@@ -152,7 +152,7 @@ export async function getCityFeed(
           .eq('city_id', cityId)
           .order('created_at', { ascending: false })
           .limit(5)
-        
+
         // Map filter IDs to database category values
         if (categoryFilter && categoryFilter !== 'All') {
           const categoryMap: Record<string, string> = {
@@ -164,7 +164,7 @@ export async function getCityFeed(
           const dbCategory = categoryMap[categoryFilter] || categoryFilter
           fallbackQuery.eq('category', dbCategory)
         }
-        
+
         const { data: fallbackBusinesses } = await fallbackQuery
         return {
           cityPosts: cityPosts || [],
@@ -185,7 +185,7 @@ export async function getCityFeed(
 
     if (promotionsError) {
       // Silently fail - promotions are optional
-      logger.warn('Error fetching promotions (non-critical)', promotionsError, { cityId })
+      logger.warn('Error fetching promotions (non-critical)', { error: promotionsError, cityId })
     }
 
     return {

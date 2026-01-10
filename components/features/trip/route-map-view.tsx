@@ -35,18 +35,18 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
     walkingDistance?: number
     [key: string]: unknown
   }
-  
+
   const [transitInfo, setTransitInfo] = useState<{ routes: string[]; segments: TransitSegment[] } | null>(null)
 
   const items = getItemsByDay(dayIndex)
-  
+
   // Memoize items IDs to prevent infinite loops
   const itemsIds = React.useMemo(() => items.map(i => i.id).join(','), [items])
 
   // Load business details for all items (including nature reserves and recreation areas)
   React.useEffect(() => {
     let cancelled = false
-    
+
     async function loadBusinesses() {
       if (items.length === 0) {
         if (!cancelled) {
@@ -59,15 +59,15 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
       if (!cancelled) {
         setIsLoading(true)
       }
-      
+
       try {
         // All items (including nature reserves and recreation areas) are in businesses table
         const businessPromises = items.map(async (item) => {
           return getBusinessById(item.business_id)
         })
-        
+
         const businessResults = await Promise.all(businessPromises)
-        
+
         if (!cancelled) {
           const validBusinesses = businessResults.filter(
             (b): b is Business => b !== null && b.latitude !== null && b.longitude !== null
@@ -84,7 +84,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
     }
 
     loadBusinesses()
-    
+
     return () => {
       cancelled = true
     }
@@ -133,7 +133,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
         return business?.id
       })
       .filter((id): id is string => id !== undefined)
-    
+
     if (optimizedIds.length === items.length) {
       // Reorder items in store
       reorderItems(dayIndex, optimizedIds)
@@ -159,7 +159,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
     }
 
     setIsCalculatingRoute(true)
-    
+
     async function calculateRoute() {
       try {
         const points: RoutePoint[] = businesses.map(b => ({
@@ -175,16 +175,16 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           longitude: p.longitude,
           name: p.name,
         }))
-        
+
         const routeResult = calculateRealRoute(routePoints, routingMode)
-        
+
         if (routeResult && routeResult.geometry) {
           setRouteGeometry(routeResult.geometry)
         } else {
           // Fallback to straight line
           setRouteGeometry(points.map(p => [p.longitude, p.latitude]))
         }
-        
+
         // For transit mode, show basic info
         if (transportMode === 'transit') {
           setTransitInfo({
@@ -218,7 +218,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
       toast.error('Geolocation nu este suportat de browser-ul tău')
       return
     }
-    
+
     setIsLocating(true)
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -260,7 +260,7 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
         longitude: p.longitude,
         name: p.name,
       }))
-      
+
       try {
         const routeResult = calculateRealRoute(routePoints, routingMode)
         if (routeResult && routeResult.geometry) {
@@ -361,12 +361,12 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
                 ))}
               </div>
               <p className="text-xs text-blue-700 mt-2">
-                {transitInfo.segments.filter(s => s.walkingDistance).length > 0 && 
+                {transitInfo.segments.filter(s => s.walkingDistance).length > 0 &&
                   'Include mers pe jos până la stație și de la stație'}
               </p>
             </div>
           )}
-          
+
           {/* Transport Costs Panel */}
           <TransportCostsPanel
             points={routePoints}
@@ -376,82 +376,81 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           />
         </>
       )}
-      
+
       <div className="w-full rounded-xl overflow-hidden border border-gray-200" style={{ height }}>
         <Map
-        mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        mapLib={import('maplibre-gl') as any}
-        initialViewState={{
-          latitude: center.lat,
-          longitude: center.lng,
-          zoom: bounds
-            ? Math.max(
+          mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+          mapLib={import('maplibre-gl') as any}
+          initialViewState={{
+            latitude: center.lat,
+            longitude: center.lng,
+            zoom: bounds
+              ? Math.max(
                 10,
                 Math.min(
                   16,
                   12 - Math.log(Math.max(bounds.maxLat - bounds.minLat, bounds.maxLng - bounds.minLng))
                 )
               )
-            : 12,
-        }}
-        style={{ width: '100%', height: '100%' }}
-        interactive={true}
-      >
-        {/* Route Line */}
-        {routeLine && (
-          <Source id="route-line" type="geojson" data={routeLine}>
-            <Layer
-              id="route-line-layer"
-              type="line"
-              paint={{
-                'line-color': '#3b82f6',
-                'line-width': 4,
-                'line-opacity': 0.8,
-              }}
-            />
-          </Source>
-        )}
+              : 12,
+          }}
+          style={{ width: '100%', height: '100%' }}
+          interactive={true}
+        >
+          {/* Route Line */}
+          {routeLine && (
+            <Source id="route-line" type="geojson" data={routeLine}>
+              <Layer
+                id="route-line-layer"
+                type="line"
+                paint={{
+                  'line-color': '#3b82f6',
+                  'line-width': 4,
+                  'line-opacity': 0.8,
+                }}
+              />
+            </Source>
+          )}
 
-        {/* User Location Marker */}
-        {userLocation && (
-          <Marker
-            latitude={userLocation.lat}
-            longitude={userLocation.lng}
-            anchor="center"
-          >
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 bg-blue-500 rounded-full opacity-20 animate-ping" />
-              </div>
-              <div className="relative flex items-center justify-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-                  <div className="w-3 h-3 bg-white rounded-full" />
+          {/* User Location Marker */}
+          {userLocation && (
+            <Marker
+              latitude={userLocation.lat}
+              longitude={userLocation.lng}
+              anchor="center"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-16 h-16 bg-blue-500 rounded-full opacity-20 animate-ping" />
                 </div>
-                <div className="absolute top-7 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-blue-600" />
+                <div className="relative flex items-center justify-center">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                    <div className="w-3 h-3 bg-white rounded-full" />
+                  </div>
+                  <div className="absolute top-7 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-blue-600" />
+                </div>
               </div>
-            </div>
-          </Marker>
-        )}
+            </Marker>
+          )}
 
-        {/* Business Markers */}
-        {businesses.map((business, index) => (
-          <Marker
-            key={business.id}
-            latitude={business.latitude!}
-            longitude={business.longitude!}
-            anchor="center"
-          >
-            <div className="relative">
-              <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white">
-                {userLocation ? index + 1 : index + 1}
+          {/* Business Markers */}
+          {businesses.map((business, index) => (
+            <Marker
+              key={business.id}
+              latitude={business.latitude!}
+              longitude={business.longitude!}
+              anchor="center"
+            >
+              <div className="relative">
+                <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white">
+                  {userLocation ? index + 1 : index + 1}
+                </div>
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
+                  <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-600" />
+                </div>
               </div>
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
-                <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-600" />
-              </div>
-            </div>
-          </Marker>
-        ))}
+            </Marker>
+          ))}
         </Map>
       </div>
     </div>

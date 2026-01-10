@@ -46,6 +46,7 @@ export default function OnboardingPage() {
     }
   }
 
+  // Inside OnboardingPage component
   const finishOnboarding = async () => {
     console.log("Finishing onboarding with data:", formData)
 
@@ -57,40 +58,69 @@ export default function OnboardingPage() {
     else if (formData.adventurous > 70) personaName = "Adventurous Foodie"
     else if (formData.popularity > 70) personaName = "Hidden Gem Hunter"
 
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (user) {
-      // Save to profile
-      // 1. Update Auth Metadata (Guaranteed to work without migration)
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          onboarding_data: formData,
-          persona: personaName,
-          onboarding_completed: true,
-          home_city_id: formData.homeCityId
-        }
-      })
-
-      if (authError) console.error("Error saving auth metadata:", authError)
-
-      // 2. Try to update Profile Table (Might fail if migration wasn't run)
+    startTransition(async () => {
       try {
-        await supabase.from('profiles').upsert({
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          console.error("No user found")
+          alert("Nu ești autentificat. Te rugăm să te autentifici din nou.")
+          router.push('/auth/login')
+          return
+        }
+
+        console.log("Saving onboarding for user:", user.id, "homeCityId:", formData.homeCityId)
+
+        // Save to profiles table - only use columns we know exist
+        const { error } = await supabase.from('profiles').upsert({
           id: user.id,
           home_city_id: formData.homeCityId,
-          onboarding_data: formData as any,
-          persona: personaName,
-          onboarding_completed: true,
+          role: 'tourist',
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
         })
-      } catch (e) {
-        console.warn("Profile table update failed (legacy schema?):", e)
-      }
-    }
 
-    // Redirect
-    router.push('/home')
+        if (error) {
+          console.error("Error saving profile:", error)
+          alert(`Eroare la salvare în profiles: ${error.message}`)
+          return
+        }
+
+        // Verify the save worked
+        const { data: verification, error: verifyError } = await supabase
+          .from('profiles')
+          .select('id, home_city_id, role')
+          .eq('id', user.id)
+          .single()
+
+        console.log("Verification after save:", verification, verifyError)
+
+        if (!verification?.home_city_id) {
+          console.error("CRITICAL: home_city_id was NOT saved!")
+          alert("Eroare: Datele nu s-au salvat corect. Verifică dacă coloana home_city_id există în tabelul profiles.")
+          return
+        }
+
+        // Also save to user metadata as backup (this always works)
+        await supabase.auth.updateUser({
+          data: {
+            home_city_id: formData.homeCityId,
+            onboarding_completed: true,
+            onboarding_data: formData,
+            persona: personaName
+          }
+        })
+
+        console.log("Onboarding saved successfully, redirecting...")
+        // Force hard redirect to ensure fresh state
+        window.location.href = '/home'
+      } catch (e) {
+        console.error("Exception during onboarding save:", e)
+        alert("Eroare neașteptată. Te rugăm să încerci din nou.")
+      }
+    })
   }
 
   // Render Functions for each Stage

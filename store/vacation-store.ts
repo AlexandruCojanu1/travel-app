@@ -66,12 +66,15 @@ export const useVacationStore = create<VacationState>()(
                     }
 
                     console.log('[VacationStore] Starting to load vacations...')
-                    set({ isLoading: true })
+
+                    // CRITICAL: Clear old data IMMEDIATELY before fetching
+                    // This prevents showing stale data from another user
+                    set({ isLoading: true, vacations: [] })
 
                     // Set a timeout to prevent infinite loading
                     const timeoutId = setTimeout(() => {
                         console.log('[VacationStore] Loading timeout - setting empty state')
-                        set({ isLoading: false, vacations: [] })
+                        set({ isLoading: false, vacations: [], userId: null })
                     }, 10000) // 10 second timeout
 
                     try {
@@ -82,30 +85,35 @@ export const useVacationStore = create<VacationState>()(
                         if (authError) {
                             console.log('[VacationStore] Auth error:', authError)
                             clearTimeout(timeoutId)
-                            set({ isLoading: false, vacations: [] })
+                            set({ isLoading: false, vacations: [], userId: null })
                             return
                         }
 
                         if (!user) {
                             console.log('[VacationStore] No user found - showing empty state')
                             clearTimeout(timeoutId)
-                            set({ isLoading: false, vacations: [] })
+                            set({ isLoading: false, vacations: [], userId: null })
                             return
                         }
 
-                        // Security: Check if data belongs to this user
-                        const state = get()
-                        if (state.userId && state.userId !== user.id) {
-                            console.log('[VacationStore] User mismatch detected, resetting user data')
-                            get().reset()
+                        // Security: Check if stored userId differs - force complete reset
+                        const currentState = get()
+                        if (currentState.userId && currentState.userId !== user.id) {
+                            console.log('[VacationStore] USER CHANGED! Clearing all data for new user')
+                            // Clear localStorage directly to ensure no persist leak
+                            if (typeof window !== 'undefined') {
+                                window.localStorage.removeItem('travel-vacation-storage')
+                            }
                         }
 
-                        console.log('[VacationStore] User found, fetching trips...')
+                        console.log('[VacationStore] User found, fetching trips for user_id:', user.id)
                         const { data, error } = await supabase
                             .from('trips')
                             .select('*, cities(id, name, latitude, longitude), trip_items(count)')
                             .eq('user_id', user.id)
                             .order('created_at', { ascending: false })
+
+                        console.log('[VacationStore] Query result - trips count:', data?.length, 'for user:', user.id)
 
                         clearTimeout(timeoutId)
 

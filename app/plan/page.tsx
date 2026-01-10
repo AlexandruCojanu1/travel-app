@@ -22,6 +22,7 @@ import { getCityFeed } from "@/services/feed/feed.service"
 // Lazy load heavy trip components
 const BudgetMeter = lazy(() => import("@/components/features/trip/budget-meter").then(m => ({ default: m.BudgetMeter })))
 const TimelineView = lazy(() => import("@/components/features/trip/timeline-view").then(m => ({ default: m.TimelineView })))
+import { PlanDashboard } from "@/components/features/trip/plan-dashboard"
 
 type ViewMode = 'selector' | 'planner'
 
@@ -186,50 +187,11 @@ function PlanPageContent() {
   // Dashboard View (Selector)
   if (viewMode === 'selector') {
     return (
-      <div className="w-full px-4 sm:px-6 lg:px-12 space-y-12 pb-32 pt-6">
-
-
-        {/* My Trips */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#A4A4A4]">Călătoriile mele</h2>
-            <button
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="p-2 bg-secondary/50 rounded-full text-primary hover:bg-secondary transition-colors"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2">
-            {vacations.length > 0 ? (
-              vacations.map((vacation) => (
-                <TripSummaryCard
-                  key={vacation.id}
-                  title={vacation.title}
-                  startDate={vacation.startDate}
-                  endDate={vacation.endDate}
-                  spotsCount={vacation.spotsCount}
-                  imageUrl={vacation.coverImage}
-                  onClick={() => handleVacationSelected(vacation.id)}
-                />
-              ))
-            ) : (
-              <div
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="col-span-full p-16 border-2 border-dashed border-slate-200 rounded-[32px] text-center cursor-pointer hover:bg-slate-50 transition-colors"
-              >
-                <p className="text-slate-400 font-medium">Nu ai nicio călătorie planificată.</p>
-                <p className="text-primary font-bold mt-2">Creează una nouă!</p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <CreateTripDialog
-          isOpen={isCreateDialogOpen}
-          onOpenChange={setIsCreateDialogOpen}
-        />
-      </div>
+      <PlanDashboard
+        vacations={vacations}
+        onSelect={handleVacationSelected}
+        onCreate={() => setIsCreateDialogOpen(true)}
+      />
     )
   }
 
@@ -260,10 +222,10 @@ function PlanPageContent() {
             <ArrowLeft className="h-4 w-4" />
             Toate vacanțele
           </button>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-2">
             {activeVacation?.title || `Călătorie la ${tripDetails.cityName || 'Destinația ta'}`}
           </h1>
-          <div className="flex items-center gap-4 text-gray-600">
+          <div className="flex items-center gap-4 text-slate-600">
             <div className="flex items-center gap-1.5">
               <Calendar className="h-4 w-4" />
               <span className="text-sm">
@@ -280,17 +242,7 @@ function PlanPageContent() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <SyncIndicator />
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Share2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Distribuie</span>
-          </Button>
-        </div>
+
       </div>
 
       {/* Budget Meter Hero Widget */}
@@ -306,38 +258,38 @@ function PlanPageContent() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="glass-card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <MapPin className="h-5 w-5 text-blue-600" />
-            <span className="text-sm font-medium text-gray-500">Locuri</span>
+            <MapPin className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium text-slate-500">Locuri</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{placesCount}</p>
+          <p className="text-2xl font-bold text-slate-800">{placesCount}</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="glass-card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Calendar className="h-5 w-5 text-purple-600" />
-            <span className="text-sm font-medium text-gray-500">Zile</span>
+            <Calendar className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium text-slate-500">Zile</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{daysCount}</p>
+          <p className="text-2xl font-bold text-slate-800">{daysCount}</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="glass-card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="h-5 w-5 text-green-600" />
-            <span className="text-sm font-medium text-gray-500">Cheltuit</span>
+            <DollarSign className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium text-slate-500">Cheltuit</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-2xl font-bold text-slate-800">
             {spent.toFixed(0)} {budget?.currency || 'RON'}
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="glass-card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="h-5 w-5 text-orange-600" />
-            <span className="text-sm font-medium text-gray-500">Rămas</span>
+            <DollarSign className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium text-slate-500">Rămas</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-2xl font-bold text-slate-800">
             {budget
               ? (budget.total - spent).toFixed(0)
               : 0}{" "}

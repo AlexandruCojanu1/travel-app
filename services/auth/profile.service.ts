@@ -17,6 +17,7 @@ export interface UserProfileData {
   onboarding_data?: any
   onboarding_completed?: boolean
   persona?: string
+  preferences?: UserPreferences | null
   stats: {
     tripsCount: number
     savedPlacesCount: number

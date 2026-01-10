@@ -19,39 +19,35 @@ export function AuthListener() {
                 console.log('[AuthListener] User signed out - clearing stores')
                 useVacationStore.getState().reset()
                 useTripStore.getState().clearTrip()
+
+                // Explicitly clear local storage to prevent any persistence leakage
+                if (typeof window !== 'undefined') {
+                    window.localStorage.removeItem('travel-vacation-storage')
+                    window.localStorage.removeItem('travel-app-storage')
+                    window.localStorage.removeItem('travel-ui-storage')
+                }
+
                 // Force hard reload to clear any other state
-                // window.location.href = '/' 
-                // OR simply router refresh
-                router.refresh()
+                window.location.href = '/'
             } else if (event === 'SIGNED_IN') {
                 console.log('[AuthListener] User signed in')
-                const checkOnboarding = async () => {
-                    const { data: { user } } = await supabase.auth.getUser()
-                    if (user) {
-                        // Check user metadata first (fastest)
-                        const metadata = user.user_metadata
-                        if (metadata.onboarding_completed) {
-                            console.log('[AuthListener] Onboarding already completed (metadata)')
-                            // Optional: Redirect to home if on login page, otherwise let them be
-                            // router.push('/home') 
-                        } else {
-                            // Double check profile table to be sure
-                            const { data: profile } = await supabase
-                                .from('profiles')
-                                .select('onboarding_completed')
-                                .eq('id', user.id)
-                                .single()
 
-                            if (profile?.onboarding_completed) {
-                                console.log('[AuthListener] Onboarding already completed (profile)')
-                            } else {
-                                console.log('[AuthListener] Onboarding NOT completed -> redirecting')
-                                router.push('/onboarding')
-                            }
-                        }
-                    }
+                // CRITICAL: Clear any previous user data first
+                // This prevents cross-user data leakage
+                useVacationStore.getState().reset()
+                useTripStore.getState().clearTrip()
+
+                // Clear localStorage to prevent persist middleware from rehydrating old data
+                if (typeof window !== 'undefined') {
+                    window.localStorage.removeItem('travel-vacation-storage')
+                    window.localStorage.removeItem('travel-app-storage')
+                    window.localStorage.removeItem('travel-ui-storage')
                 }
-                checkOnboarding()
+
+                // NOTE: Do NOT redirect to onboarding here.
+                // The login action and middleware already handle onboarding checks.
+                // Redirecting from here causes race conditions and loops.
+                console.log('[AuthListener] Stores cleared, letting normal flow continue')
             }
         })
 

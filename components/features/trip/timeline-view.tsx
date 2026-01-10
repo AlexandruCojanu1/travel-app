@@ -42,7 +42,7 @@ export function TimelineView() {
     // Each item is approximately 120px tall (card + padding)
     const itemHeight = 120
     const threshold = itemHeight / 2 // Swap when crossing halfway point
-    
+
     // Determine direction and calculate new index
     let newIndex = itemIndex
     if (y > threshold && itemIndex < localItems.length - 1) {
@@ -99,68 +99,67 @@ export function TimelineView() {
           {/* Timeline Content */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6">
-        <AnimatePresence mode="wait">
-          {dayItems.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center"
-            >
-              <div className="max-w-sm mx-auto">
-                <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                  <Plus className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Planul este gol pentru această zi
-                </h3>
-                <p className="text-sm text-gray-600 mb-6">
-                  Începe să-ți construiești itinerariul adăugând activități și locuri
-                </p>
+              <AnimatePresence mode="wait">
+                {dayItems.length === 0 ? (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="py-12 text-center"
+                  >
+                    <div className="max-w-sm mx-auto">
+                      <div className="h-12 w-12 rounded-full bg-blue-50/50 flex items-center justify-center mx-auto mb-4">
+                        <Plus className="h-6 w-6 text-blue-500" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">
+                        Planul este gol
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-6">
+                        Adaugă primele activități pentru această zi
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={`day-${selectedDayIndex}`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-0"
+                  >
+                    {localItems.map((item, index) => (
+                      <TimelineItem
+                        key={item.id}
+                        item={item}
+                        index={index}
+                        isLast={index === localItems.length - 1}
+                        totalItems={localItems.length}
+                        isDragging={draggedItemId === item.id}
+                        onDragStart={() => setDraggedItemId(item.id)}
+                        onDragEnd={() => handleItemDragEnd(item.id)}
+                        onDrag={(y) => handleItemDrag(item.id, y)}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Constant Add Activity Button */}
+              <div className="mt-4 flex justify-center pb-4">
+                <Button
+                  className="rounded-full px-6 bg-primary hover:bg-red-600 shadow-lg shadow-primary/20 text-white border-none"
+                  onClick={() => {
+                    // Navigate to explore page to add items
+                    window.location.href = '/explore'
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  <span className="font-semibold">Adaugă activitate</span>
+                </Button>
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key={`day-${selectedDayIndex}`}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-0"
-            >
-              {localItems.map((item, index) => (
-                <TimelineItem
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  isLast={index === localItems.length - 1}
-                  totalItems={localItems.length}
-                  isDragging={draggedItemId === item.id}
-                  onDragStart={() => setDraggedItemId(item.id)}
-                  onDragEnd={() => handleItemDragEnd(item.id)}
-                  onDrag={(y) => handleItemDrag(item.id, y)}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {/* Constant Add Activity Button - Always visible */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            onClick={() => {
-              // Navigate to explore page to add items
-              window.location.href = '/explore'
-            }}
-          >
-            <Plus className="h-5 w-5" />
-            <span className="font-semibold">Adaugă activitate</span>
-          </Button>
-        </div>
             </div>
           </div>
         </TabsContent>

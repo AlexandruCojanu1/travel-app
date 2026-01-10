@@ -138,6 +138,7 @@ export function CreateVacationDialog({
                     budgetTotal: budget[0],
                     currency: 'RON',
                     status: 'planning',
+                    spotsCount: 0,
                 })
 
                 if (!result.success) {

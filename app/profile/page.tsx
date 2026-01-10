@@ -33,21 +33,37 @@ export default function ProfilePage() {
     async function loadProfile() {
       try {
         setIsLoading(true)
+        setProfileData(null) // Clear any stale data first
+
         const supabase = createClient()
 
-        // Get current user
+        // Force fresh user check
+        console.log('[ProfilePage] Getting current user...')
         const {
           data: { user },
           error: userError,
         } = await supabase.auth.getUser()
 
+        console.log('[ProfilePage] Current user:', user?.id, user?.email)
+
         if (userError || !user) {
+          console.log('[ProfilePage] No user, redirecting to login')
           router.push("/auth/login")
           return
         }
 
         // Fetch profile data
+        console.log('[ProfilePage] Fetching profile for user:', user.id)
         const data = await getUserProfile(user.id)
+        console.log('[ProfilePage] Profile loaded:', data.email, 'id:', data.id)
+
+        // Double-check the loaded profile matches current user
+        if (data.id !== user.id) {
+          console.error('[ProfilePage] CRITICAL: Profile ID mismatch!', data.id, '!==', user.id)
+          setError("Eroare de izolare date. Te rugăm să te deconectezi și să te reconectezi.")
+          return
+        }
+
         setProfileData(data)
       } catch (err) {
         console.error("Error loading profile:", err)
