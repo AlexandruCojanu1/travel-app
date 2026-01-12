@@ -4,25 +4,13 @@ import { useState, useEffect } from "react"
 import { X } from "lucide-react"
 import { Button } from "@/components/shared/ui/button"
 import { cn } from "@/lib/utils"
-
-interface Room {
-  id: string
-  name: string
-  base_price: number
-  capacity: number
-  bed_type: string
-  room_size_m2?: number
-  amenities: string[]
-  images: string[]
-  is_active: boolean
-  created_at: string
-}
+import type { HotelRoom } from "@/services/hotel/room.service"
 
 interface RoomFormDialogProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (room: Omit<Room, 'id' | 'created_at'>) => void
-  room: Room | null
+  onSave: (room: Partial<HotelRoom>) => void
+  room: HotelRoom | null
   bedTypes: readonly string[]
   amenitiesOptions: string[]
 }
@@ -35,15 +23,17 @@ export function RoomFormDialog({
   bedTypes,
   amenitiesOptions,
 }: RoomFormDialogProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Partial<HotelRoom>>({
     name: "",
-    base_price: 0,
-    capacity: 2,
+    price_per_night: 0,
+    max_guests: 2,
     bed_type: "double",
-    room_size_m2: undefined as number | undefined,
-    amenities: [] as string[],
-    images: [] as string[],
+    size_sqm: undefined,
+    amenities: [],
+    images: [],
     is_active: true,
+    total_rooms: 1,
+    room_type: 'standard', // default
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -52,24 +42,28 @@ export function RoomFormDialog({
     if (room) {
       setFormData({
         name: room.name,
-        base_price: room.base_price,
-        capacity: room.capacity,
-        bed_type: room.bed_type,
-        room_size_m2: room.room_size_m2,
-        amenities: room.amenities,
-        images: room.images,
+        price_per_night: room.price_per_night,
+        max_guests: room.max_guests,
+        bed_type: room.bed_type || "double",
+        size_sqm: room.size_sqm,
+        amenities: room.amenities || [],
+        images: room.images || [],
         is_active: room.is_active,
+        total_rooms: room.total_rooms,
+        room_type: room.room_type,
       })
     } else {
       setFormData({
         name: "",
-        base_price: 0,
-        capacity: 2,
+        price_per_night: 0,
+        max_guests: 2,
         bed_type: "double",
-        room_size_m2: undefined,
+        size_sqm: undefined,
         amenities: [],
         images: [],
         is_active: true,
+        total_rooms: 1,
+        room_type: 'standard',
       })
     }
     setErrors({})
@@ -81,16 +75,16 @@ export function RoomFormDialog({
     e.preventDefault()
     setErrors({})
 
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       setErrors({ name: "Room name is required" })
       return
     }
-    if (formData.base_price <= 0) {
-      setErrors({ base_price: "Price must be greater than 0" })
+    if ((formData.price_per_night || 0) <= 0) {
+      setErrors({ price_per_night: "Price must be greater than 0" })
       return
     }
-    if (formData.capacity < 1) {
-      setErrors({ capacity: "Capacity must be at least 1" })
+    if ((formData.max_guests || 0) < 1) {
+      setErrors({ max_guests: "Capacity must be at least 1" })
       return
     }
 
@@ -100,30 +94,30 @@ export function RoomFormDialog({
   function toggleAmenity(amenity: string) {
     setFormData(prev => ({
       ...prev,
-      amenities: prev.amenities.includes(amenity)
+      amenities: prev.amenities?.includes(amenity)
         ? prev.amenities.filter(a => a !== amenity)
-        : [...prev.amenities, amenity]
+        : [...(prev.amenities || []), amenity]
     }))
   }
 
   function addImageUrl() {
     setFormData(prev => ({
       ...prev,
-      images: [...prev.images, ""]
+      images: [...(prev.images || []), ""]
     }))
   }
 
   function updateImageUrl(index: number, url: string) {
     setFormData(prev => ({
       ...prev,
-      images: prev.images.map((img, i) => i === index ? url : img)
+      images: prev.images?.map((img, i) => i === index ? url : img)
     }))
   }
 
   function removeImageUrl(index: number) {
     setFormData(prev => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: prev.images?.filter((_, i) => i !== index)
     }))
   }
 
@@ -152,7 +146,7 @@ export function RoomFormDialog({
             </label>
             <input
               type="text"
-              value={formData.name}
+              value={formData.name || ""}
               onChange={(e) => {
                 setFormData(prev => ({ ...prev, name: e.target.value }))
                 if (errors.name) setErrors({ ...errors, name: "" })
@@ -174,58 +168,74 @@ export function RoomFormDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Base Price (RON/night) *
+                Price per Night (RON) *
               </label>
               <input
                 type="number"
-                value={formData.base_price || ""}
+                value={formData.price_per_night || ""}
                 onChange={(e) => {
-                  setFormData(prev => ({ ...prev, base_price: parseFloat(e.target.value) || 0 }))
-                  if (errors.base_price) setErrors({ ...errors, base_price: "" })
+                  setFormData(prev => ({ ...prev, price_per_night: parseFloat(e.target.value) || 0 }))
+                  if (errors.price_per_night) setErrors({ ...errors, price_per_night: "" })
                 }}
                 min="0"
                 step="0.01"
                 className={cn(
                   "w-full px-4 py-3 rounded-xl border-2 transition-all",
-                  errors.base_price
+                  errors.price_per_night
                     ? "border-red-300 bg-blue-50"
                     : "border-slate-200 focus:border-blue-500"
                 )}
               />
-              {errors.base_price && (
-                <p className="mt-1 text-sm text-red-600">{errors.base_price}</p>
+              {errors.price_per_night && (
+                <p className="mt-1 text-sm text-red-600">{errors.price_per_night}</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Capacity (guests) *
+                Max Guests *
               </label>
               <input
                 type="number"
-                value={formData.capacity || ""}
+                value={formData.max_guests || ""}
                 onChange={(e) => {
-                  setFormData(prev => ({ ...prev, capacity: parseInt(e.target.value) || 1 }))
-                  if (errors.capacity) setErrors({ ...errors, capacity: "" })
+                  setFormData(prev => ({ ...prev, max_guests: parseInt(e.target.value) || 1 }))
+                  if (errors.max_guests) setErrors({ ...errors, max_guests: "" })
                 }}
                 min="1"
                 className={cn(
                   "w-full px-4 py-3 rounded-xl border-2 transition-all",
-                  errors.capacity
+                  errors.max_guests
                     ? "border-red-300 bg-blue-50"
                     : "border-slate-200 focus:border-blue-500"
                 )}
               />
-              {errors.capacity && (
-                <p className="mt-1 text-sm text-red-600">{errors.capacity}</p>
+              {errors.max_guests && (
+                <p className="mt-1 text-sm text-red-600">{errors.max_guests}</p>
               )}
             </div>
+          </div>
+
+          {/* Total Rooms (Inventory) */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Total Rooms Available (Inventory) *
+            </label>
+            <input
+              type="number"
+              value={formData.total_rooms || 1}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, total_rooms: parseInt(e.target.value) || 1 }))
+              }}
+              min="1"
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500"
+            />
           </div>
 
           {/* Bed Type & Room Size */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Bed Type *
+                Bed Type
               </label>
               <select
                 value={formData.bed_type}
@@ -245,9 +255,9 @@ export function RoomFormDialog({
               </label>
               <input
                 type="number"
-                value={formData.room_size_m2 || ""}
+                value={formData.size_sqm || ""}
                 onChange={(e) =>
-                  setFormData(prev => ({ ...prev, room_size_m2: parseFloat(e.target.value) || undefined }))
+                  setFormData(prev => ({ ...prev, size_sqm: parseFloat(e.target.value) || undefined }))
                 }
                 min="0"
                 step="0.1"
@@ -270,7 +280,7 @@ export function RoomFormDialog({
                 >
                   <input
                     type="checkbox"
-                    checked={formData.amenities.includes(amenity)}
+                    checked={formData.amenities?.includes(amenity)}
                     onChange={() => toggleAmenity(amenity)}
                     className="rounded"
                   />
@@ -283,10 +293,10 @@ export function RoomFormDialog({
           {/* Images */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Room Images
+              Room Images URLs
             </label>
             <div className="space-y-3">
-              {formData.images.map((url, index) => (
+              {formData.images?.map((url, index) => (
                 <div key={index} className="flex gap-2">
                   <input
                     type="url"
@@ -304,7 +314,7 @@ export function RoomFormDialog({
                   </button>
                 </div>
               ))}
-              {formData.images.length < 5 && (
+              {(formData.images?.length || 0) < 5 && (
                 <button
                   type="button"
                   onClick={addImageUrl}
@@ -347,4 +357,3 @@ export function RoomFormDialog({
     </div>
   )
 }
-

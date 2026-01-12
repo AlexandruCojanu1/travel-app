@@ -1,24 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Edit, Trash2, Eye, EyeOff, Calendar } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, EyeOff, Calendar, Loader2 } from "lucide-react"
 import { Button } from "@/components/shared/ui/button"
 import { cn } from "@/lib/utils"
-import { createClient } from "@/lib/supabase/client"
 import { RoomFormDialog } from "./room-form-dialog"
-
-interface Room {
-  id: string
-  name: string
-  base_price: number
-  capacity: number
-  bed_type: string
-  room_size_m2?: number
-  amenities: string[]
-  images: string[]
-  is_active: boolean
-  created_at: string
-}
+import { toast } from "sonner"
+import {
+  getRoomsByHotel,
+  createRoom,
+  updateRoom,
+  deleteRoom,
+  type HotelRoom
+} from "@/services/hotel/room.service"
 
 interface RoomManagerProps {
   businessId: string
@@ -26,150 +20,111 @@ interface RoomManagerProps {
 
 const BED_TYPES = ['single', 'double', 'king', 'queen', 'bunk'] as const
 const AMENITIES_OPTIONS = [
-  'Balcony', 'Sea View', 'WiFi', 'AC', 'TV', 'Mini Bar', 'Safe', 'Room Service'
+  'Balcony', 'Sea View', 'WiFi', 'AC', 'TV', 'Mini Bar', 'Safe', 'Room Service', 'Kitchen'
 ]
 
 export function RoomManager({ businessId }: RoomManagerProps) {
-  const [rooms, setRooms] = useState<Room[]>([])
+  const [rooms, setRooms] = useState<HotelRoom[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingRoom, setEditingRoom] = useState<Room | null>(null)
+  const [editingRoom, setEditingRoom] = useState<HotelRoom | null>(null)
 
   useEffect(() => {
-    loadRooms()
+    if (businessId) {
+      loadRooms()
+    }
   }, [businessId])
 
   async function loadRooms() {
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('business_resources')
-      .select('*')
-      .eq('business_id', businessId)
-      .eq('resource_type', 'room')
-      .order('created_at', { ascending: false })
-
-    if (error) {
+    setIsLoading(true)
+    try {
+      const data = await getRoomsByHotel(businessId)
+      setRooms(data)
+    } catch (error) {
       console.error('Error loading rooms:', error)
-      // Try without resource_type filter
-      const { data: allData, error: allError } = await supabase
-        .from('business_resources')
-        .select('*')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: false })
-      
-      if (allError) {
-        console.error('Error loading all resources:', allError)
-        setRooms([])
-        setIsLoading(false)
-        return
-      }
-      
-      // Filter client-side
-      const filteredData = (allData || []).filter((r: any) => r.resource_type === 'room')
-      setRooms(filteredData.map(parseRoomFromResource))
+      toast.error('Failed to load rooms')
+    } finally {
       setIsLoading(false)
-      return
-    }
-
-    if (data) {
-      setRooms(data.map(parseRoomFromResource))
-    }
-    setIsLoading(false)
-  }
-
-  function parseRoomFromResource(resource: any): Room {
-    const attrs = resource.attributes || {}
-    return {
-      id: resource.id,
-      name: resource.name,
-      base_price: resource.base_price || attrs.base_price || 0,
-      capacity: attrs.capacity || 2,
-      bed_type: attrs.bed_type || 'double',
-      room_size_m2: attrs.room_size_m2,
-      amenities: attrs.amenities || [],
-      images: attrs.images || [],
-      is_active: resource.is_active !== false,
-      created_at: resource.created_at,
     }
   }
 
-  async function handleSaveRoom(roomData: Omit<Room, 'id' | 'created_at'>) {
-    const supabase = createClient()
-    const attributes = {
-      capacity: roomData.capacity,
-      bed_type: roomData.bed_type,
-      room_size_m2: roomData.room_size_m2,
-      amenities: roomData.amenities,
-      images: roomData.images,
-    }
+  async function handleSaveRoom(roomData: Partial<HotelRoom>) {
+    try {
+      if (editingRoom) {
+        // Update existing room
+        await updateRoom(editingRoom.id, roomData)
+        toast.success('Room updated successfully')
+      } else {
+        // Create new room
+        // Validate required fields for creation
+        if (!roomData.name || !roomData.price_per_night || !roomData.max_guests) {
+          toast.error('Missing required fields')
+          return
+        }
 
-    if (editingRoom) {
-      // Update existing room
-      const { error } = await supabase
-        .from('business_resources')
-        .update({
+        await createRoom({
+          hotel_id: businessId,
           name: roomData.name,
-          base_price: roomData.base_price,
-          is_active: roomData.is_active,
-          attributes,
+          room_type: roomData.room_type || 'standard',
+          price_per_night: roomData.price_per_night,
+          currency: 'RON',
+          max_guests: roomData.max_guests,
+          bed_type: roomData.bed_type || 'double',
+          size_sqm: roomData.size_sqm,
+          amenities: roomData.amenities,
+          images: roomData.images,
+          total_rooms: roomData.total_rooms || 1,
+          available_rooms: roomData.total_rooms || 1,
+          is_active: roomData.is_active !== false, // default true
         })
-        .eq('id', editingRoom.id)
-
-      if (!error) {
-        await loadRooms()
-        setIsDialogOpen(false)
-        setEditingRoom(null)
+        toast.success('Room created successfully')
       }
-    } else {
-      // Create new room
-      const { error } = await supabase
-        .from('business_resources')
-        .insert({
-          business_id: businessId,
-          resource_type: 'room',
-          name: roomData.name,
-          base_price: roomData.base_price,
-          is_active: roomData.is_active,
-          attributes,
-        })
 
-      if (!error) {
-        await loadRooms()
-        setIsDialogOpen(false)
-      }
+      await loadRooms()
+      setIsDialogOpen(false)
+      setEditingRoom(null)
+
+    } catch (error) {
+      console.error('Error saving room:', error)
+      toast.error('Failed to save room')
     }
   }
 
   async function handleDeleteRoom(roomId: string) {
-    if (!confirm('Are you sure you want to delete this room?')) return
+    if (!confirm('Are you sure you want to delete this room? This action cannot be undone.')) return
 
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('business_resources')
-      .delete()
-      .eq('id', roomId)
+    try {
+      await deleteRoom(roomId)
+      toast.success('Room deleted successfully')
 
-    if (!error) {
-      await loadRooms()
+      // Update local state directly for speed
+      setRooms(prev => prev.filter(r => r.id !== roomId))
+    } catch (error) {
+      console.error('Error deleting room:', error)
+      toast.error('Failed to delete room')
     }
   }
 
   async function handleToggleActive(roomId: string, currentStatus: boolean) {
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('business_resources')
-      .update({ is_active: !currentStatus })
-      .eq('id', roomId)
+    try {
+      await updateRoom(roomId, { is_active: !currentStatus })
 
-    if (!error) {
-      await loadRooms()
+      // Optimistic update
+      setRooms(prev => prev.map(r =>
+        r.id === roomId ? { ...r, is_active: !currentStatus } : r
+      ))
+
+      toast.success(currentStatus ? 'Room deactivated' : 'Room activated')
+    } catch (error) {
+      console.error('Error toggling room status:', error)
+      toast.error('Failed to update room status')
     }
   }
 
-  if (isLoading) {
+  if (isLoading && rooms.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-slate-600">Loading rooms...</div>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
       </div>
     )
   }
@@ -212,118 +167,136 @@ export function RoomManager({ businessId }: RoomManagerProps) {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rooms.map((room) => (
             <div
               key={room.id}
               className={cn(
-                "p-6 rounded-xl border-2 transition-all",
+                "p-0 rounded-xl border-2 transition-all flex flex-col bg-white overflow-hidden",
                 room.is_active
-                  ? "border-slate-200 bg-white hover:border-blue-300 hover:shadow-md"
-                  : "border-slate-200 bg-slate-50 opacity-75"
+                  ? "border-slate-200 hover:border-blue-300 hover:shadow-lg"
+                  : "border-slate-200 opacity-75"
               )}
             >
               {/* Room Image */}
-              {room.images && room.images.length > 0 ? (
-                <img
-                  src={room.images[0]}
-                  alt={room.name}
-                  className="w-full h-32 object-cover rounded-lg mb-4"
-                />
-              ) : (
-                <div className="w-full h-32 bg-slate-200 rounded-lg mb-4 flex items-center justify-center">
-                  <span className="text-slate-400 text-sm">No image</span>
+              <div className="relative h-48 w-full bg-slate-100">
+                {room.images && room.images.length > 0 ? (
+                  <img
+                    src={room.images[0]}
+                    alt={room.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-400">
+                    <span className="text-sm">No image</span>
+                  </div>
+                )}
+                <div className="absolute top-3 right-3 flex gap-2">
+                  <span className={cn(
+                    "px-2 py-1 rounded-full text-xs font-bold shadow-sm",
+                    room.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                  )}>
+                    {room.is_active ? "Active" : "Inactive"}
+                  </span>
                 </div>
-              )}
+              </div>
 
               {/* Room Info */}
-              <div className="space-y-2">
-                <div className="flex items-start justify-between">
-                  <h4 className="font-semibold text-slate-900">{room.name}</h4>
-                  <button
-                    onClick={() => handleToggleActive(room.id, room.is_active)}
-                    className="p-1 rounded hover:bg-slate-100"
+              <div className="p-5 flex-1 flex flex-col space-y-4">
+                <div className="flex-1 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-bold text-lg text-slate-900 line-clamp-1">{room.name}</h4>
+                    <div className="flex flex-col items-end">
+                      <span className="font-bold text-blue-600">{room.price_per_night} RON</span>
+                      <span className="text-[10px] text-gray-500">/ night</span>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-slate-600 space-y-1.5 pt-2">
+                    <div className="flex items-center justify-between">
+                      <span>Type</span>
+                      <span className="font-medium capitalize">{room.room_type}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Max Guests</span>
+                      <span className="font-medium">{room.max_guests}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Bed</span>
+                      <span className="font-medium capitalize">{room.bed_type}</span>
+                    </div>
+                    {room.size_sqm && (
+                      <div className="flex items-center justify-between">
+                        <span>Size</span>
+                        <span className="font-medium">{room.size_sqm} m²</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span>Total Rooms</span>
+                      <span className="font-medium">{room.total_rooms}</span>
+                    </div>
+                  </div>
+
+                  {/* Amenities Tags */}
+                  {room.amenities && room.amenities.length > 0 && (
+                    <div className="pt-3 flex flex-wrap gap-1.5">
+                      {room.amenities.slice(0, 3).map((amenity) => (
+                        <span
+                          key={amenity}
+                          className="px-2 py-1 text-[10px] bg-blue-50 text-blue-700 rounded-md font-medium"
+                        >
+                          {amenity}
+                        </span>
+                      ))}
+                      {room.amenities.length > 3 && (
+                        <span className="px-2 py-1 text-[10px] text-slate-500 bg-slate-50 rounded-md h-fit">
+                          +{room.amenities.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      handleToggleActive(room.id, room.is_active)
+                    }}
+                    title={room.is_active ? "Deactivate" : "Activate"}
+                    className="h-9 w-9 p-0"
                   >
                     {room.is_active ? (
                       <Eye className="h-4 w-4 text-green-600" />
                     ) : (
                       <EyeOff className="h-4 w-4 text-slate-400" />
                     )}
-                  </button>
-                </div>
-
-                <div className="text-sm text-slate-600 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span>Price per night:</span>
-                    <span className="font-semibold text-slate-900">{room.base_price} RON</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Capacity:</span>
-                    <span>{room.capacity} guests</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Bed type:</span>
-                    <span className="capitalize">{room.bed_type}</span>
-                  </div>
-                  {room.room_size_m2 && (
-                    <div className="flex items-center justify-between">
-                      <span>Size:</span>
-                      <span>{room.room_size_m2} m²</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Amenities */}
-                {room.amenities && room.amenities.length > 0 && (
-                  <div className="pt-2">
-                    <div className="flex flex-wrap gap-1">
-                      {room.amenities.slice(0, 3).map((amenity) => (
-                        <span
-                          key={amenity}
-                          className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded"
-                        >
-                          {amenity}
-                        </span>
-                      ))}
-                      {room.amenities.length > 3 && (
-                        <span className="px-2 py-1 text-xs text-slate-500">
-                          +{room.amenities.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 pt-3 border-t border-slate-200 mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditingRoom(room)
-                      setIsDialogOpen(true)
-                    }}
-                    className="flex-1"
-                  >
-                    <Edit className="h-3 w-3 mr-1" />
-                    Edit
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteRoom(room.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-blue-50"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                    title="View availability calendar"
-                  >
-                    <Calendar className="h-3 w-3" />
-                  </Button>
+
+                  <div className="flex-1 flex gap-2 justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-slate-700"
+                      onClick={() => {
+                        setEditingRoom(room)
+                        setIsDialogOpen(true)
+                      }}
+                    >
+                      <Edit className="h-3.5 w-3.5 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => handleDeleteRoom(room.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -346,4 +319,3 @@ export function RoomManager({ businessId }: RoomManagerProps) {
     </div>
   )
 }
-

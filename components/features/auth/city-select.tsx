@@ -10,16 +10,19 @@ interface City {
   name: string
   country: string
   state_province: string | null
+  latitude?: number
+  longitude?: number
 }
 
 interface CitySelectProps {
   value: string
   onChange: (cityId: string) => void
+  onCityChange?: (city: City | null) => void  // Optional callback for full city data
   error?: string
   className?: string
 }
 
-export function CitySelect({ value, onChange, error, className }: CitySelectProps) {
+export function CitySelect({ value, onChange, onCityChange, error, className }: CitySelectProps) {
   const [cities, setCities] = useState<City[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -60,8 +63,11 @@ export function CitySelect({ value, onChange, error, className }: CitySelectProp
     city.country.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const handleCitySelect = (cityId: string) => {
-    onChange(cityId)
+  const handleCitySelect = (city: City) => {
+    onChange(city.id)
+    if (onCityChange) {
+      onCityChange(city)
+    }
     setIsOpen(false)
     setSearchQuery('')
   }
@@ -140,7 +146,7 @@ export function CitySelect({ value, onChange, error, className }: CitySelectProp
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    handleCitySelect(city.id)
+                    handleCitySelect(city)
                   }}
                 >
                   <div className="flex items-center gap-2">

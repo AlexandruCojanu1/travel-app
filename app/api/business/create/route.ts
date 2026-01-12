@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // Always try to get user from session first (required for RLS)
     const { data: { user: sessionUser }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError) {
       logger.error('API: Auth error', userError)
       authError = userError
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     logger.log('API: User authenticated', { userId: user.id })
-    
+
     // Note: getSession() may not work in API routes, but getUser() should be enough for RLS
     // RLS policy checks auth.uid() which is available if getUser() succeeds
     // Try to refresh session to ensure it's available for RLS
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     // Map category to type enum
     // If category is not in map, use a default type to satisfy NOT NULL constraint
     const businessType = CATEGORY_TO_TYPE_MAP[validated.category] || 'restaurant'
-    
+
     if (!CATEGORY_TO_TYPE_MAP[validated.category]) {
       logger.warn('API: Category not in map, using default type', { category: validated.category })
     }
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
       owner_user_id: user.id, // REQUIRED: NOT NULL constraint, must be direct column
       type: businessType, // REQUIRED: NOT NULL constraint, must be direct column
     }
-    
+
     // Store ALL other fields in attributes JSONB (safer approach - avoids schema cache errors)
     const extendedAttributes: Record<string, any> = {
       ...attributes,
@@ -174,6 +174,7 @@ export async function POST(request: NextRequest) {
       address_line: validated.address_line || null,
       // Images (all in attributes since image_url might not be in cache)
       image_url: validated.image_url || null,
+      image_urls: validated.image_urls && validated.image_urls.length > 0 ? validated.image_urls : null,
       logo_url: validated.logo_url || null,
       cover_image_url: validated.cover_image_url || null,
       // Contact
@@ -183,8 +184,8 @@ export async function POST(request: NextRequest) {
       // Note: type is already in businessData as direct column (NOT NULL constraint), no need to duplicate in attributes
       // Extended info
       tagline: validated.tagline || null,
-      social_media: validated.social_media && Object.keys(validated.social_media).length > 0 
-        ? validated.social_media 
+      social_media: validated.social_media && Object.keys(validated.social_media).length > 0
+        ? validated.social_media
         : null,
       operating_hours: validated.operating_hours && Object.keys(validated.operating_hours).length > 0
         ? validated.operating_hours
@@ -193,21 +194,21 @@ export async function POST(request: NextRequest) {
         ? validated.facilities
         : null,
     }
-    
+
     // Remove null/undefined values to keep attributes clean
     Object.keys(extendedAttributes).forEach(key => {
       if (extendedAttributes[key] === null || extendedAttributes[key] === undefined) {
         delete extendedAttributes[key]
       }
     })
-    
+
     businessData.attributes = Object.keys(extendedAttributes).length > 0 ? extendedAttributes : {}
 
     // Insert business using service role client to bypass RLS
     // This is necessary because auth.uid() is not available in API routes
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     let insertClient = supabase
-    
+
     if (serviceRoleKey) {
       // Use service role client to bypass RLS for insert
       insertClient = createServiceClient(
@@ -219,7 +220,7 @@ export async function POST(request: NextRequest) {
       logger.warn('API: Service role key not found, using regular client (RLS may fail)')
       logger.warn('API: Add SUPABASE_SERVICE_ROLE_KEY to .env.local to bypass RLS')
     }
-    
+
     // Log the data being inserted for debugging
     logger.log('API: Inserting business data', {
       city_id: businessData.city_id,
@@ -230,7 +231,7 @@ export async function POST(request: NextRequest) {
       attributesKeys: businessData.attributes ? Object.keys(businessData.attributes) : [],
       usingServiceRole: !!serviceRoleKey
     })
-    
+
     const { data: business, error } = await insertClient
       .from('businesses')
       .insert(businessData)

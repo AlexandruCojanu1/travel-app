@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
-import { createOrUpdateTrip, fetchUserTrip, deleteTrip } from '@/services/trip/trip.service'
+import { createOrUpdateTrip, fetchUserTrip, deleteTrip, type CreateTripDTO } from '@/services/trip/trip.service'
 
 export interface TripDetails {
   cityId: string
@@ -8,6 +8,7 @@ export interface TripDetails {
   startDate: string // ISO date string
   endDate: string // ISO date string
   title?: string
+  guests: number
 }
 
 export interface TripItem {
@@ -54,6 +55,7 @@ interface TripState {
   budgetHealth: () => BudgetHealth
   getDaysCount: () => number
   getItemsByDay: (dayIndex: number) => TripItem[]
+  changeItemDay: (itemId: string, newDayIndex: number) => void
 }
 
 /**
@@ -107,12 +109,14 @@ export const useTripStore = create<TripState>()(
             throw new Error('Această activitate există deja în această zi')
           }
 
-          // For Nature reserves and Activities, always set cost to 0
-          const isNatureOrActivity = business.category === 'Nature' ||
-            business.category === 'Activities' ||
+          // For Nature reserves, always set cost to 0 (but NOT for general Activities)
+          const isNatureResult = business.category === 'Nature' ||
             business.id?.startsWith('nature-') ||
             business.id?.startsWith('recreation-')
-          const estimatedCost = isNatureOrActivity ? 0 : getPriceFromLevel(business.price_level)
+
+          const basePrice = isNatureResult ? 0 : getPriceFromLevel(business.price_level)
+          const guests = state.tripDetails?.guests || 2
+          const estimatedCost = basePrice * guests
 
           const newItem: TripItem = {
             id: `${Date.now()}-${Math.random()}`,
@@ -196,6 +200,14 @@ export const useTripStore = create<TripState>()(
           })
         },
 
+        changeItemDay: (itemId, newDayIndex) => {
+          set((state) => ({
+            items: state.items.map((item) =>
+              item.id === itemId ? { ...item, day_index: newDayIndex } : item
+            ),
+          }))
+        },
+
         // Computed values
         spentBudget: () => {
           const state = get()
@@ -248,13 +260,14 @@ export const useTripStore = create<TripState>()(
           set({ syncStatus: 'saving' })
 
           try {
-            const tripData = {
+            const tripData: CreateTripDTO = {
               title: state.tripDetails.title || `Trip to ${state.tripDetails.cityName || 'Destination'}`,
               destination_city_id: state.tripDetails.cityId,
               start_date: state.tripDetails.startDate,
               end_date: state.tripDetails.endDate,
               budget_total: state.budget.total,
               status: 'planning' as const,
+              guests: state.tripDetails.guests || 2
             }
 
             const result = await createOrUpdateTrip(tripData, state.items as any, state.tripId || undefined)
@@ -332,6 +345,7 @@ export const useTripStore = create<TripState>()(
                   startDate: trip.start_date,
                   endDate: trip.end_date,
                   title: trip.title,
+                  guests: trip.guests || 2
                 },
                 budget: trip.budget_total
                   ? { total: trip.budget_total, currency: 'RON' }

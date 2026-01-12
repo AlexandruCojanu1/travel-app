@@ -99,6 +99,7 @@ export function CreateTripDialog({
         startDate,
         endDate,
         title: `Călătorie în ${selectedCity.name}`,
+        guests: travelers,
       },
       {
         total: budget[0],

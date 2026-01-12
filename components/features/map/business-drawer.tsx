@@ -14,7 +14,7 @@ import {
 } from '@/components/shared/ui/drawer'
 import { Button } from '@/components/shared/ui/button'
 import { AddToTripDrawer } from '@/components/features/trip/add-to-trip-drawer'
-import { BookingDialog } from '@/components/features/booking/booking-dialog'
+import { HotelBookingDrawer } from '@/components/features/explore/hotel-booking-drawer'
 import { useTripStore } from '@/store/trip-store'
 import { useUIStore } from '@/store/ui-store'
 import type { MapBusiness } from '@/services/business/business.service'
@@ -147,12 +147,16 @@ export function BusinessDrawer({ business, isOpen, onClose }: BusinessDrawerProp
         />
       )}
 
-      {/* Booking Dialog (for hotels) */}
+      {/* Booking Drawer (for hotels) */}
       {isHotel && (
-        <BookingDialog
+        <HotelBookingDrawer
           business={business}
           isOpen={isBookingDialogOpen}
-          onOpenChange={setIsBookingDialogOpen}
+          onClose={() => setIsBookingDialogOpen(false)}
+          onBooked={() => {
+            setIsBookingDialogOpen(false)
+            toast.success('Rezervare confirmată! 🎉')
+          }}
         />
       )}
     </>

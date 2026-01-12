@@ -1,21 +1,35 @@
 import { createClient } from "@/lib/supabase/client"
 import type { Database } from "@/types/database.types"
 
-type Trip = Database["public"]["Tables"]["trips"]["Row"]
-
-export interface TripData {
-  city_id?: string
-  destination_city_id?: string
+export interface CreateTripDTO {
+  title: string
+  destination_city_id: string
   start_date: string
   end_date: string
-  title?: string | null
-  budget_total?: number | null
+  budget_total: number
+  status: 'planning' | 'active' | 'completed'
+  city_name?: string
+  guests: number
+}
+
+export interface Trip {
+  id: string
+  user_id: string
+  title: string
+  destination_city_id: string
+  start_date: string
+  end_date: string
+  budget_total: number
+  currency: 'RON' | 'EUR' | 'USD'
+  status: 'planning' | 'active' | 'completed'
+  created_at: string
+  updated_at: string
   items?: any[]
-  status?: string
+  guests: number
 }
 
 export async function createOrUpdateTrip(
-  tripData: TripData,
+  tripData: CreateTripDTO, // Changed from TripData to CreateTripDTO
   items?: Array<{
     id?: string
     business_id: string
@@ -42,13 +56,14 @@ export async function createOrUpdateTrip(
     let tripResult
 
     const commonData = {
-      city_id: tripData.city_id || tripData.destination_city_id,
+      destination_city_id: tripData.destination_city_id,
       start_date: tripData.start_date,
       end_date: tripData.end_date,
       title: tripData.title,
       budget_total: tripData.budget_total,
       status: 'planning', // Ensure we use a valid string
       updated_at: new Date().toISOString(),
+      guests: tripData.guests
     }
 
     if (currentTripId) {
@@ -205,3 +220,59 @@ export async function fetchUserTrip(tripId?: string) {
   }
 }
 
+/**
+ * Add a single business to a trip's items
+ */
+export async function addBusinessToTrip(
+  tripId: string,
+  businessId: string,
+  dayIndex: number = 0,
+  block: 'morning' | 'afternoon' | 'evening' = 'morning'
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient()
+
+  if (!tripId || !businessId) {
+    console.error('[addBusinessToTrip] Missing tripId or businessId!')
+    return { success: false, error: 'Missing tripId or businessId' }
+  }
+
+  try {
+    // Check if already added
+    const { data: existing, error: checkError } = await supabase
+      .from('trip_items')
+      .select('id')
+      .eq('trip_id', tripId)
+      .eq('business_id', businessId)
+      .maybeSingle()
+
+    if (checkError) {
+      console.error('[addBusinessToTrip] Error checking existing:', checkError)
+    }
+
+    if (existing) {
+      return { success: true } // Already exists, silently succeed
+    }
+
+    // Add new item
+    const { data, error } = await supabase
+      .from('trip_items')
+      .insert({
+        trip_id: tripId,
+        business_id: businessId,
+        day_index: dayIndex,
+        block: block,
+        estimated_cost: 0,
+      })
+      .select()
+
+    if (error) {
+      console.error('[addBusinessToTrip] Error inserting:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('[addBusinessToTrip] Exception:', error)
+    return { success: false, error: error.message || 'Unknown error' }
+  }
+}

@@ -141,6 +141,7 @@ export function TimelineView() {
                         onDragStart={() => setDraggedItemId(item.id)}
                         onDragEnd={() => handleItemDragEnd(item.id)}
                         onDrag={(y) => handleItemDrag(item.id, y)}
+                        daysCount={daysCount}
                       />
                     ))}
                   </motion.div>

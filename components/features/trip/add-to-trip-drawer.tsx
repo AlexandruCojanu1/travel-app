@@ -56,7 +56,7 @@ export function AddToTripDrawer({
     business.id?.startsWith('recreation-')
 
   const estimatedCost = isNatureOrActivity ? 0 : getPriceFromLevel(
-    'price_level' in business ? business.price_level : undefined
+    'price_level' in business ? (business.price_level ?? undefined) : undefined
   )
 
   // Calculate budget impact (only for paid activities)
@@ -91,7 +91,7 @@ export function AddToTripDrawer({
           name: business.name,
           category: business.category,
           price_level:
-            'price_level' in business ? business.price_level : undefined,
+            'price_level' in business ? (business.price_level ?? undefined) : undefined,
         },
         selectedDayIndex
       )
@@ -158,8 +158,8 @@ export function AddToTripDrawer({
                         key={day.index}
                         onClick={() => setSelectedDayIndex(day.index)}
                         className={`p-3 rounded-xl border-2 transition-all text-left ${isSelected
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 bg-white hover:border-gray-300'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
                           }`}
                       >
                         <div className="font-semibold text-gray-900 text-sm">

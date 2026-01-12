@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Briefcase, Plus, Map } from "lucide-react"
+import { Briefcase, Plus, Layers } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { CreateMenu } from "./create-menu"
 
@@ -22,7 +22,7 @@ const navItems = [
   {
     label: "Explorează",
     href: "/explore",
-    icon: Map,
+    icon: Layers,
   },
 ]
 

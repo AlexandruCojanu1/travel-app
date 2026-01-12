@@ -40,6 +40,25 @@ export interface Business {
   is_verified: boolean
   created_at: string
   updated_at: string
+  // Extended fields from attributes
+  tagline?: string | null
+  phone?: string | null
+  website?: string | null
+  email?: string | null
+  image_urls?: string[]
+  logo_url?: string | null
+  cover_image_url?: string | null
+  opening_hours?: Record<string, any> | null
+  facilities?: Record<string, boolean> | null
+  social_media?: Record<string, string> | null
+  price_level?: string | null
+  // Category-specific fields
+  amenities?: string[]
+  cuisine_types?: string[]
+  star_rating?: number | null
+  room_types?: string[]
+  check_in_time?: string | null
+  check_out_time?: string | null
 }
 
 export interface MapBusiness {
@@ -91,10 +110,17 @@ export async function getBusinessesForMap(
 
     // Transform to MapBusiness and add price_level based on category
     return validBusinesses.map((business: SupabaseBusiness) => {
-      const attributes = business.attributes || {}
+      const attributes = (business.attributes || {}) as Record<string, any>
       const lat = business.latitude ?? business.lat ?? attributes.latitude ?? attributes.lat
       const lng = business.longitude ?? business.lng ?? attributes.longitude ?? attributes.lng
-      
+
+      // Extract image_url - check direct column first, then attributes
+      const imageUrl = business.image_url && typeof business.image_url === 'string' && business.image_url.trim() !== ''
+        ? business.image_url
+        : (attributes.image_url && typeof attributes.image_url === 'string' && attributes.image_url.trim() !== ''
+          ? attributes.image_url
+          : null)
+
       return {
         id: business.id,
         name: business.name,
@@ -102,9 +128,9 @@ export async function getBusinessesForMap(
         latitude: lat!,
         longitude: lng!,
         rating: business.rating,
-        image_url: business.image_url,
-        address: business.address,
-        price_level: getPriceLevelForCategory(business.category),
+        image_url: imageUrl,
+        address: business.address || attributes.address || attributes.address_line || null,
+        price_level: attributes.price_level || getPriceLevelForCategory(business.category),
       }
     })
   } catch (error) {
@@ -135,22 +161,27 @@ export async function getBusinessById(id: string): Promise<Business | null> {
       return null
     }
 
-    // Extract coordinates from attributes if not available as direct columns
+    // Extract from attributes JSONB
     const businessData = data as SupabaseBusiness
-    const attributes = businessData.attributes || {}
-    
-    // Extract image_url - check direct column first, then attributes, handle empty strings
-    const imageUrl = businessData.image_url && typeof businessData.image_url === 'string' && businessData.image_url.trim() !== '' 
-      ? businessData.image_url 
-      : (attributes.image_url && typeof attributes.image_url === 'string' && attributes.image_url.trim() !== '' 
-          ? attributes.image_url 
-          : null)
-    
+    const attributes = (businessData.attributes || {}) as Record<string, any>
+
+    // Extract image_url - check direct column first, then attributes
+    const imageUrl = businessData.image_url && typeof businessData.image_url === 'string' && businessData.image_url.trim() !== ''
+      ? businessData.image_url
+      : (attributes.image_url && typeof attributes.image_url === 'string' && attributes.image_url.trim() !== ''
+        ? attributes.image_url
+        : null)
+
+    // Extract image_urls array
+    const imageUrls = Array.isArray(attributes.image_urls)
+      ? attributes.image_urls.filter((url: any) => typeof url === 'string' && url.trim() !== '')
+      : []
+
     const business: Business = {
       id: data.id,
       city_id: data.city_id,
       name: data.name,
-      description: data.description,
+      description: data.description || attributes.description || null,
       category: data.category,
       address: data.address || attributes.address || attributes.address_line || null,
       latitude: data.latitude ?? attributes.latitude ?? attributes.lat ?? null,
@@ -160,6 +191,25 @@ export async function getBusinessById(id: string): Promise<Business | null> {
       is_verified: data.is_verified,
       created_at: data.created_at,
       updated_at: data.updated_at,
+      // Extended fields from attributes
+      tagline: attributes.tagline || null,
+      phone: attributes.phone || null,
+      website: attributes.website || null,
+      email: attributes.email || null,
+      image_urls: imageUrls,
+      logo_url: attributes.logo_url || null,
+      cover_image_url: attributes.cover_image_url || null,
+      opening_hours: attributes.opening_hours || attributes.operating_hours || null,
+      facilities: attributes.facilities || null,
+      social_media: attributes.social_media || null,
+      price_level: attributes.price_level || getPriceLevelForCategory(data.category),
+      // Category-specific fields
+      amenities: Array.isArray(attributes.amenities) ? attributes.amenities : [],
+      cuisine_types: Array.isArray(attributes.cuisine_types) ? attributes.cuisine_types : [],
+      star_rating: typeof attributes.star_rating === 'number' ? attributes.star_rating : null,
+      room_types: Array.isArray(attributes.room_types) ? attributes.room_types : [],
+      check_in_time: attributes.check_in_time || null,
+      check_out_time: attributes.check_out_time || null,
     }
 
     return business
@@ -168,6 +218,7 @@ export async function getBusinessById(id: string): Promise<Business | null> {
     return null
   }
 }
+
 
 /**
  * Fetch businesses by category for a city
@@ -243,15 +294,22 @@ export async function searchBusinessesInBounds(
     })
 
     return validBusinesses.map((business: SupabaseBusiness) => {
-      const attributes = business.attributes || {}
+      const attributes = (business.attributes || {}) as Record<string, any>
       const lat = business.latitude ?? business.lat ?? (typeof attributes.latitude === 'number' ? attributes.latitude : null) ?? (typeof attributes.lat === 'number' ? attributes.lat : null)
       const lng = business.longitude ?? business.lng ?? (typeof attributes.longitude === 'number' ? attributes.longitude : null) ?? (typeof attributes.lng === 'number' ? attributes.lng : null)
-      
+
       if (lat == null || lng == null) {
         // Skip businesses without valid coordinates
         return null
       }
-      
+
+      // Extract image_url - check direct column first, then attributes
+      const imageUrl = business.image_url && typeof business.image_url === 'string' && business.image_url.trim() !== ''
+        ? business.image_url
+        : (attributes.image_url && typeof attributes.image_url === 'string' && attributes.image_url.trim() !== ''
+          ? attributes.image_url
+          : null)
+
       return {
         id: business.id,
         name: business.name,
@@ -259,9 +317,9 @@ export async function searchBusinessesInBounds(
         latitude: lat,
         longitude: lng,
         rating: business.rating,
-        image_url: business.image_url,
-        address: business.address,
-        price_level: getPriceLevelForCategory(business.category),
+        image_url: imageUrl,
+        address: business.address || attributes.address || attributes.address_line || null,
+        price_level: attributes.price_level || getPriceLevelForCategory(business.category),
       }
     }).filter((b): b is MapBusiness => b !== null)
   } catch (error) {
@@ -409,14 +467,14 @@ export async function searchBusinesses(
     // Extract coordinates from attributes JSONB or direct columns (similar to getBusinessById)
     const businessesWithCoordinates: Business[] = results.map((business: SupabaseBusiness) => {
       const attributes = business.attributes || {}
-      
+
       // Extract image_url - check direct column first, then attributes, handle empty strings
-      const imageUrl = business.image_url && typeof business.image_url === 'string' && business.image_url.trim() !== '' 
-        ? business.image_url 
-        : (attributes.image_url && typeof attributes.image_url === 'string' && attributes.image_url.trim() !== '' 
-            ? attributes.image_url 
-            : null)
-      
+      const imageUrl = business.image_url && typeof business.image_url === 'string' && business.image_url.trim() !== ''
+        ? business.image_url
+        : (attributes.image_url && typeof attributes.image_url === 'string' && attributes.image_url.trim() !== ''
+          ? attributes.image_url
+          : null)
+
       const businessResult: Business = {
         id: business.id,
         city_id: business.city_id,
@@ -432,7 +490,7 @@ export async function searchBusinesses(
         created_at: business.created_at,
         updated_at: business.updated_at,
       }
-      
+
       return businessResult
     })
 
@@ -457,3 +515,60 @@ function getPriceLevelForCategory(category: string): string {
   return priceLevels[category] || '€€'
 }
 
+
+/**
+ * Record a user swipe (like or pass)
+ */
+export async function recordSwipe(
+  userId: string,
+  businessId: string,
+  action: 'like' | 'pass'
+): Promise<void> {
+  const supabase = createClient()
+
+  try {
+    const { error } = await supabase
+      .from('user_swipes')
+      .upsert({
+        user_id: userId,
+        business_id: businessId,
+        action: action
+      }, { onConflict: 'user_id,business_id' })
+
+    if (error) {
+      console.error('Error recording swipe:', error)
+    }
+  } catch (error) {
+    console.error('Unexpected error recording swipe:', error)
+  }
+}
+
+/**
+ * Get IDs of businesses swiped by user
+ */
+export async function getUserSwipedIds(userId: string, action?: 'like' | 'pass'): Promise<string[]> {
+  const supabase = createClient()
+
+  try {
+    let query = supabase
+      .from('user_swipes')
+      .select('business_id')
+      .eq('user_id', userId)
+
+    if (action) {
+      query = query.eq('action', action)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error fetching swiped IDs:', error)
+      return []
+    }
+
+    return data?.map(row => row.business_id) || []
+  } catch (error) {
+    console.error('Unexpected error fetching swiped IDs:', error)
+    return []
+  }
+}

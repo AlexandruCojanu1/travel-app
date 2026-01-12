@@ -2,9 +2,17 @@
 
 import React, { useRef } from 'react'
 import { motion, useMotionValue } from 'framer-motion'
-import { Trash2, Bed, Utensils, Mountain, MapPin, GripVertical } from 'lucide-react'
+import { Trash2, Bed, Utensils, Mountain, MapPin, GripVertical, Calendar, MoreVertical } from 'lucide-react'
 import { useTripStore, type TripItem } from '@/store/trip-store'
 import { Button } from '@/components/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from "@/components/shared/ui/dropdown-menu"
 import { cn } from '@/lib/utils'
 
 interface TimelineItemProps {
@@ -16,6 +24,7 @@ interface TimelineItemProps {
   onDragStart?: () => void
   onDragEnd?: () => void
   onDrag?: (y: number) => void
+  daysCount: number
 }
 
 export function TimelineItem({
@@ -27,8 +36,9 @@ export function TimelineItem({
   onDragStart,
   onDragEnd,
   onDrag,
+  daysCount,
 }: TimelineItemProps) {
-  const { removeItem, budget } = useTripStore()
+  const { removeItem, changeItemDay, budget } = useTripStore()
   const y = useMotionValue(0)
   const dragStartY = useRef(0)
 
@@ -144,18 +154,45 @@ export function TimelineItem({
               </div>
             </div>
 
-            {/* Remove Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation()
-                removeItem(item.id)
-              }}
-              className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-blue-50 flex-shrink-0"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {/* Actions Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-600">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Acțiuni</DropdownMenuLabel>
+
+                {/* Move to another day */}
+                <DropdownMenuLabel className="text-xs font-normal text-gray-500">Mută în ziua...</DropdownMenuLabel>
+                {Array.from({ length: daysCount }).map((_, i) => (
+                  i !== item.day_index && (
+                    <DropdownMenuItem
+                      key={i}
+                      onClick={() => changeItemDay(item.id, i)}
+                      className="cursor-pointer"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Ziua {i + 1}
+                    </DropdownMenuItem>
+                  )
+                ))}
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  className="text-red-600 cursor-pointer focus:text-red-600 focus:bg-red-50"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    removeItem(item.id)
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Șterge
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Footer: Cost Badge - Only show if cost > 0 */}
