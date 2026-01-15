@@ -24,7 +24,7 @@ const CATEGORY_FILTERS: Record<SwipeCategory, string[]> = {
     activities: ['Activities', 'Attraction', 'Museum', 'Nature', 'Shopping', 'Spa'],
 }
 
-export default function ExplorePage() {
+function ExploreContent() {
     const router = useRouter()
     const { currentCity } = useAppStore()
     const { vacations, loadVacations, getActiveVacation, selectVacation } = useVacationStore()
@@ -170,8 +170,10 @@ export default function ExplorePage() {
 
     // Handle when all cards in a category are swiped
     const handleStackEmpty = useCallback(() => {
-        if (currentCategory === 'hotel' && !selectedHotel) {
-            // No hotel selected, show message
+        if (currentCategory === 'hotel') {
+            // Even if no hotel selected, allow moving to restaurants
+            setCompletedCategories(prev => [...prev, 'hotel'])
+            setCurrentCategory('restaurants')
             return
         }
 
@@ -186,7 +188,10 @@ export default function ExplorePage() {
 
     // Skip current category
     const handleSkipCategory = useCallback(() => {
-        if (currentCategory === 'restaurants') {
+        if (currentCategory === 'hotel') {
+            setCompletedCategories(prev => [...prev, 'hotel'])
+            setCurrentCategory('restaurants')
+        } else if (currentCategory === 'restaurants') {
             setCompletedCategories(prev => [...prev, 'restaurants'])
             setCurrentCategory('activities')
         } else if (currentCategory === 'activities') {
@@ -322,13 +327,17 @@ export default function ExplorePage() {
                     selectedHotel={selectedHotel}
                 />
 
-                {/* Skip button for non-hotel categories */}
-                {currentCategory !== 'hotel' && currentBusinesses.length > 0 && (
+                {/* Skip button for ALL categories */}
+                {currentBusinesses.length > 0 && (
                     <button
                         onClick={handleSkipCategory}
                         className="text-sm text-gray-400 hover:text-gray-600 underline mx-auto block"
                     >
-                        Sari peste {currentCategory === 'restaurants' ? 'restaurante' : 'activități'}
+                        {currentCategory === 'hotel'
+                            ? 'Nu am nevoie de cazare'
+                            : currentCategory === 'restaurants'
+                                ? 'Sari peste restaurante'
+                                : 'Sari peste activități'}
                     </button>
                 )}
             </div>
@@ -354,11 +363,10 @@ export default function ExplorePage() {
                         <p className="text-gray-500 text-center mb-6">
                             În acest oraș nu sunt încă înregistrate locuri din această categorie.
                         </p>
-                        {currentCategory !== 'hotel' && (
-                            <Button onClick={handleSkipCategory}>
-                                Continuă la următoarea categorie
-                            </Button>
-                        )}
+                        {/* Show continue button for ALL categories if empty */}
+                        <Button onClick={handleSkipCategory}>
+                            Continuă la următoarea categorie
+                        </Button>
                     </div>
                 ) : (
                     <SwipeStack
@@ -390,5 +398,17 @@ export default function ExplorePage() {
             )}
 
         </div>
+    )
+}
+
+export default function ExplorePage() {
+    return (
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <Loader2 className="w-10 h-10 text-mova-blue animate-spin" />
+            </div>
+        }>
+            <ExploreContent />
+        </Suspense>
     )
 }

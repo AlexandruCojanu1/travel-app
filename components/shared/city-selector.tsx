@@ -51,7 +51,9 @@ export function CitySelector() {
     setIsLoading(true)
     try {
       const data = await getActiveCities()
-      setCities(data)
+      // Filter out cities with null coordinates to match the expected type
+      const validCities = data.filter(c => c.latitude !== null && c.longitude !== null) as City[]
+      setCities(validCities)
     } catch (error) {
       console.error("Error loading cities:", error)
     } finally {
@@ -62,7 +64,7 @@ export function CitySelector() {
   async function handleCitySelect(city: City) {
     // Update global store
     setCity(city)
-    
+
     // Close dialog
     closeCitySelector()
 
@@ -103,8 +105,8 @@ export function CitySelector() {
               </div>
             </div>
 
-            <CommandInput 
-              placeholder="Search cities..." 
+            <CommandInput
+              placeholder="Search cities..."
               className="h-12"
             />
 

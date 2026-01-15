@@ -40,93 +40,88 @@ export async function updateSession(request: NextRequest) {
             }
         )
 
-    // IMPORTANT: Avoid writing any logic between createServerClient and
-    // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-    // issues with users being randomly logged out.
+        // IMPORTANT: Avoid writing any logic between createServerClient and
+        // supabase.auth.getUser(). A simple mistake could make it very hard to debug
+        // issues with users being randomly logged out.
 
-    // IMPORTANT: Call getUser() to refresh the session if needed
-    // This ensures cookies are updated after login
-    // Also refresh the session explicitly to ensure cookies are set
-    let user = null
-    try {
-        // Refresh session first to ensure cookies are up to date
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError) {
-            // Only log non-AuthSessionMissingError errors (missing session is normal for unauthenticated users)
-            if (sessionError.name !== 'AuthSessionMissingError' && sessionError.status !== 400) {
-                logger.warn('Middleware: Error getting session', { error: sessionError })
-            }
-        }
-        
-        // Then get user
-        const { data: { user: userData }, error: userError } = await supabase.auth.getUser()
-        if (userError) {
-            // Only log non-AuthSessionMissingError errors (missing session is normal for unauthenticated users)
-            if (userError.name !== 'AuthSessionMissingError' && userError.status !== 400) {
-                logger.warn('Middleware: Error getting user', { error: userError })
-            }
-            // AuthSessionMissingError is expected for unauthenticated users - don't log as warning
-        } else {
-            user = userData
-        }
-    } catch (error: any) {
-        // If getUser() fails, continue without user (will be handled below)
-        // Only log if it's not a session missing error
-        if (error?.name !== 'AuthSessionMissingError' && error?.status !== 400) {
-            logger.warn('Middleware: Failed to get user', { error })
-        }
-    }
-
-    const pathname = request.nextUrl.pathname
-    
-    // Public paths that don't require authentication
-    const publicPaths = [
-        '/',
-        '/auth',
-        '/api',
-    ]
-    
-    const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
-    
-    // For API routes, always refresh session to ensure cookies are up to date
-    if (pathname.startsWith('/api')) {
-        // Just refresh the session - don't block API routes
-        // The API route itself will handle authentication
-        return supabaseResponse
-    }
-    
-    // If user is authenticated and trying to access login/signup, redirect to home
-    // Do this BEFORE checking if user is missing, to avoid redirect loops
-    if (user && pathname.startsWith('/auth')) {
-        const url = request.nextUrl.clone()
-        // Check if user has businesses using centralized service
+        // IMPORTANT: Call getUser() to refresh the session if needed
+        // This ensures cookies are updated after login
+        // Also refresh the session explicitly to ensure cookies are set
+        let user = null
         try {
-            const hasBusinesses = await BusinessOwnershipService.userHasBusinessesServer(user.id)
-            url.pathname = hasBusinesses ? '/business-portal/dashboard' : '/home'
-        } catch (error) {
-            // If check fails, default to home page
-            logger.warn('Middleware: Failed to check businesses', { error, userId: user.id })
-            url.pathname = '/home'
+            // Refresh session first to ensure cookies are up to date
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+            if (sessionError) {
+                // Only log non-AuthSessionMissingError errors (missing session is normal for unauthenticated users)
+                if (sessionError.name !== 'AuthSessionMissingError' && sessionError.status !== 400) {
+                    logger.warn('Middleware: Error getting session', { error: sessionError })
+                }
+            }
+
+            // Then get user
+            const { data: { user: userData }, error: userError } = await supabase.auth.getUser()
+            if (userError) {
+                // Only log non-AuthSessionMissingError errors (missing session is normal for unauthenticated users)
+                if (userError.name !== 'AuthSessionMissingError' && userError.status !== 400) {
+                    logger.warn('Middleware: Error getting user', { error: userError })
+                }
+                // AuthSessionMissingError is expected for unauthenticated users - don't log as warning
+            } else {
+                user = userData
+            }
+        } catch (error: any) {
+            // If getUser() fails, continue without user (will be handled below)
+            // Only log if it's not a session missing error
+            if (error?.name !== 'AuthSessionMissingError' && error?.status !== 400) {
+                logger.warn('Middleware: Failed to get user', { error })
+            }
         }
-        return NextResponse.redirect(url)
-    }
-    
-    // If no user and trying to access protected route, redirect to login
-    // BUT: Allow /onboarding even without user if coming from signup (cookies might not be set yet)
-    if (!user && !isPublicPath) {
-        // Special case: if trying to access /onboarding, allow it (user might have just signed up)
-        if (pathname === '/onboarding') {
+
+        const pathname = request.nextUrl.pathname
+
+        // Public paths that don't require authentication
+        const publicPaths = [
+            '/',
+            '/auth',
+            '/api',
+        ]
+
+        const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
+
+        // For API routes, always refresh session to ensure cookies are up to date
+        if (pathname.startsWith('/api')) {
+            // Just refresh the session - don't block API routes
+            // The API route itself will handle authentication
             return supabaseResponse
         }
-        
-        const url = request.nextUrl.clone()
-        url.pathname = '/auth/login'
-        // Preserve redirect parameter
-        if (pathname !== '/auth/login') {
-            url.searchParams.set('redirect', pathname)
+
+        // If user is authenticated and trying to access login/signup, redirect to home
+        // Do this BEFORE checking if user is missing, to avoid redirect loops
+        if (user && pathname.startsWith('/auth')) {
+            const url = request.nextUrl.clone()
+            // Check if user has businesses using centralized service
+            try {
+                const hasBusinesses = await BusinessOwnershipService.userHasBusinessesServer(user.id)
+                url.pathname = hasBusinesses ? '/business-portal/dashboard' : '/home'
+            } catch (error) {
+                // If check fails, default to home page
+                logger.warn('Middleware: Failed to check businesses', { error, userId: user.id })
+                url.pathname = '/home'
+            }
+            return NextResponse.redirect(url)
         }
-        return NextResponse.redirect(url)
-    }
+
+        // If no user and trying to access protected route, redirect to login
+        if (!user && !isPublicPath) {
+
+            const url = request.nextUrl.clone()
+            url.pathname = '/auth/login'
+            // Preserve redirect parameter
+            if (pathname !== '/auth/login') {
+                url.searchParams.set('redirect', pathname)
+            }
+            return NextResponse.redirect(url)
+        }
 
         // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
         // creating a new response object with NextResponse.next() make sure to:

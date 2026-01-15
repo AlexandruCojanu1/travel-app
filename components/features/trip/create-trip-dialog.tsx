@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Calendar, ArrowRight, ArrowLeft, MapPin, Check, Plus, ThumbsUp, ChevronLeft, Search, Users, Minus } from 'lucide-react'
+import { Calendar, ArrowRight, ArrowLeft, MapPin, Check, Plus, ThumbsUp, ChevronLeft, Search, Users, Minus, Car, Bus, Train, User } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Dialog,
@@ -14,7 +14,6 @@ import { useTripStore } from '@/store/trip-store'
 import { useVacationStore } from '@/store/vacation-store'
 import { useAppStore } from '@/store/app-store'
 import { getActiveCities } from '@/services/auth/city.service'
-import { VerticalPicker } from '@/components/shared/ui/vertical-picker'
 import { cn } from '@/lib/utils'
 
 interface CreateTripDialogProps {
@@ -22,7 +21,7 @@ interface CreateTripDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-type Step = 1 | 2 | 3 | 4 | 5
+type Step = 1 | 2 | 3 | 4 | 5 | 6
 
 const preferences = [
   { id: 'popular', label: 'Populare', emoji: '📌' },
@@ -33,11 +32,25 @@ const preferences = [
   { id: 'shopping', label: 'Cumpărături', emoji: '🛍️' },
 ]
 
+const protagonistOptions = [
+  { id: 'solo', label: 'Solo', icon: User, description: 'Doar eu și lumea' },
+  { id: 'couple', label: 'Cuplu', icon: Users, description: 'O escapadă romantică' },
+  { id: 'family', label: 'Familie', icon: Users, description: 'Distracție pentru toți' },
+  { id: 'friends', label: 'Prieteni', icon: Users, description: 'Grup de aventurieri' },
+]
+
+const mobilityOptions = [
+  { id: 'car_personal', label: 'Mașină Personală', icon: Car },
+  { id: 'car_rental', label: 'Mașină Închiriată', icon: Car },
+  { id: 'public_transport', label: 'Transport Public', icon: Bus },
+  { id: 'rideshare', label: 'Ridesharing / Taxi', icon: Car },
+]
+
 export function CreateTripDialog({
   isOpen,
   onOpenChange,
 }: CreateTripDialogProps) {
-  const { currentCity, openCitySelector } = useAppStore()
+  const { currentCity } = useAppStore()
   const { initTrip, syncToDatabase } = useTripStore()
   const { loadVacations, selectVacation } = useVacationStore()
 
@@ -53,6 +66,10 @@ export function CreateTripDialog({
 
   // Travelers state
   const [travelers, setTravelers] = useState(2)
+  const [protagonist, setProtagonist] = useState<string>('couple')
+
+  // Mobility
+  const [mobility, setMobility] = useState<string>('car_personal')
 
   const [selectedPrefs, setSelectedPrefs] = useState<string[]>([])
   const [budget, setBudget] = useState([2000])
@@ -82,7 +99,7 @@ export function CreateTripDialog({
   )
 
   const handleNext = () => {
-    if (step < 5) setStep((step + 1) as Step)
+    if (step < 6) setStep((step + 1) as Step)
   }
 
   const handleBack = () => {
@@ -100,6 +117,11 @@ export function CreateTripDialog({
         endDate,
         title: `Călătorie în ${selectedCity.name}`,
         guests: travelers,
+        metadata: {
+          protagonist,
+          mobility,
+          preferences: selectedPrefs
+        }
       },
       {
         total: budget[0],
@@ -127,13 +149,6 @@ export function CreateTripDialog({
     setSelectedPrefs(prev =>
       prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
     )
-  }
-
-  // Helper to format date for display
-  const formatDateDisplay = (dateStr: string) => {
-    if (!dateStr) return '-'
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' })
   }
 
   return (
@@ -317,10 +332,151 @@ export function CreateTripDialog({
               </motion.div>
             )}
 
-            {/* STEP 3: PREFERENCES (Translated) */}
+            {/* STEP 3: PROTAGONISTS (Type + Count) */}
             {step === 3 && (
               <motion.div
                 key="step3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="absolute inset-0 p-0 flex flex-col"
+                style={{ background: 'linear-gradient(180deg, #FEF3C7 0%, #FFFFFF 100%)' }}
+              >
+                <div className="p-8 pb-0">
+                  <button onClick={handleBack} className="p-2 hover:bg-black/5 rounded-full">
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                </div>
+
+                <div className="px-8 pt-4 space-y-1">
+                  <h2 className="text-4xl font-extrabold tracking-tighter text-foreground">Cine sunteți?</h2>
+                  <p className="text-gray-500 text-lg font-medium">Cu cine călătorești această dată?</p>
+                </div>
+
+                <div className="flex-1 px-8 py-6 flex flex-col space-y-8 min-h-0 overflow-y-auto">
+                  {/* Protagonist Type */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {protagonistOptions.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setProtagonist(opt.id)}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-4 rounded-3xl border-2 transition-all gap-2 text-center",
+                          protagonist === opt.id
+                            ? "border-yellow-500 bg-yellow-50 shadow-sm"
+                            : "border-gray-100 bg-white hover:border-gray-200"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-12 h-12 rounded-full flex items-center justify-center mb-1",
+                          protagonist === opt.id ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-500"
+                        )}>
+                          <opt.icon className="h-6 w-6" />
+                        </div>
+                        <p className="font-bold text-sm text-foreground">{opt.label}</p>
+                        <p className="text-[10px] text-gray-400 font-medium leading-tight">{opt.description}</p>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Count */}
+                  <div className="bg-white/50 p-6 rounded-[32px] border border-white/50 space-y-4">
+                    <p className="text-center font-bold text-gray-500 uppercase text-xs tracking-wider">Câte persoane</p>
+                    <div className="flex items-center justify-center gap-6">
+                      <button
+                        onClick={() => setTravelers(Math.max(1, travelers - 1))}
+                        className="w-14 h-14 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center active:scale-95 transition-all text-gray-600"
+                      >
+                        <Minus className="h-6 w-6" />
+                      </button>
+                      <span className="text-5xl font-black text-foreground w-16 text-center">{travelers}</span>
+                      <button
+                        onClick={() => setTravelers(Math.min(10, travelers + 1))}
+                        className="w-14 h-14 rounded-full bg-black shadow-lg flex items-center justify-center active:scale-95 transition-all text-white"
+                      >
+                        <Plus className="h-6 w-6" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-8">
+                  <Button
+                    onClick={handleNext}
+                    className="w-full h-16 bg-black text-white hover:bg-black/90 rounded-full text-xl font-bold shadow-xl"
+                  >
+                    Confirmă
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 4: MOBILITY */}
+            {step === 4 && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="absolute inset-0 p-0 flex flex-col"
+                style={{ background: 'linear-gradient(180deg, #E0F2FE 0%, #FFFFFF 100%)' }}
+              >
+                <div className="p-8 pb-0">
+                  <button onClick={handleBack} className="p-2 hover:bg-black/5 rounded-full">
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                </div>
+
+                <div className="px-8 pt-4 space-y-1">
+                  <h2 className="text-4xl font-extrabold tracking-tighter text-foreground">Logistică</h2>
+                  <p className="text-gray-500 text-lg font-medium">Cum vă veți deplasa?</p>
+                </div>
+
+                <div className="flex-1 px-8 py-6 space-y-4 min-h-0 overflow-y-auto">
+                  {mobilityOptions.map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setMobility(opt.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-5 rounded-[24px] border-2 transition-all",
+                        mobility === opt.id
+                          ? "border-sky-500 bg-sky-50 shadow-sm"
+                          : "border-gray-50 hover:border-gray-100 bg-white"
+                      )}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "p-3 rounded-2xl",
+                          mobility === opt.id ? "bg-sky-100 text-sky-700" : "bg-gray-50 text-gray-400"
+                        )}>
+                          <opt.icon className="h-6 w-6" />
+                        </div>
+                        <span className="font-bold text-lg text-foreground">{opt.label}</span>
+                      </div>
+                      {mobility === opt.id && (
+                        <div className="h-6 w-6 bg-sky-500 rounded-full flex items-center justify-center">
+                          <Check className="h-3 w-3 text-white stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="p-8">
+                  <Button
+                    onClick={handleNext}
+                    className="w-full h-16 bg-black text-white hover:bg-black/90 rounded-full text-xl font-bold shadow-xl"
+                  >
+                    Confirmă
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP 5: PREFERENCES */}
+            {step === 5 && (
+              <motion.div
+                key="step5"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -374,71 +530,10 @@ export function CreateTripDialog({
               </motion.div>
             )}
 
-            {/* STEP 4: TRAVELERS (New) */}
-            {step === 4 && (
+            {/* STEP 6: BUDGET (Final) */}
+            {step === 6 && (
               <motion.div
-                key="step4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="absolute inset-0 p-0 flex flex-col"
-                style={{ background: 'linear-gradient(180deg, #FEF3C7 0%, #FFFFFF 100%)' }}
-              >
-                <div className="p-8">
-                  <button onClick={handleBack} className="p-2 hover:bg-black/5 rounded-full">
-                    <ChevronLeft className="h-6 w-6" />
-                  </button>
-                </div>
-
-                <div className="flex-1 px-8 flex flex-col items-center justify-center space-y-12">
-                  <div className="text-center space-y-4">
-                    <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Users className="h-10 w-10 text-yellow-600" />
-                    </div>
-                    <h2 className="text-4xl font-extrabold tracking-tighter text-foreground">Câte persoane?</h2>
-                    <p className="text-gray-500 text-lg font-medium">Ajustăm bugetul în funcție de grup</p>
-                  </div>
-
-                  <div className="flex items-center gap-8">
-                    <button
-                      onClick={() => setTravelers(Math.max(1, travelers - 1))}
-                      className="w-16 h-16 rounded-full bg-white border-2 border-gray-100 flex items-center justify-center shadow-lg active:scale-95 transition-all hover:bg-gray-50"
-                    >
-                      <Minus className="h-8 w-8 text-gray-600" />
-                    </button>
-
-                    <div className="w-24 text-center">
-                      <span className="text-6xl font-black text-foreground">{travelers}</span>
-                    </div>
-
-                    <button
-                      onClick={() => setTravelers(Math.min(10, travelers + 1))}
-                      className="w-16 h-16 rounded-full bg-black border-2 border-black flex items-center justify-center shadow-lg active:scale-95 transition-all hover:bg-gray-900"
-                    >
-                      <Plus className="h-8 w-8 text-white" />
-                    </button>
-                  </div>
-
-                  <p className="text-gray-400 font-medium">
-                    {travelers === 1 ? 'Călătoresc singur' : `${travelers} persoane în total`}
-                  </p>
-                </div>
-
-                <div className="p-8">
-                  <Button
-                    onClick={handleNext}
-                    className="w-full h-16 bg-black text-white hover:bg-black/90 rounded-full text-xl font-bold shadow-xl"
-                  >
-                    Confirmă
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 5: BUDGET */}
-            {step === 5 && (
-              <motion.div
-                key="step5"
+                key="step6"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}

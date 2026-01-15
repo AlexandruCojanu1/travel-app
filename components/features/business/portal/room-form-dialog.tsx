@@ -238,7 +238,7 @@ export function RoomFormDialog({
                 Bed Type
               </label>
               <select
-                value={formData.bed_type}
+                value={formData.bed_type || "double"}
                 onChange={(e) => setFormData(prev => ({ ...prev, bed_type: e.target.value }))}
                 className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500"
               >

@@ -19,6 +19,8 @@ export interface HotelRoom {
     is_active: boolean
     created_at: string
     updated_at: string
+    bed_type: string | null
+    size_sqm: number | null
 }
 
 export interface RoomAvailability {
@@ -33,12 +35,15 @@ export interface CreateRoomInput {
     business_id: string
     room_type: string
     name: string
-    description?: string
+    description?: string | null
     price_per_night: number
     max_guests: number
     total_rooms: number
     amenities?: string[]
     images?: string[]
+    bed_type?: string | null
+    size_sqm?: number | null
+    is_active?: boolean
 }
 
 // ============================================
@@ -95,6 +100,9 @@ export async function createRoom(input: CreateRoomInput): Promise<HotelRoom | nu
             total_rooms: input.total_rooms,
             amenities: input.amenities || [],
             images: input.images || [],
+            bed_type: input.bed_type || 'double',
+            size_sqm: input.size_sqm || null,
+            is_active: input.is_active !== undefined ? input.is_active : true,
         })
         .select()
         .single()

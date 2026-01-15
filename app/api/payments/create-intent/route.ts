@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
-import { getBookingDetails } from '@/services/booking/booking.service'
+import { getBookingById } from '@/services/booking/booking.service'
 import { logger } from '@/lib/logger'
 import { success, failure, handleApiError } from '@/lib/api-response'
 import { checkRateLimit, RateLimitConfigs } from '@/lib/rate-limit'
@@ -33,18 +33,18 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { bookingId } = body
-    
+
     if (!bookingId) {
       return NextResponse.json(
         failure('Missing bookingId', 'VALIDATION_ERROR'),
         { status: 400 }
       )
     }
-    
+
     // Get authenticated user
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError || !user) {
       return NextResponse.json(
         failure('User not authenticated', 'UNAUTHORIZED'),
@@ -73,19 +73,17 @@ export async function POST(request: NextRequest) {
         }
       )
     }
-    
+
     // Get booking details
-    const bookingResult = await getBookingDetails(bookingId)
-    
-    if (!bookingResult.success || !bookingResult.booking) {
+    const booking = await getBookingById(bookingId)
+
+    if (!booking) {
       return NextResponse.json(
         failure('Booking not found', 'NOT_FOUND'),
         { status: 404 }
       )
     }
-    
-    const booking = bookingResult.booking
-    
+
     // Verify booking belongs to user
     if (booking.user_id !== user.id) {
       return NextResponse.json(
@@ -93,15 +91,15 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       )
     }
-    
+
     // Verify booking is in correct status
-    if (booking.status !== 'awaiting_payment') {
+    if (booking.status !== 'pending') {
       return NextResponse.json(
         failure(`Booking is in ${booking.status} status`, 'INVALID_STATUS'),
         { status: 400 }
       )
     }
-    
+
     // Initialize Stripe
     let stripe
     try {
@@ -113,10 +111,10 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-    
+
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(booking.total_amount * 100), // Convert to cents
+      amount: Math.round(booking.total_price * 100), // Convert to cents
       currency: 'ron',
       metadata: {
         bookingId: booking.id,
@@ -127,7 +125,7 @@ export async function POST(request: NextRequest) {
         enabled: true,
       },
     })
-    
+
     return NextResponse.json(
       success({
         clientSecret: paymentIntent.client_secret,

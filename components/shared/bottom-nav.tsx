@@ -3,32 +3,41 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Briefcase, Plus, Layers } from "lucide-react"
+import { User, Plus, Home } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { CreateMenu } from "./create-menu"
+import { CreateTripDialog } from "@/components/features/trip/create-trip-dialog"
+import { useVacationStore } from "@/store/vacation-store"
 
 const navItems = [
   {
-    label: "Călătorii",
+    label: "Acasă",
     href: "/home",
-    icon: Briefcase,
+    icon: Home,
   },
   {
     label: "Creează",
-    href: "/plan",
+    href: "#",
     icon: Plus,
     isSpecial: true,
   },
   {
-    label: "Explorează",
-    href: "/explore",
-    icon: Layers,
+    label: "Profil",
+    href: "/profile",
+    icon: User,
   },
 ]
 
 export function BottomNav() {
   const pathname = usePathname()
-  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false)
+  const [isCreateTripOpen, setIsCreateTripOpen] = useState(false)
+
+  // Use the vacation store to handle post-creation logic if needed
+  const { loadVacations } = useVacationStore()
+
+  const handleCreateSuccess = () => {
+    setIsCreateTripOpen(false)
+    loadVacations()
+  }
 
   return (
     <>
@@ -41,8 +50,8 @@ export function BottomNav() {
             if (item.isSpecial) {
               return (
                 <button
-                  key={item.href}
-                  onClick={() => setIsCreateMenuOpen(true)}
+                  key={item.label}
+                  onClick={() => setIsCreateTripOpen(true)}
                   className="relative h-14 w-14 rounded-full bg-black flex items-center justify-center text-white hover:scale-105 transition-transform shadow-lg shrink-0"
                 >
                   <Plus className="h-8 w-8" strokeWidth={3} />
@@ -66,9 +75,9 @@ export function BottomNav() {
         </nav>
       </div>
 
-      <CreateMenu
-        isOpen={isCreateMenuOpen}
-        onClose={() => setIsCreateMenuOpen(false)}
+      <CreateTripDialog
+        isOpen={isCreateTripOpen}
+        onOpenChange={setIsCreateTripOpen}
       />
     </>
   )

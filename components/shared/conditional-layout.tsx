@@ -42,8 +42,8 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
           {children}
         </div>
         {!isLandingPage && !isOnboardingPage && !isAuthPage && !pathname?.startsWith('/explore') && (
-          <div className="hidden md:block">
-            <Footer />
+          <div className="hidden">
+            {/* Footer Removed as per UX request */}
           </div>
         )}
       </main>

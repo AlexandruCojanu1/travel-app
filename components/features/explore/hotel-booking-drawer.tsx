@@ -31,7 +31,9 @@ import { loadStripe } from "@stripe/stripe-js"
 import { createPaymentIntent } from "@/services/payment/payment.service"
 
 // Initialize Stripe outside component
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+// Initialize Stripe outside component
+const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null
 
 // Separate component for the actual payment form to context scope
 function PaymentForm({
@@ -366,21 +368,23 @@ export function HotelBookingDrawer({ business, isOpen, onClose, onBooked }: Hote
                             {(paymentOption === 'on_site' || clientSecret) && (
                                 <div className="pt-4">
                                     {paymentOption !== 'on_site' ? (
-                                        <Elements stripe={stripePromise} options={{ clientSecret }}>
-                                            <PaymentForm
-                                                onSubmit={async () => {
-                                                    // In a real app, we need to pass the elements instance or handle confirm properly
-                                                    // For this simplified integration, we will assume standard confirm flow within form
-                                                    // OR refactor to lift "confirm" up. 
-                                                    // IMPORTANT: PaymentElement logic is distinct. 
-                                                    // Let's rely on standard handleSubmit in subcomponent triggering onBooked
-                                                    handleBook()
-                                                }}
-                                                isProcessing={submitting}
-                                                totalAmount={paymentOption === 'deposit' ? pricing?.deposit_amount || 0 : pricing?.total || 0}
-                                                paymentOption={paymentOption}
-                                            />
-                                        </Elements>
+                                        stripePromise ? (
+                                            <Elements stripe={stripePromise} options={{ clientSecret: clientSecret ?? undefined }}>
+                                                <PaymentForm
+                                                    onSubmit={async () => {
+                                                        handleBook()
+                                                    }}
+                                                    isProcessing={submitting}
+                                                    totalAmount={paymentOption === 'deposit' ? pricing?.deposit_amount || 0 : pricing?.total || 0}
+                                                    paymentOption={paymentOption}
+                                                />
+                                            </Elements>
+                                        ) : (
+                                            <div className="p-4 border border-red-200 bg-red-50 text-red-600 rounded-xl text-center">
+                                                <div className="font-bold mb-1">Plată Online Indisponibilă</div>
+                                                <div>Configurarea Stripe lipsește. Te rugăm să selectezi "Plată la locație".</div>
+                                            </div>
+                                        )
                                     ) : (
                                         <Button className="w-full h-12 text-lg font-bold bg-green-600 hover:bg-green-700" onClick={() => handleBook()} disabled={submitting}>
                                             {submitting ? <Loader2 className="animate-spin" /> : "Rezervă acum"}

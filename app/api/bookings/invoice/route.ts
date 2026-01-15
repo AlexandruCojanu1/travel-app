@@ -1,60 +1,58 @@
 import { createClient } from '@/lib/supabase/server'
-import { getBookingDetails } from '@/services/booking/booking.service'
+import { getBookingById } from '@/services/booking/booking.service'
 import { format } from 'date-fns'
 import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-    try {
-        const searchParams = request.nextUrl.searchParams
-        const bookingId = searchParams.get('bookingId')
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const bookingId = searchParams.get('bookingId')
 
-        if (!bookingId) {
-            return NextResponse.json(
-                { success: false, error: 'Missing bookingId' },
-                { status: 400 }
-            )
-        }
+    if (!bookingId) {
+      return NextResponse.json(
+        { success: false, error: 'Missing bookingId' },
+        { status: 400 }
+      )
+    }
 
-        const supabase = await createClient()
+    const supabase = await createClient()
 
-        // Get authenticated user
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Get authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-        if (userError || !user) {
-            return NextResponse.json(
-                { success: false, error: 'User not authenticated' },
-                { status: 401 }
-            )
-        }
+    if (userError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'User not authenticated' },
+        { status: 401 }
+      )
+    }
 
-        // Get booking details
-        const bookingResult = await getBookingDetails(bookingId)
+    // Get booking details
+    const booking = await getBookingById(bookingId)
 
-        if (!bookingResult.success || !bookingResult.booking) {
-            return NextResponse.json(
-                { success: false, error: 'Booking not found' },
-                { status: 404 }
-            )
-        }
+    if (!booking) {
+      return NextResponse.json(
+        { success: false, error: 'Booking not found' },
+        { status: 404 }
+      )
+    }
 
-        const booking = bookingResult.booking
+    // Verify booking belongs to user
+    if (booking.user_id !== user.id) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 403 }
+      )
+    }
 
-        // Verify booking belongs to user
-        if (booking.user_id !== user.id) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 403 }
-            )
-        }
+    // Generate invoice HTML
+    const start = new Date(booking.check_in)
+    const end = new Date(booking.check_out)
+    const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
 
-        // Generate invoice HTML
-        const start = new Date(booking.start_date)
-        const end = new Date(booking.end_date)
-        const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-
-        const invoiceHTML = `
+    const invoiceHTML = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -85,12 +83,6 @@ export async function GET(request: NextRequest) {
               <span>Name:</span>
               <span>${booking.business?.name || 'N/A'}</span>
             </div>
-            ${booking.business?.category ? `
-            <div class="row">
-              <span>Category:</span>
-              <span>${booking.business.category}</span>
-            </div>
-            ` : ''}
           </div>
 
           <div class="section">
@@ -109,31 +101,29 @@ export async function GET(request: NextRequest) {
             </div>
             <div class="row">
               <span>Guests:</span>
-              <span>${booking.guest_count}</span>
+              <span>${booking.guests}</span>
             </div>
-            ${booking.resource ? `
+            ${booking.room ? `
             <div class="row">
-              <span>Room/Resource:</span>
-              <span>${booking.resource.name}</span>
+              <span>Room:</span>
+              <span>${booking.room.name}</span>
             </div>
             ` : ''}
           </div>
 
           <div class="section">
             <div class="section-title">Payment Summary</div>
-            ${booking.resource ? `
             <div class="row">
               <span>Price per night:</span>
-              <span>${booking.resource.price_per_night.toFixed(2)} RON</span>
+              <span>${booking.price_per_night.toFixed(2)} RON</span>
             </div>
             <div class="row">
               <span>Nights:</span>
               <span>${nights}</span>
             </div>
-            ` : ''}
             <div class="row total">
               <span>Total Amount:</span>
-              <span>${booking.total_amount.toFixed(2)} RON</span>
+              <span>${booking.total_price.toFixed(2)} RON</span>
             </div>
             <div class="row">
               <span>Status:</span>
@@ -149,18 +139,18 @@ export async function GET(request: NextRequest) {
       </html>
     `
 
-        return new NextResponse(invoiceHTML, {
-            headers: {
-                'Content-Type': 'text/html',
-                'Content-Disposition': `attachment; filename="invoice-${booking.id.slice(0, 8)}.html"`,
-            },
-        })
-    } catch (error: any) {
-        console.error('Error generating invoice:', error)
-        return NextResponse.json(
-            { success: false, error: error.message || 'Failed to generate invoice' },
-            { status: 500 }
-        )
-    }
+    return new NextResponse(invoiceHTML, {
+      headers: {
+        'Content-Type': 'text/html',
+        'Content-Disposition': `attachment; filename="invoice-${booking.id.slice(0, 8)}.html"`,
+      },
+    })
+  } catch (error: any) {
+    console.error('Error generating invoice:', error)
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to generate invoice' },
+      { status: 500 }
+    )
+  }
 }
 

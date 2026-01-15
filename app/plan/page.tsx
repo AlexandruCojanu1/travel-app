@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, Suspense, lazy } from "react"
-import { useSearchParams } from "next/navigation"
-import { Calendar, MapPin, DollarSign, Share2, Edit, Plus, Sparkles, ArrowLeft, Loader2, Trash2 } from "lucide-react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { Calendar, MapPin, DollarSign, Share2, Edit, Plus, Sparkles, ArrowLeft, Loader2, Trash2, BookCheck } from "lucide-react"
 import { useTripStore } from "@/store/trip-store"
 import { useVacationStore } from "@/store/vacation-store"
 import { useAppStore } from "@/store/app-store"
@@ -22,9 +22,10 @@ import { getCityFeed } from "@/services/feed/feed.service"
 // Lazy load heavy trip components
 const BudgetMeter = lazy(() => import("@/components/features/trip/budget-meter").then(m => ({ default: m.BudgetMeter })))
 const TimelineView = lazy(() => import("@/components/features/trip/timeline-view").then(m => ({ default: m.TimelineView })))
-import { PlanDashboard } from "@/components/features/trip/plan-dashboard"
+import { BookingsDialog } from "@/components/features/bookings/bookings-dialog"
 
-type ViewMode = 'selector' | 'planner'
+// ViewMode removed
+
 
 export default function PlanPage() {
   return (
@@ -40,6 +41,7 @@ export default function PlanPage() {
 }
 
 function PlanPageContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const action = searchParams.get('action')
 
@@ -59,7 +61,8 @@ function PlanPageContent() {
   const handleDeleteTrip = async () => {
     if (window.confirm('Ești sigur că vrei să ștergi acest plan? Această acțiune este ireversibilă.')) {
       await deleteCurrentTrip()
-      setViewMode('selector')
+      await deleteCurrentTrip()
+      router.push('/home')
     }
   }
 
@@ -74,9 +77,10 @@ function PlanPageContent() {
   const { setCity } = useAppStore()
   const { openBusinessDrawer } = useUIStore()
 
-  const [viewMode, setViewMode] = useState<ViewMode>('selector')
+  // Removed viewMode state
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditBudgetOpen, setIsEditBudgetOpen] = useState(false)
+  const [isBookingsOpen, setIsBookingsOpen] = useState(false)
   const [isLoadingTrip, setIsLoadingTrip] = useState(false)
 
   const [profile, setProfile] = useState<{ avatar_url: string | null; full_name: string | null } | null>(null)
@@ -112,15 +116,21 @@ function PlanPageContent() {
   // Check if we should go directly to planner (if there's an active vacation)
   useEffect(() => {
     if (activeVacationId && vacations.length > 0) {
-      // If we are not in planner OR if we are but looking at wrong trip
-      if (viewMode === 'selector' || (tripId && tripId !== activeVacationId)) {
-        const activeVacation = getActiveVacation()
-        if (activeVacation) {
+      // Always load active trip if present
+      const activeVacation = getActiveVacation()
+      if (activeVacation) {
+        if (!tripDetails || tripId !== activeVacation.id) {
           loadVacationTrip(activeVacation.id)
         }
       }
+    } else if (!isLoadingTrip && vacations.length > 0 && !activeVacationId) {
+      // If no active vacation, redirect to home
+      router.push('/home')
+    } else if (vacations.length === 0) {
+      // No vacations at all
+      router.push('/home')
     }
-  }, [activeVacationId, vacations.length, viewMode, tripId])
+  }, [activeVacationId, vacations.length, tripId, router])
 
   // Function to load trip data for a specific vacation
   const loadVacationTrip = async (vacationId: string) => {
@@ -139,6 +149,7 @@ function PlanPageContent() {
           startDate: vacation.startDate,
           endDate: vacation.endDate,
           title: vacation.title,
+          guests: 2, // Default to 2 if not active
         },
         {
           total: vacation.budgetTotal,
@@ -156,7 +167,7 @@ function PlanPageContent() {
 
       if (cityData) setCity(cityData)
       await loadTripFromDatabase(vacation.id)
-      setViewMode('planner')
+      // ViewMode is implicit
     } catch (error) {
       console.error('Error loading vacation trip:', error)
     } finally {
@@ -172,7 +183,7 @@ function PlanPageContent() {
   // Handle going back to selector
   const handleBackToSelector = () => {
     clearActiveVacation()
-    setViewMode('selector')
+    router.push('/home')
   }
 
   if (isLoadingTrip) {
@@ -184,16 +195,7 @@ function PlanPageContent() {
     )
   }
 
-  // Dashboard View (Selector)
-  if (viewMode === 'selector') {
-    return (
-      <PlanDashboard
-        vacations={vacations}
-        onSelect={handleVacationSelected}
-        onCreate={() => setIsCreateDialogOpen(true)}
-      />
-    )
-  }
+
 
   // Planner View
   if (!tripDetails) {
@@ -236,10 +238,7 @@ function PlanPageContent() {
                   format(new Date(tripDetails.endDate), "d MMM yyyy", { locale: ro })}
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4" />
-              <span className="text-sm">{tripDetails.cityName}</span>
-            </div>
+            {/* Location removed as requested */}
           </div>
         </div>
 
@@ -323,6 +322,14 @@ function PlanPageContent() {
           <Share2 className="h-4 w-4" />
           Distribuie planul
         </Button>
+        <Button
+          variant="outline"
+          onClick={() => setIsBookingsOpen(true)}
+          className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+        >
+          <BookCheck className="h-4 w-4" />
+          Rezervările mele
+        </Button>
       </div>
 
       {/* Timeline View */}
@@ -381,6 +388,11 @@ function PlanPageContent() {
       <CreateTripDialog
         isOpen={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
+      />
+
+      <BookingsDialog
+        isOpen={isBookingsOpen}
+        onOpenChange={setIsBookingsOpen}
       />
     </div>
   )

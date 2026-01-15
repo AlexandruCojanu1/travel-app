@@ -9,6 +9,7 @@ export interface TripDetails {
   endDate: string // ISO date string
   title?: string
   guests: number
+  metadata?: Record<string, any>
 }
 
 export interface TripItem {
@@ -88,7 +89,7 @@ export const useTripStore = create<TripState>()(
 
         initTrip: (details, budget, tripId) => {
           set({
-            tripDetails: details,
+            tripDetails: { ...details, metadata: details.metadata || {} },
             budget,
             items: [],
             tripId: tripId || null,
@@ -267,7 +268,8 @@ export const useTripStore = create<TripState>()(
               end_date: state.tripDetails.endDate,
               budget_total: state.budget.total,
               status: 'planning' as const,
-              guests: state.tripDetails.guests || 2
+              guests: state.tripDetails.guests || 2,
+              metadata: state.tripDetails.metadata
             }
 
             const result = await createOrUpdateTrip(tripData, state.items as any, state.tripId || undefined)
@@ -345,7 +347,8 @@ export const useTripStore = create<TripState>()(
                   startDate: trip.start_date,
                   endDate: trip.end_date,
                   title: trip.title,
-                  guests: trip.guests || 2
+                  guests: trip.guests || 2,
+                  metadata: trip.metadata || {}
                 },
                 budget: trip.budget_total
                   ? { total: trip.budget_total, currency: 'RON' }

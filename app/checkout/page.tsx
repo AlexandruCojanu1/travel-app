@@ -2,33 +2,18 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { getBookingDetails } from '@/services/booking/booking.service'
+import { getBookingById } from '@/services/booking/booking.service'
 import { BookingSummary } from '@/components/features/booking/checkout/booking-summary'
 import { StripeWrapper } from '@/components/features/booking/checkout/stripe-wrapper'
 import { Loader2, AlertCircle } from 'lucide-react'
-import type { Business } from '@/services/business/business.service'
-
-interface BookingData {
-  id: string
-  start_date: string
-  end_date: string
-  guest_count: number
-  total_amount: number
-  status: string
-  business: Business
-  resource: {
-    id: string
-    name: string
-    price_per_night: number
-  }
-}
+import type { Booking } from '@/services/booking/booking.service'
 
 function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const bookingId = searchParams.get('bookingId')
 
-  const [booking, setBooking] = useState<BookingData | null>(null)
+  const [booking, setBooking] = useState<Booking | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,35 +29,35 @@ function CheckoutContent() {
         setIsLoading(true)
         setError(null)
 
-        const result = await getBookingDetails(bookingId)
+        const result = await getBookingById(bookingId)
 
-        if (!result.success || !result.booking) {
-          setError(result.error || 'Booking not found')
+        if (!result) {
+          setError('Booking not found')
           setIsLoading(false)
           return
         }
 
         // Check if booking is already confirmed
-        if (result.booking.status === 'confirmed') {
+        if (result.status === 'confirmed') {
           router.push('/bookings?success=true')
           return
         }
 
         // Check if booking is in correct status
-        if (result.booking.status !== 'awaiting_payment') {
-          setError(`Booking is in ${result.booking.status} status`)
+        if (result.status !== 'pending') {
+          setError(`Booking is in ${result.status} status`)
           setIsLoading(false)
           return
         }
 
         // Validate required data
-        if (!result.booking.business || !result.booking.resource) {
+        if (!result.business || !result.room) {
           setError('Booking data is incomplete')
           setIsLoading(false)
           return
         }
 
-        setBooking(result.booking as BookingData)
+        setBooking(result)
       } catch (err) {
         console.error('Error loading booking:', err)
         setError('An unexpected error occurred')
@@ -135,11 +120,11 @@ function CheckoutContent() {
         <div>
           <BookingSummary
             business={booking.business!}
-            startDate={booking.start_date}
-            endDate={booking.end_date}
-            guests={booking.guest_count}
-            totalPrice={booking.total_amount}
-            pricePerNight={booking.resource?.price_per_night}
+            startDate={booking.check_in}
+            endDate={booking.check_out}
+            guests={booking.guests}
+            totalPrice={booking.total_price}
+            pricePerNight={booking.price_per_night}
           />
         </div>
 
@@ -147,7 +132,7 @@ function CheckoutContent() {
         <div>
           <StripeWrapper
             bookingId={booking.id}
-            amount={booking.total_amount}
+            amount={booking.total_price}
           />
         </div>
       </div>

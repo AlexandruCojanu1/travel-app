@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { getCityFeed, getHomeContext, type CityFeedData, type HomeContext } from "@/services/feed/feed.service"
+import { getNearestCity } from "@/services/auth/city.service"
 import { useAppStore } from "@/store/app-store"
 import { useVacationStore } from "@/store/vacation-store"
 import { TravelGuideCard } from "@/components/features/feed/travel-guide-card"
@@ -11,6 +12,8 @@ import { TripSummaryCard } from "@/components/features/feed/trip-summary-card"
 import { FeedSkeleton } from "@/components/features/feed/feed-skeleton"
 import { logger } from "@/lib/logger"
 import { useUIStore } from "@/store/ui-store"
+import { PlanDashboard } from "@/components/features/trip/plan-dashboard"
+
 
 export default function HomePage() {
   const router = useRouter()
@@ -30,7 +33,9 @@ export default function HomePage() {
 
   const activeVacation = getActiveVacation()
 
-  // Initial Load
+  const [locationError, setLocationError] = useState<string | null>(null)
+
+  // Initial Load & Location Check
   useEffect(() => {
     async function initialize() {
       setIsLoading(true)
@@ -51,33 +56,54 @@ export default function HomePage() {
 
         if (profileData) setProfile(profileData)
 
+        // 1. Get basic home context (fallback)
         const context = await getHomeContext(user.id)
         setHomeContext(context)
-
-        // Only redirect to onboarding if no home_city_id set
-        // home_city_id is the indicator that onboarding was completed
-        if (!context.homeCityId) {
-          router.push('/onboarding')
-          return
-        }
-
-        // Set default city to home context
-        if (context.homeCity) {
-          setCity(context.homeCity)
-        }
 
         // CRITICAL: Reset vacation store before loading to prevent cross-user data leak
         useVacationStore.getState().reset()
 
-        // Load vacations and feed data
-        const [_, feed] = await Promise.all([
-          loadVacations(),
-          context.homeCityId ? getCityFeed(context.homeCityId!) : Promise.resolve(null)
-        ]);
-        if (feed) setFeedData(feed)
+        // 2. Refresh active vacation
+        await loadVacations()
 
-        // If there is an active vacation starting today/soon, maybe prompt to switch?
-        // For now, logic defaults to 'home'.
+        // 3. Determine initial city (Location based > Home City)
+        let determinedCityId = context.homeCityId
+        let determinedCity = context.homeCity
+
+        // Attempt location detection
+        if ("geolocation" in navigator) {
+          try {
+            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject, {
+                timeout: 5000,
+                maximumAge: 60000 // Cache for 1 min
+              })
+            })
+
+            const nearestCity = await getNearestCity(position.coords.latitude, position.coords.longitude)
+            if (nearestCity) {
+              determinedCity = nearestCity
+              determinedCityId = nearestCity.id
+              console.log("📍 Auto-detected city:", nearestCity.name)
+            } else {
+              console.log("📍 No supported city found nearby")
+            }
+          } catch (locError) {
+            console.warn("Location permission denied or error:", locError)
+            setLocationError("Nu am putut detecta locația ta. Se afișează orașul de reședință.")
+          }
+        }
+
+        // Set the city
+        if (determinedCity) {
+          setCity(determinedCity)
+        }
+
+        // 4. Load feed for the determined city
+        if (determinedCityId) {
+          const feed = await getCityFeed(determinedCityId)
+          if (feed) setFeedData(feed)
+        }
 
       } catch (err) {
         logger.error('Error initializing home page', err)
@@ -97,10 +123,16 @@ export default function HomePage() {
 
       setIsFeedLoading(true)
       try {
-        if (viewMode === 'home' && homeContext.homeCityId) {
-          const feed = await getCityFeed(homeContext.homeCityId)
-          if (feed) setFeedData(feed)
-          if (homeContext.homeCity) setCity(homeContext.homeCity)
+        if (viewMode === 'home') {
+          // Note: In manual implementation we might want to keep the auto-detected city
+          // instead of reverting to homeContext.homeCityId strictly on view mode toggle.
+          // For now, let's respect currentCity store if set, else fallback.
+          const targetCityId = currentCity?.id || homeContext.homeCityId
+          if (targetCityId) {
+            const feed = await getCityFeed(targetCityId)
+            if (feed) setFeedData(feed)
+          }
+
         } else if (viewMode === 'travel' && activeVacation) {
           // Fetch feed for vacation city
           const feed = await getCityFeed(activeVacation.cityId)
@@ -136,37 +168,25 @@ export default function HomePage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-12 space-y-12 pb-32 pt-6">
-      {/* My Trips */}
-      <section className="space-y-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-muted-foreground">Călătoriile mele</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vacations.length > 0 ? (
-            vacations.map((vacation) => (
-              <TripSummaryCard
-                key={vacation.id}
-                title={vacation.title}
-                cityName={vacation.cityName}
-                startDate={vacation.startDate}
-                endDate={vacation.endDate}
-                spotsCount={vacation.spotsCount}
-                imageUrl={vacation.coverImage}
-                onClick={() => {
-                  selectVacation(vacation.id)
-                  router.push('/plan')
-                }}
-                className="bg-white/95 backdrop-blur-md border border-white/20 shadow-sm hover:bg-white transition-colors [&_h3]:text-slate-900 [&_p]:text-slate-600"
-              />
-            ))
-          ) : (
-            <div
-              onClick={() => router.push('/plan')}
-              className="col-span-full p-16 border-2 border-dashed border-border rounded-[32px] text-center cursor-pointer hover:bg-secondary/20 transition-colors"
-            >
-              <p className="text-muted-foreground font-medium">Nu ai nicio călătorie planificată.</p>
-              <p className="text-primary font-bold mt-2">Începe una nouă acum!</p>
-            </div>
-          )}
-        </div>
+      {/* My Trips - Plan Dashboard Integration */}
+      <section className="-mx-4 sm:mx-0">
+        <PlanDashboard
+          vacations={vacations}
+          onSelect={(id) => {
+            selectVacation(id)
+            router.push('/plan')
+          }}
+          onCreate={() => {
+            // PlanDashboard handles its own dialog state, or we can control it if we want to pass a prop
+            // The current PlanDashboard implementation has internal state for dialog, but accepts an onCreate prop.
+            // Let's check PlanDashboard again. It calls onCreate() BUT also has internal state?
+            // Re-reading PlanDashboard code: 
+            // const handleOpenCreate = () => { setIsCreateDialogOpen(true); onCreate() }
+            // So it opens its own dialog. We just need to maybe refresh after? 
+            // Actually PlanDashboard takes `onCreate` as void.
+            // If we want to reload vacations?
+          }}
+        />
       </section>
 
       {/* Feed / Activities */}

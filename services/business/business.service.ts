@@ -71,6 +71,7 @@ export interface MapBusiness {
   image_url: string | null
   price_level: string
   address: string | null
+  description: string | null
 }
 
 /**
@@ -131,6 +132,7 @@ export async function getBusinessesForMap(
         image_url: imageUrl,
         address: business.address || attributes.address || attributes.address_line || null,
         price_level: attributes.price_level || getPriceLevelForCategory(business.category),
+        description: business.description || attributes.description || null,
       }
     })
   } catch (error) {
@@ -271,6 +273,12 @@ export async function searchBusinessesInBounds(
       .from('businesses')
       .select('*')
       .eq('city_id', cityId)
+      // Apply bounding box filter directly in SQL
+      // The columns are named 'lat' and 'lng' in the database
+      .gte('lat', bounds.south)
+      .lte('lat', bounds.north)
+      .gte('lng', bounds.west)
+      .lte('lng', bounds.east)
 
     if (category) {
       query = query.eq('category', category)
@@ -283,23 +291,14 @@ export async function searchBusinessesInBounds(
       return []
     }
 
-    // Extract coordinates from attributes JSONB or direct columns (lat/lng)
-    // Filter by bounds and valid coordinates
-    const validBusinesses = (data || []).filter((b: SupabaseBusiness) => {
-      const attributes = b.attributes || {}
-      const lat = b.latitude ?? b.lat ?? (typeof attributes.latitude === 'number' ? attributes.latitude : null) ?? (typeof attributes.lat === 'number' ? attributes.lat : null)
-      const lng = b.longitude ?? b.lng ?? (typeof attributes.longitude === 'number' ? attributes.longitude : null) ?? (typeof attributes.lng === 'number' ? attributes.lng : null)
-      if (lat == null || lng == null) return false
-      return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east
-    })
-
-    return validBusinesses.map((business: SupabaseBusiness) => {
+    return (data || []).map((business: SupabaseBusiness) => {
       const attributes = (business.attributes || {}) as Record<string, any>
+      // Lat/Lng are already guaranteed by the SQL filter, but we fallback to attributes just in case
+      // typically for display logic or consistency
       const lat = business.latitude ?? business.lat ?? (typeof attributes.latitude === 'number' ? attributes.latitude : null) ?? (typeof attributes.lat === 'number' ? attributes.lat : null)
       const lng = business.longitude ?? business.lng ?? (typeof attributes.longitude === 'number' ? attributes.longitude : null) ?? (typeof attributes.lng === 'number' ? attributes.lng : null)
 
       if (lat == null || lng == null) {
-        // Skip businesses without valid coordinates
         return null
       }
 

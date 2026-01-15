@@ -63,19 +63,17 @@ export function RoomManager({ businessId }: RoomManagerProps) {
         }
 
         await createRoom({
-          hotel_id: businessId,
+          business_id: businessId,
           name: roomData.name,
           room_type: roomData.room_type || 'standard',
           price_per_night: roomData.price_per_night,
-          currency: 'RON',
           max_guests: roomData.max_guests,
           bed_type: roomData.bed_type || 'double',
-          size_sqm: roomData.size_sqm,
+          size_sqm: roomData.size_sqm || undefined,
           amenities: roomData.amenities,
           images: roomData.images,
           total_rooms: roomData.total_rooms || 1,
-          available_rooms: roomData.total_rooms || 1,
-          is_active: roomData.is_active !== false, // default true
+          is_active: roomData.is_active !== false,
         })
         toast.success('Room created successfully')
       }

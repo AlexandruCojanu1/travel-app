@@ -147,7 +147,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
         .eq('user_id', userId),
       supabase
         .from('saved_businesses')
-        .select('id', { count: 'exact', head: true })
+        .select('business_id', { count: 'exact', head: true })
         .eq('user_id', userId),
     ])
 

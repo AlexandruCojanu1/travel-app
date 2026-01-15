@@ -6,8 +6,8 @@ export interface City {
   name: string
   country: string
   state_province: string | null
-  latitude: number
-  longitude: number
+  latitude: number | null
+  longitude: number | null
   is_active: boolean
   created_at: string
 }
@@ -15,7 +15,7 @@ export interface City {
 interface AppState {
   currentCity: City | null
   isCitySelectorOpen: boolean
-  
+
   // Actions
   setCity: (city: City) => void
   openCitySelector: () => void

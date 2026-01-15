@@ -10,6 +10,7 @@ export interface CreateTripDTO {
   status: 'planning' | 'active' | 'completed'
   city_name?: string
   guests: number
+  metadata?: any
 }
 
 export interface Trip {
@@ -26,6 +27,7 @@ export interface Trip {
   updated_at: string
   items?: any[]
   guests: number
+  metadata?: any
 }
 
 export async function createOrUpdateTrip(
@@ -57,13 +59,15 @@ export async function createOrUpdateTrip(
 
     const commonData = {
       destination_city_id: tripData.destination_city_id,
+      city_id: tripData.destination_city_id, // Map destination_city_id to city_id for DB compatibility
       start_date: tripData.start_date,
       end_date: tripData.end_date,
       title: tripData.title,
       budget_total: tripData.budget_total,
       status: 'planning', // Ensure we use a valid string
       updated_at: new Date().toISOString(),
-      guests: tripData.guests
+      guests: tripData.guests,
+      metadata: tripData.metadata || {}
     }
 
     if (currentTripId) {

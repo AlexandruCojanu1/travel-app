@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { checkAvailability, getResourceDetails } from '@/services/booking/booking.service'
+import { checkAvailability, getRoomById } from '@/services/hotel/room.service'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
@@ -88,23 +88,26 @@ export async function POST(request: NextRequest) {
         )
 
         if (!availability.available) {
+            const errorMsg = availability.unavailableDates.length > 0
+                ? `Date indisponibile: ${availability.unavailableDates.join(', ')}`
+                : 'Resursă indisponibilă'
+
             return NextResponse.json(
-                failure(availability.error || 'Resource not available', 'UNAVAILABLE'),
+                failure(errorMsg, 'UNAVAILABLE'),
                 { status: 400 }
             )
         }
 
         // Step 2: Get resource details and calculate price
-        const resourceResult = await getResourceDetails(validated.resource_id)
+        const resource = await getRoomById(validated.resource_id)
 
-        if (!resourceResult.success || !resourceResult.resource) {
+        if (!resource) {
             return NextResponse.json(
                 failure('Resource not found', 'NOT_FOUND'),
                 { status: 404 }
             )
         }
 
-        const resource = resourceResult.resource
         const pricePerNight = resource.price_per_night || 0
 
         // Calculate number of nights

@@ -67,22 +67,6 @@ export async function login(data: LoginInput, redirectPath?: string): Promise<Ac
     const userMetadata = authData.user.user_metadata
     const metadataHasOnboarding = userMetadata?.onboarding_completed || userMetadata?.home_city_id
 
-    // User needs onboarding if: no profile home_city_id AND no metadata confirmation
-    const needsOnboarding = !profile?.home_city_id && !metadataHasOnboarding
-
-    console.log('Login check:', {
-      profileHomeCityId: profile?.home_city_id,
-      metadataHasOnboarding,
-      needsOnboarding
-    })
-
-    if (needsOnboarding) {
-      const onboardingRedirect = redirectPath?.includes('role=')
-        ? redirectPath
-        : '/onboarding'
-      return { success: true, redirect: onboardingRedirect }
-    }
-
     // Always redirect to /home - users can navigate to business dashboard if needed
     const finalRedirect = redirectPath || '/home'
     return { success: true, redirect: finalRedirect }
@@ -149,7 +133,7 @@ export async function signup(data: SignupInput, redirectPath?: string): Promise<
     }
 
     // Use redirectPath if provided (for business signup), otherwise default to /onboarding (for traveler)
-    const finalRedirect = redirectPath || '/onboarding'
+    const finalRedirect = redirectPath || '/home'
     // Return redirect path for client to handle
     return { success: true, redirect: finalRedirect }
   } catch (error: any) {

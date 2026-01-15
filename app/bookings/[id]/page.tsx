@@ -5,18 +5,18 @@ import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { QRCodeSVG } from 'qrcode.react'
 import { MapPin, Download, X, ArrowLeft, Calendar, Users, Star } from 'lucide-react'
-import { getBookingDetails } from '@/services/booking/booking.service'
+import { getBookingById } from '@/services/booking/booking.service'
 import { Button } from '@/components/shared/ui/button'
 import { BookingChatButton } from '@/components/features/messaging/booking-chat-button'
 import { format } from 'date-fns'
-import type { BookingWithDetails } from '@/services/booking/booking.service'
+import type { Booking } from '@/services/booking/booking.service'
 
 export default function BookingDetailPage() {
   const params = useParams()
   const router = useRouter()
   const bookingId = params.id as string
 
-  const [booking, setBooking] = useState<BookingWithDetails | null>(null)
+  const [booking, setBooking] = useState<Booking | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,15 +32,15 @@ export default function BookingDetailPage() {
         setIsLoading(true)
         setError(null)
 
-        const result = await getBookingDetails(bookingId)
+        const result = await getBookingById(bookingId)
 
-        if (!result.success || !result.booking) {
-          setError(result.error || 'Booking not found')
+        if (!result) {
+          setError('Booking not found')
           setIsLoading(false)
           return
         }
 
-        setBooking(result.booking as BookingWithDetails)
+        setBooking(result)
       } catch (err) {
         console.error('Error loading booking:', err)
         setError('An unexpected error occurred')
@@ -81,15 +81,15 @@ export default function BookingDetailPage() {
   }
 
   // Calculate nights
-  const start = new Date(booking.start_date)
-  const end = new Date(booking.end_date)
+  const start = new Date(booking.check_in)
+  const end = new Date(booking.check_out)
   const nights = Math.ceil(
     (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
   )
 
   // Check if booking can be cancelled (48h before start)
   const now = new Date()
-  const startDate = new Date(booking.start_date)
+  const startDate = new Date(booking.check_in)
   const hoursUntilStart = (startDate.getTime() - now.getTime()) / (1000 * 60 * 60)
   const canCancel = hoursUntilStart > 48 && booking.status === 'confirmed'
 
@@ -97,8 +97,8 @@ export default function BookingDetailPage() {
   const qrData = JSON.stringify({
     bookingId: booking.id,
     businessName: booking.business?.name,
-    startDate: booking.start_date,
-    endDate: booking.end_date,
+    startDate: booking.check_in,
+    endDate: booking.check_out,
   })
 
   // Get directions URL
@@ -198,14 +198,6 @@ export default function BookingDetailPage() {
                 <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
                   {booking.business.name}
                 </h1>
-                {booking.business.rating && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-yellow-400">★</span>
-                    <span className="text-white font-medium">
-                      {booking.business.rating.toFixed(1)}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -214,6 +206,7 @@ export default function BookingDetailPage() {
           <div className="p-6 md:p-8 space-y-8">
             {/* Booking Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
                 <div>
@@ -232,7 +225,7 @@ export default function BookingDetailPage() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Guests</p>
                   <p className="font-semibold text-gray-900">
-                    {booking.guest_count} {booking.guest_count === 1 ? 'Guest' : 'Guests'}
+                    {booking.guests} {booking.guests === 1 ? 'Guest' : 'Guests'}
                   </p>
                 </div>
               </div>
@@ -261,16 +254,15 @@ export default function BookingDetailPage() {
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-gray-700">Total Amount</span>
                 <span className="text-2xl font-bold text-gray-900">
-                  {booking.total_amount.toFixed(2)} RON
+                  {booking.total_price.toFixed(2)} RON
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <span>Status</span>
-                <span className={`font-semibold ${
-                  booking.status === 'confirmed' ? 'text-green-600' :
+                <span className={`font-semibold ${booking.status === 'confirmed' ? 'text-green-600' :
                   booking.status === 'cancelled' ? 'text-red-600' :
-                  'text-yellow-600'
-                }`}>
+                    'text-yellow-600'
+                  }`}>
                   {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                 </span>
               </div>
@@ -287,15 +279,15 @@ export default function BookingDetailPage() {
                   Write Review
                 </Button>
               )}
-              
+
               {booking.business && (
                 <BookingChatButton
                   bookingId={bookingId}
-                  businessId={booking.business.id}
+                  businessId={booking.business_id}
                   businessName={booking.business.name}
                 />
               )}
-              
+
               <Button
                 variant="outline"
                 className="w-full"

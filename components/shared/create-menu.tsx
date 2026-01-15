@@ -29,14 +29,7 @@ const menuItems: {
             bgColor: 'bg-[#0A0A0A]',
             textColor: 'text-white'
         },
-        {
-            id: 'find-trip',
-            title: 'Noutăți',
-            image: '/images/ui/menu/find_trip.png',
-            href: '/home',
-            bgColor: 'bg-[#E0F7FF]',
-            textColor: 'text-[#0A2A3A]'
-        },
+
         {
             id: 'reservations',
             title: 'Rezervări',
