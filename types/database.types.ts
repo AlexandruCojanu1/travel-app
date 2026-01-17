@@ -140,6 +140,94 @@ export type Database = {
           },
         ]
       }
+      trip_collaborators: {
+        Row: {
+          id: string
+          trip_id: string
+          user_id: string
+          role: "admin" | "collaborator"
+          joined_at: string
+        }
+        Insert: {
+          id?: string
+          trip_id: string
+          user_id: string
+          role?: "admin" | "collaborator"
+          joined_at?: string
+        }
+        Update: {
+          id?: string
+          trip_id?: string
+          user_id?: string
+          role?: "admin" | "collaborator"
+          joined_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_collaborators_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_collaborators_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      trip_votes: {
+        Row: {
+          id: string
+          trip_id: string
+          business_id: string
+          user_id: string
+          vote: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          trip_id: string
+          business_id: string
+          user_id: string
+          vote: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          trip_id?: string
+          business_id?: string
+          user_id?: string
+          vote?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_votes_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_votes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       business_amenities: {
         Row: {
           amenity_id: string
@@ -1050,45 +1138,7 @@ export type Database = {
           },
         ]
       }
-      trip_collaborators: {
-        Row: {
-          created_at: string
-          id: string
-          role: string | null
-          trip_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: string | null
-          trip_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: string | null
-          trip_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trip_collaborators_trip_id_fkey"
-            columns: ["trip_id"]
-            isOneToOne: false
-            referencedRelation: "trips"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trip_collaborators_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+
       trip_items: {
         Row: {
           block: string | null
@@ -1156,6 +1206,7 @@ export type Database = {
           destination_city_id: string
           end_date: string
           guests: number | null
+          invite_token: string | null
           id: string
           is_public: boolean
           start_date: string
@@ -1173,6 +1224,7 @@ export type Database = {
           destination_city_id: string
           end_date: string
           guests?: number | null
+          invite_token?: string | null
           id?: string
           is_public?: boolean
           start_date: string
@@ -1190,6 +1242,7 @@ export type Database = {
           destination_city_id?: string
           end_date?: string
           guests?: number | null
+          invite_token?: string | null
           id?: string
           is_public?: boolean
           start_date?: string

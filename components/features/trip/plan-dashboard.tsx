@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { Plus, Home, Search, Calendar as CalendarIcon, User, Map, Globe } from "lucide-react"
 import { TripSummaryCard } from "@/components/features/feed/trip-summary-card"
+
 import { CreateTripDialog } from "@/components/features/trip/create-trip-dialog"
+import { JoinTripDialog } from "@/components/features/trip/join-trip-dialog"
 
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -15,6 +17,7 @@ interface PlanDashboardProps {
 export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardProps) {
     const [activeTab, setActiveTab] = useState<'active' | 'past'>('active')
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+    const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false)
     const [showAllMobile, setShowAllMobile] = useState(false)
 
     // Filter vacations
@@ -80,14 +83,22 @@ export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardPr
                     <>
                         {/* Mobile: Show limited, Desktop: Show all */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Add New Trip Card - FIRST on mobile, last on desktop */}
-                            <div className="order-first md:order-last">
+                            {/* Add New Trip Card & Join Card - FIRST on mobile, last on desktop */}
+                            <div className="order-first md:order-last flex flex-col gap-4">
                                 <button
                                     onClick={handleOpenCreate}
-                                    className="w-full min-h-[80px] py-4 border-2 border-dashed border-border rounded-3xl text-muted-foreground font-medium hover:bg-secondary/20 hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-2"
+                                    className="w-full flex-1 min-h-[80px] py-4 border-2 border-dashed border-border rounded-3xl text-muted-foreground font-medium hover:bg-secondary/20 hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-2"
                                 >
                                     <Plus className="h-8 w-8" />
                                     Planifică o nouă călătorie
+                                </button>
+
+                                <button
+                                    onClick={() => setIsJoinDialogOpen(true)}
+                                    className="w-full py-4 border border-border rounded-3xl text-muted-foreground font-medium hover:bg-secondary/10 hover:text-foreground transition-colors flex items-center justify-center gap-2 text-sm"
+                                >
+                                    <User className="h-4 w-4" />
+                                    Colaborează la un plan
                                 </button>
                             </div>
 
@@ -149,13 +160,21 @@ export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardPr
                         </p>
 
                         {activeTab === 'active' && (
-                            <button
-                                onClick={handleOpenCreate}
-                                className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl transition-all text-sm flex items-center gap-2"
-                            >
-                                <Plus className="h-4 w-4" />
-                                Planifică acum
-                            </button>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button
+                                    onClick={handleOpenCreate}
+                                    className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-xl transition-all text-sm flex items-center gap-2"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Planifică acum
+                                </button>
+                                <button
+                                    onClick={() => setIsJoinDialogOpen(true)}
+                                    className="px-6 py-3 rounded-full font-semibold border border-input hover:bg-accent hover:text-accent-foreground transition-all text-sm flex items-center gap-2"
+                                >
+                                    Ai un link? Colaborează
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}
@@ -164,6 +183,11 @@ export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardPr
             <CreateTripDialog
                 isOpen={isCreateDialogOpen}
                 onOpenChange={setIsCreateDialogOpen}
+            />
+
+            <JoinTripDialog
+                isOpen={isJoinDialogOpen}
+                onOpenChange={setIsJoinDialogOpen}
             />
         </div>
     )

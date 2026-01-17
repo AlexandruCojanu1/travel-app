@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense, lazy } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
+import Link from "next/link"
 import { Calendar, MapPin, DollarSign, Share2, Edit, Plus, Sparkles, ArrowLeft, Loader2, Trash2, BookCheck } from "lucide-react"
 import { useTripStore } from "@/store/trip-store"
 import { useVacationStore } from "@/store/vacation-store"
@@ -24,6 +25,9 @@ import { WeatherWidget } from "@/components/features/weather/weather-widget"
 const BudgetMeter = lazy(() => import("@/components/features/trip/budget-meter").then(m => ({ default: m.BudgetMeter })))
 const TimelineView = lazy(() => import("@/components/features/trip/timeline-view").then(m => ({ default: m.TimelineView })))
 import { BookingsDialog } from "@/components/features/bookings/bookings-dialog"
+import { InviteDialog } from "@/components/features/trip/invite-dialog"
+import { exportTripToPDF } from "@/utils/export-trip-pdf"
+import { FileDown } from "lucide-react"
 
 // ViewMode removed
 
@@ -80,6 +84,7 @@ function PlanPageContent() {
 
   // Removed viewMode state
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [isEditBudgetOpen, setIsEditBudgetOpen] = useState(false)
   const [isBookingsOpen, setIsBookingsOpen] = useState(false)
   const [isLoadingTrip, setIsLoadingTrip] = useState(false)
@@ -272,6 +277,18 @@ function PlanPageContent() {
       <div className="grid grid-cols-2 md:flex md:items-center gap-3">
         <Button
           variant="outline"
+          onClick={() => {
+            if (tripDetails) {
+              exportTripToPDF(tripDetails, items, budget, spent)
+            }
+          }}
+          className="flex items-center justify-center gap-2"
+        >
+          <FileDown className="h-4 w-4" />
+          Exportă PDF
+        </Button>
+        <Button
+          variant="outline"
           onClick={() => setIsEditBudgetOpen(true)}
           className="flex items-center justify-center gap-2"
         >
@@ -288,10 +305,11 @@ function PlanPageContent() {
         </Button>
         <Button
           variant="outline"
+          onClick={() => setIsInviteDialogOpen(true)}
           className="flex items-center justify-center gap-2"
         >
           <Share2 className="h-4 w-4" />
-          Distribuie planul
+          Invită prieteni
         </Button>
         <Button
           variant="outline"
@@ -300,6 +318,15 @@ function PlanPageContent() {
         >
           <BookCheck className="h-4 w-4" />
           Rezervările mele
+        </Button>
+        <Button
+          asChild
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white border-0"
+        >
+          <Link href={`/plan/${tripId}/vote`}>
+            <Sparkles className="h-4 w-4" />
+            Găsește Activități
+          </Link>
         </Button>
       </div>
 
@@ -365,6 +392,15 @@ function PlanPageContent() {
         isOpen={isBookingsOpen}
         onOpenChange={setIsBookingsOpen}
       />
+
+      {tripId && (
+        <InviteDialog
+          isOpen={isInviteDialogOpen}
+          onOpenChange={setIsInviteDialogOpen}
+          tripId={tripId}
+          tripTitle={tripDetails.title || activeVacation?.title}
+        />
+      )}
     </div>
   )
 }
