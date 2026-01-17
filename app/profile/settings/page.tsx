@@ -95,19 +95,23 @@ export default function SettingsPage() {
         const profileData = await getUserProfile(user.id)
 
         // Set personal information
+        // Set personal information
+        // Note: getUserProfile returns { profile: { ...raw_row_data }, ...top_level_helpers }
+        const rawProfile = (profileData as any).profile || {};
+
         setPersonalInfo({
           fullName: profileData.full_name || "",
           email: user.email || "",
-          phone: (profileData as any).phone || "",
-          birthDate: (profileData as any).birth_date || "",
-          gender: (profileData as any).gender || "masculin",
+          phone: rawProfile.phone || "",
+          birthDate: rawProfile.birth_date || "",
+          gender: rawProfile.gender || "masculin",
         })
 
         // Set two-factor authentication
-        setTwoFactorEnabled((profileData as any).two_factor_enabled || false)
+        setTwoFactorEnabled(rawProfile.two_factor_enabled || false)
 
         // Set theme
-        const theme = (profileData as any).theme || "light"
+        const theme = rawProfile.theme || "light"
         setPreferences(prev => ({ ...prev, theme }))
 
         // Set preferences
@@ -305,20 +309,23 @@ export default function SettingsPage() {
   }
 
   const ToggleSwitch = ({
+    id,
     enabled,
     onChange,
     label
   }: {
+    id: string
     enabled: boolean
     onChange: (enabled: boolean) => void
     label: string
   }) => {
     return (
       <div className="flex items-center justify-between py-3">
-        <Label htmlFor={label} className="text-sm font-medium text-mova-dark cursor-pointer">
+        <Label htmlFor={id} className="text-sm font-medium text-mova-dark cursor-pointer">
           {label}
         </Label>
         <button
+          id={id}
           type="button"
           role="switch"
           aria-checked={enabled}
@@ -385,6 +392,7 @@ export default function SettingsPage() {
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-mova-gray" />
               <Input
                 id="fullName"
+                autoComplete="name"
                 type="text"
                 value={personalInfo.fullName}
                 onChange={(e) => setPersonalInfo({ ...personalInfo, fullName: e.target.value })}
@@ -402,6 +410,7 @@ export default function SettingsPage() {
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-mova-gray" />
               <Input
                 id="email"
+                autoComplete="email"
                 type="email"
                 value={personalInfo.email}
                 disabled
@@ -419,6 +428,7 @@ export default function SettingsPage() {
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-mova-gray" />
               <Input
                 id="phone"
+                autoComplete="tel"
                 type="tel"
                 value={personalInfo.phone}
                 onChange={(e) => setPersonalInfo({ ...personalInfo, phone: e.target.value })}
@@ -436,6 +446,7 @@ export default function SettingsPage() {
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-mova-gray" />
               <Input
                 id="birthDate"
+                autoComplete="bday"
                 type="date"
                 value={personalInfo.birthDate}
                 onChange={(e) => setPersonalInfo({ ...personalInfo, birthDate: e.target.value })}
@@ -450,6 +461,7 @@ export default function SettingsPage() {
             </Label>
             <Select
               id="gender"
+              autoComplete="sex"
               value={personalInfo.gender}
               onChange={(e) => setPersonalInfo({ ...personalInfo, gender: e.target.value as "masculin" | "feminin" | "prefer-sa-nu-spun" })}
               className="w-full h-11 rounded-airbnb border border-gray-300 focus-visible:ring-2 focus-visible:ring-mova-blue focus-visible:ring-offset-2 focus-visible:border-mova-blue"
@@ -505,6 +517,7 @@ export default function SettingsPage() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-mova-gray" />
                   <Input
                     id="currentPassword"
+                    autoComplete="current-password"
                     type="password"
                     value={passwordData.currentPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
@@ -522,6 +535,7 @@ export default function SettingsPage() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-mova-gray" />
                   <Input
                     id="newPassword"
+                    autoComplete="new-password"
                     type="password"
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
@@ -539,6 +553,7 @@ export default function SettingsPage() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-mova-gray" />
                   <Input
                     id="confirmPassword"
+                    autoComplete="new-password"
                     type="password"
                     value={passwordData.confirmPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
@@ -563,6 +578,7 @@ export default function SettingsPage() {
         {/* Two-Factor Authentication */}
         <div className="pt-4 border-t border-gray-200">
           <ToggleSwitch
+            id="two-factor"
             enabled={twoFactorEnabled}
             onChange={handleToggleTwoFactor}
             label="Activează autentificarea în 2 pași"
@@ -639,6 +655,7 @@ export default function SettingsPage() {
           <div className="space-y-1">
             <h4 className="text-sm font-medium text-mova-gray mb-2">Notificări Push</h4>
             <ToggleSwitch
+              id="push-urgent"
               enabled={preferences.pushNotifications.urgent}
               onChange={(enabled) => setPreferences({
                 ...preferences,
@@ -647,6 +664,7 @@ export default function SettingsPage() {
               label="Urgențe zbor"
             />
             <ToggleSwitch
+              id="push-checkin"
               enabled={preferences.pushNotifications.checkin}
               onChange={(enabled) => setPreferences({
                 ...preferences,
@@ -659,6 +677,7 @@ export default function SettingsPage() {
           <div className="space-y-1 pt-2 border-t border-gray-100">
             <h4 className="text-sm font-medium text-mova-gray mb-2">Email</h4>
             <ToggleSwitch
+              id="email-newsletter"
               enabled={preferences.emailNotifications.newsletter}
               onChange={(enabled) => setPreferences({
                 ...preferences,
@@ -667,6 +686,7 @@ export default function SettingsPage() {
               label="Newsletter"
             />
             <ToggleSwitch
+              id="email-offers"
               enabled={preferences.emailNotifications.offers}
               onChange={(enabled) => setPreferences({
                 ...preferences,

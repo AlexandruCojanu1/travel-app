@@ -1,133 +1,120 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { Cloud, Sun, CloudRain, Wind, Droplets, Thermometer } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
+import { Cloud, Droplets, Wind } from 'lucide-react'
+import { getWeatherForecast, filterForecastForVacation, type WeatherDay, type WeatherForecast } from '@/services/weather/weather.service'
 
 interface WeatherWidgetProps {
-  cityId: string
-  tripId?: string
+  latitude: number
+  longitude: number
+  cityName: string
+  vacationStartDate: Date
+  vacationEndDate: Date
 }
 
-export function WeatherWidget({ cityId, tripId }: WeatherWidgetProps) {
-  const [weather, setWeather] = useState<any>(null)
+export function WeatherWidget({
+  latitude,
+  longitude,
+  cityName,
+  vacationStartDate,
+  vacationEndDate
+}: WeatherWidgetProps) {
+  const [forecast, setForecast] = useState<WeatherForecast | null>(null)
+  const [filteredDays, setFilteredDays] = useState<WeatherDay[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [alerts, setAlerts] = useState<any[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadWeather()
-    if (tripId) {
-      loadAlerts()
-    }
-  }, [cityId, tripId])
+    async function loadWeather() {
+      setIsLoading(true)
+      setError(null)
 
-  async function loadWeather() {
-    setIsLoading(true)
-    try {
-      const response = await fetch(`/api/weather/get?city_id=${cityId}`)
-      const result = await response.json()
+      try {
+        const weatherData = await getWeatherForecast(latitude, longitude, cityName)
+        setForecast(weatherData)
 
-      if (result.success) {
-        setWeather(result.weather)
+        if (weatherData) {
+          const filtered = filterForecastForVacation(weatherData, vacationStartDate, vacationEndDate)
+          setFilteredDays(filtered)
+        }
+      } catch (err) {
+        console.error('Error loading weather:', err)
+        setError('Nu am putut încărca vremea')
+      } finally {
+        setIsLoading(false)
       }
-    } catch (error) {
-      console.error('Error loading weather:', error)
-    } finally {
-      setIsLoading(false)
     }
-  }
 
-  async function loadAlerts() {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !tripId) return
+    loadWeather()
+  }, [latitude, longitude, cityName, vacationStartDate, vacationEndDate])
 
-    const { data } = await supabase
-      .from('weather_alerts')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('trip_id', tripId)
-      .eq('is_sent', false)
-
-    if (data) {
-      setAlerts(data)
-    }
+  // If vacation is more than 14 days away, don't show anything
+  if (!isLoading && filteredDays.length === 0) {
+    return null
   }
 
   if (isLoading) {
     return (
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
-        <p className="text-sm">Loading weather...</p>
+      <div className="glass-card p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Cloud className="h-5 w-5 text-primary" />
+          <span className="font-semibold text-slate-700">Prognoza meteo</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="flex-shrink-0 w-20 h-24 bg-slate-100 rounded-xl animate-pulse" />
+          ))}
+        </div>
       </div>
     )
   }
 
-  if (!weather) {
+  if (error) {
     return null
   }
 
-  const getWeatherIcon = (main: string) => {
-    switch (main.toLowerCase()) {
-      case 'rain':
-      case 'drizzle':
-        return CloudRain
-      case 'snow':
-        return CloudRain // Snow icon not available, using CloudRain as fallback
-      case 'clouds':
-        return Cloud
-      default:
-        return Sun
-    }
-  }
-
-  const Icon = getWeatherIcon(weather.weather?.[0]?.main || 'clear')
-
   return (
-    <div className="space-y-3">
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h3 className="font-semibold text-lg">Weather</h3>
-            <p className="text-sm opacity-90">{weather.name}</p>
-          </div>
-          <Icon className="h-10 w-10" />
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-baseline gap-1">
-            <Thermometer className="h-5 w-5" />
-            <span className="text-2xl font-bold">
-              {Math.round(weather.main?.temp || 0)}°
-            </span>
-          </div>
-          <div className="text-sm opacity-90">
-            {weather.weather?.[0]?.description}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 mt-3 text-sm">
-          <div className="flex items-center gap-1">
-            <Wind className="h-4 w-4" />
-            <span>{weather.wind?.speed || 0} m/s</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Droplets className="h-4 w-4" />
-            <span>{weather.main?.humidity || 0}%</span>
-          </div>
-        </div>
+    <div className="glass-card p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Cloud className="h-5 w-5 text-primary" />
+        <span className="font-semibold text-slate-700">Prognoza meteo pentru {cityName}</span>
       </div>
 
-      {alerts.length > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-          <h4 className="font-semibold text-yellow-900 mb-1">Weather Alerts</h4>
-          {alerts.map((alert) => (
-            <p key={alert.id} className="text-sm text-yellow-800">
-              {alert.message}
-            </p>
-          ))}
-        </div>
-      )}
+      <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+        {filteredDays.map((day) => {
+          const date = new Date(day.date)
+          const dayName = date.toLocaleDateString('ro-RO', { weekday: 'short' })
+          const dayNumber = date.getDate()
+          const month = date.toLocaleDateString('ro-RO', { month: 'short' })
+
+          return (
+            <div
+              key={day.date}
+              className="flex-shrink-0 w-24 bg-gradient-to-b from-blue-50 to-white rounded-xl p-3 border border-blue-100 text-center"
+            >
+              <div className="text-xs font-medium text-slate-500 capitalize">{dayName}</div>
+              <div className="text-xs text-slate-400">{dayNumber} {month}</div>
+              <div className="text-3xl my-2">{day.weatherIcon}</div>
+              <div className="text-sm font-bold text-slate-800">
+                {day.temperatureMax}° / {day.temperatureMin}°
+              </div>
+              <div className="text-xs text-slate-500 mt-1 truncate" title={day.weatherDescription}>
+                {day.weatherDescription}
+              </div>
+              {day.precipitationProbability > 20 && (
+                <div className="flex items-center justify-center gap-1 mt-1 text-xs text-blue-500">
+                  <Droplets className="h-3 w-3" />
+                  {day.precipitationProbability}%
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <p className="text-xs text-slate-400 mt-2 text-center">
+        Sursa: Open-Meteo • Prognoza disponibilă pentru următoarele 14 zile
+      </p>
     </div>
   )
 }
-

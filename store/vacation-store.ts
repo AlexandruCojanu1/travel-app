@@ -130,7 +130,7 @@ export const useVacationStore = create<VacationState>()(
                         console.log('[VacationStore] Loaded', data?.length || 0, 'trips')
                         const vacations: Vacation[] = (data || []).map((trip: any) => ({
                             id: trip.id,
-                            title: trip.title || `Vacanță la ${trip.cities?.name || 'Destinație'}`,
+                            title: trip.title || trip.cities?.name || 'Destinație',
                             cityId: trip.city_id,
                             cityName: trip.cities?.name || 'Necunoscut',
                             startDate: trip.start_date,
@@ -182,7 +182,7 @@ export const useVacationStore = create<VacationState>()(
 
                         const newVacation: Vacation = {
                             id: data.id,
-                            title: data.title || `Vacanță la ${(data as any).cities?.name || 'Destinație'}`,
+                            title: data.title || (data as any).cities?.name || 'Destinație',
                             cityId: data.city_id,
                             cityName: (data as any).cities?.name || 'Necunoscut',
                             startDate: data.start_date,

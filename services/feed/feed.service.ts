@@ -137,6 +137,11 @@ export async function getCityFeed(
       }
       const dbCategory = categoryMap[categoryFilter] || categoryFilter
       businessQuery = businessQuery.eq('category', dbCategory)
+    } else {
+      // If no specific filter is applied (Homepage default), EXCLUDE lodging to separate them
+      // This ensures 'Activities in City' section doesn't show hotels
+      businessQuery = businessQuery.not('category', 'in', '("Hotel","Hotels","Lodging","Accommodation","Guesthouse","Resort","Villa","Apartment","Hostel")')
+      // Also try to exclude by name pattern if possible, but strict category exclude is safer for SQL
     }
 
     const { data: featuredBusinesses, error: businessError } = await businessQuery

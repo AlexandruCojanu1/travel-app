@@ -18,6 +18,7 @@ import { HomeHeader } from "@/components/features/feed/home-header"
 import { TravelGuideCard } from "@/components/features/feed/travel-guide-card"
 import { TripSummaryCard } from "@/components/features/feed/trip-summary-card"
 import { getCityFeed } from "@/services/feed/feed.service"
+import { WeatherWidget } from "@/components/features/weather/weather-widget"
 
 // Lazy load heavy trip components
 const BudgetMeter = lazy(() => import("@/components/features/trip/budget-meter").then(m => ({ default: m.BudgetMeter })))
@@ -74,7 +75,7 @@ function PlanPageContent() {
     clearActiveVacation,
   } = useVacationStore()
 
-  const { setCity } = useAppStore()
+  const { setCity, currentCity } = useAppStore()
   const { openBusinessDrawer } = useUIStore()
 
   // Removed viewMode state
@@ -255,54 +256,24 @@ function PlanPageContent() {
         </div>
       )}
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="glass-card p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium text-slate-500">Locuri</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{placesCount}</p>
-        </div>
+      {/* Weather Forecast Widget */}
+      {currentCity?.latitude && currentCity?.longitude && tripDetails.startDate && tripDetails.endDate && (
+        <WeatherWidget
+          latitude={currentCity.latitude}
+          longitude={currentCity.longitude}
+          cityName={tripDetails.cityName || currentCity.name}
+          vacationStartDate={new Date(tripDetails.startDate)}
+          vacationEndDate={new Date(tripDetails.endDate)}
+        />
+      )}
 
-        <div className="glass-card p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium text-slate-500">Zile</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{daysCount}</p>
-        </div>
 
-        <div className="glass-card p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium text-slate-500">Cheltuit</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">
-            {spent.toFixed(0)} {budget?.currency || 'RON'}
-          </p>
-        </div>
-
-        <div className="glass-card p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium text-slate-500">Rămas</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">
-            {budget
-              ? (budget.total - spent).toFixed(0)
-              : 0}{" "}
-            {budget?.currency || 'RON'}
-          </p>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-3">
+      {/* Actions - 2 per row on mobile */}
+      <div className="grid grid-cols-2 md:flex md:items-center gap-3">
         <Button
           variant="outline"
           onClick={() => setIsEditBudgetOpen(true)}
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-2"
         >
           <Edit className="h-4 w-4" />
           Editează bugetul
@@ -310,14 +281,14 @@ function PlanPageContent() {
         <Button
           variant="outline"
           onClick={handleDeleteTrip}
-          className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          className="flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
         >
           <Trash2 className="h-4 w-4" />
           Șterge
         </Button>
         <Button
           variant="outline"
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-2"
         >
           <Share2 className="h-4 w-4" />
           Distribuie planul
@@ -325,7 +296,7 @@ function PlanPageContent() {
         <Button
           variant="outline"
           onClick={() => setIsBookingsOpen(true)}
-          className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+          className="flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
         >
           <BookCheck className="h-4 w-4" />
           Rezervările mele

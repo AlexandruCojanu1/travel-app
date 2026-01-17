@@ -41,15 +41,7 @@ export default function RootLayout({
     <html lang="en" className={dmSans.variable} suppressHydrationWarning>
       <body className="antialiased relative min-h-screen">
         <AuthListener />
-        {/* Faded Background Pattern */}
-        <div
-          className="fixed inset-0 z-[-1] opacity-[0.08] pointer-events-none"
-          style={{
-            backgroundImage: "url('/images/travel-pattern.svg')",
-            backgroundRepeat: "repeat",
-            backgroundSize: "400px" // Adjust size as needed for a nice pattern
-          }}
-        />
+
 
         <ConditionalLayout>
           {children}

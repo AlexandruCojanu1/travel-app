@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Plus, Home, Search, Calendar as CalendarIcon, User, Map, Globe } from "lucide-react"
 import { TripSummaryCard } from "@/components/features/feed/trip-summary-card"
 import { CreateTripDialog } from "@/components/features/trip/create-trip-dialog"
-import Image from "next/image"
+
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -15,6 +15,7 @@ interface PlanDashboardProps {
 export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardProps) {
     const [activeTab, setActiveTab] = useState<'active' | 'past'>('active')
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+    const [showAllMobile, setShowAllMobile] = useState(false)
 
     // Filter vacations
     const now = new Date()
@@ -27,6 +28,10 @@ export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardPr
         }
     })
 
+    // Get vacations to display on mobile (first 1 unless expanded)
+    const mobileVacations = showAllMobile ? filteredVacations : filteredVacations.slice(0, 1)
+    const hasMoreVacations = filteredVacations.length > 1
+
     // Handle open create dialog (merging props and internal state logic)
     const handleOpenCreate = () => {
         setIsCreateDialogOpen(true)
@@ -34,22 +39,14 @@ export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardPr
     }
 
     return (
-        <div className="min-h-screen bg-background pb-24 relative">
-            {/* Animated Background Pattern */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03]">
-                <Image
-                    src="/images/travel-pattern.svg"
-                    alt="Pattern"
-                    fill
-                    className="object-cover"
-                />
-            </div>
+        <div className="bg-background relative">
 
-            <div className="max-w-md mx-auto px-6 pt-8 relative z-10">
+
+            <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-6 pt-2 relative z-10">
                 <h1 className="text-3xl font-bold text-foreground mb-6">Planificări</h1>
 
                 {/* Custom Segmented Control */}
-                <div className="bg-muted p-1 rounded-full flex mb-12 relative border border-black/5 max-w-xs mx-auto">
+                <div className="bg-muted p-1 rounded-full flex mb-12 relative border border-black/5 max-w-xs mx-auto md:mx-0">
                     <button
                         onClick={() => setActiveTab('active')}
                         className={cn(
@@ -78,30 +75,64 @@ export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardPr
                     />
                 </div>
 
-                {/* Content */}
+                {/* Content - Responsive Grid */}
                 {filteredVacations.length > 0 ? (
-                    <div className="space-y-6">
-                        {filteredVacations.map((vacation) => (
-                            <TripSummaryCard
-                                key={vacation.id}
-                                title={vacation.title}
-                                cityName={vacation.cityName}
-                                startDate={vacation.startDate}
-                                endDate={vacation.endDate}
-                                spotsCount={vacation.spotsCount}
-                                imageUrl={vacation.coverImage}
-                                onClick={() => onSelect(vacation.id)}
-                            />
-                        ))}
-                        {/* Add New Trip Button (Floating or inline) */}
-                        <button
-                            onClick={handleOpenCreate}
-                            className="w-full py-4 border-2 border-dashed border-border rounded-3xl text-muted-foreground font-medium hover:bg-secondary/20 hover:border-primary/50 transition-colors flex items-center justify-center gap-2"
-                        >
-                            <Plus className="h-5 w-5" />
-                            Planifică o nouă călătorie
-                        </button>
-                    </div>
+                    <>
+                        {/* Mobile: Show limited, Desktop: Show all */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Add New Trip Card - FIRST on mobile, last on desktop */}
+                            <div className="order-first md:order-last">
+                                <button
+                                    onClick={handleOpenCreate}
+                                    className="w-full min-h-[80px] py-4 border-2 border-dashed border-border rounded-3xl text-muted-foreground font-medium hover:bg-secondary/20 hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-2"
+                                >
+                                    <Plus className="h-8 w-8" />
+                                    Planifică o nouă călătorie
+                                </button>
+                            </div>
+
+                            {/* Vacation cards */}
+                            {filteredVacations.map((vacation, index) => (
+                                <div
+                                    key={vacation.id}
+                                    className={cn(
+                                        // On mobile, hide items beyond first 1 unless expanded
+                                        index >= 1 && !showAllMobile ? "hidden md:block" : "block"
+                                    )}
+                                >
+                                    <TripSummaryCard
+                                        title={vacation.title}
+                                        cityName={vacation.cityName}
+                                        startDate={vacation.startDate}
+                                        endDate={vacation.endDate}
+                                        spotsCount={vacation.spotsCount}
+                                        imageUrl={vacation.coverImage}
+                                        onClick={() => onSelect(vacation.id)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Mobile "Vezi toate" / "Vezi mai puțin" button */}
+                        {hasMoreVacations && (
+                            <button
+                                onClick={() => setShowAllMobile(!showAllMobile)}
+                                className="mt-6 w-full py-3 text-sm font-medium text-primary hover:text-primary/80 flex items-center justify-center gap-2 md:hidden"
+                            >
+                                {showAllMobile ? (
+                                    <>
+                                        Vezi mai puțin
+                                        <Map className="h-4 w-4 rotate-180" />
+                                    </>
+                                ) : (
+                                    <>
+                                        Vezi toate ({filteredVacations.length})
+                                        <Map className="h-4 w-4" />
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </>
                 ) : (
                     /* Empty State - Minimalist */
                     <div className="flex flex-col items-center justify-center pt-12 text-center">

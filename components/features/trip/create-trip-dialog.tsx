@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react'
 import { Calendar, ArrowRight, ArrowLeft, MapPin, Check, Plus, ThumbsUp, ChevronLeft, Search, Users, Minus, Car, Bus, Train, User } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
   DialogTitle,
+  DialogDescription,
 } from '@/components/shared/ui/dialog'
 import { Button } from '@/components/shared/ui/button'
 import { Slider } from '@/components/shared/ui/slider'
@@ -115,7 +116,7 @@ export function CreateTripDialog({
         cityName: selectedCity.name,
         startDate,
         endDate,
-        title: `Călătorie în ${selectedCity.name}`,
+        title: selectedCity.name,
         guests: travelers,
         metadata: {
           protagonist,
@@ -155,104 +156,30 @@ export function CreateTripDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-0 overflow-hidden rounded-[40px] border-none shadow-2xl h-[85vh] md:h-[700px] max-h-[90vh] flex flex-col bg-white">
         <DialogTitle className="sr-only">Creează Călătorie nouă</DialogTitle>
+        <DialogDescription className="sr-only">Formular interactiv pentru planificarea vacanței tale.</DialogDescription>
         <div className="flex-1 relative overflow-hidden">
           <AnimatePresence mode="wait">
 
-            {/* STEP 1: DESTINATION */}
+            {/* STEP 1: DESTINATION (Wheel Selector) */}
             {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="absolute inset-0 p-8 space-y-6 flex flex-col bg-white"
-              >
-                <div className="flex items-center justify-between">
-                  <button onClick={() => onOpenChange(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                    <ChevronLeft className="h-6 w-6" />
-                  </button>
-                </div>
-
-                <div className="space-y-1">
-                  <h2 className="text-4xl font-extrabold tracking-tighter text-mova-dark">Unde mergem?</h2>
-                  <p className="text-gray-500 text-lg font-medium">Alege destinația visurilor tale</p>
-                </div>
-
-                {/* Search Bar */}
-                <div className="relative group">
-                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-mova-blue transition-colors">
-                    <Search className="h-5 w-5" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Caută destinații..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:border-mova-blue focus:bg-white rounded-[24px] outline-none transition-all font-medium text-lg"
-                  />
-                </div>
-
-                <div className="flex-1 overflow-y-auto -mx-2 px-2 space-y-4 min-h-0">
-                  {filteredCities.length > 0 ? (
-                    filteredCities.map((city) => (
-                      <button
-                        key={city.id}
-                        onClick={() => {
-                          setSelectedCity({
-                            id: city.id,
-                            name: city.name,
-                            country: city.country,
-                            // @ts-ignore
-                            state_province: null,
-                            latitude: 0,
-                            longitude: 0,
-                            is_active: true,
-                            created_at: '',
-                          })
-                          handleNext()
-                        }}
-                        className={cn(
-                          "w-full flex items-center justify-between p-5 rounded-[28px] border-2 transition-all",
-                          selectedCity?.id === city.id
-                            ? "border-mova-blue bg-mova-blue/5 shadow-sm"
-                            : "border-gray-50 hover:border-gray-100 bg-white"
-                        )}
-                      >
-                        <div className="flex items-center gap-4 text-left">
-                          <div className={cn(
-                            "p-3 rounded-2xl transition-colors",
-                            selectedCity?.id === city.id ? "bg-primary/10" : "bg-gray-50"
-                          )}>
-                            <MapPin className={cn(
-                              "h-6 w-6",
-                              selectedCity?.id === city.id ? "text-primary" : "text-gray-400"
-                            )} />
-                          </div>
-                          <div>
-                            <p className="font-bold text-lg text-foreground">{city.name}</p>
-                            <p className="text-gray-500 text-sm font-medium">{city.country}</p>
-                          </div>
-                        </div>
-                        {selectedCity?.id === city.id && (
-                          <div className="h-7 w-7 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/20">
-                            <Check className="h-4 w-4 text-white stroke-[3]" />
-                          </div>
-                        )}
-                      </button>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                      <div className="p-6 bg-gray-50 rounded-full">
-                        <Search className="h-10 w-10 text-gray-200" />
-                      </div>
-                      <div>
-                        <p className="text-gray-800 font-bold text-lg">Niciun rezultat</p>
-                        <p className="text-gray-400 font-medium">Încearcă să cauți alt oraș sau țară.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
+              <DestinationStep
+                cities={cities}
+                onSelect={(city) => {
+                  setSelectedCity({
+                    id: city.id,
+                    name: city.name,
+                    country: city.country,
+                    // @ts-ignore
+                    state_province: null,
+                    latitude: 0,
+                    longitude: 0,
+                    is_active: true,
+                    created_at: '',
+                  })
+                  handleNext()
+                }}
+                onClose={() => onOpenChange(false)}
+              />
             )}
 
             {/* STEP 2: DATES (Range) */}
@@ -588,5 +515,179 @@ export function CreateTripDialog({
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+const ITEM_HEIGHT = 80
+const CIRCLE_RADIUS = 400 // For X offset calculation
+const MAX_ANGLE = 50 // Much more rotation like Paris
+
+function DestinationStep({
+  cities,
+  onSelect,
+  onClose
+}: {
+  cities: any[],
+  onSelect: (city: any) => void,
+  onClose: () => void
+}) {
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [containerHeight, setContainerHeight] = React.useState(600)
+
+  React.useEffect(() => {
+    const updateHeight = () => {
+      if (containerRef.current) {
+        setContainerHeight(containerRef.current.clientHeight)
+      }
+    }
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
+    return () => window.removeEventListener('resize', updateHeight)
+  }, [])
+
+  const spacerHeight = (containerHeight / 2) - (ITEM_HEIGHT / 2)
+
+  return (
+    <motion.div
+      key="step1"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="absolute inset-0 z-50 flex flex-col bg-[#1e2328] text-white overflow-hidden rounded-[40px]"
+    >
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 p-6 z-20">
+        <button onClick={onClose} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors text-white">
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+      </div>
+
+      {/* Circle Arc - Small and tight around center like Paris */}
+      <div
+        className="absolute top-1/2 -translate-y-1/2 rounded-full border border-white/20 pointer-events-none z-0"
+        style={{
+          width: 200,
+          height: 200,
+          left: -100, // Right edge at center item
+        }}
+      />
+
+      {/* Scroll Container */}
+      <div
+        ref={containerRef}
+        className="absolute inset-0 overflow-y-auto no-scrollbar snap-y snap-mandatory"
+        style={{
+          scrollBehavior: 'smooth',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+        }}
+      >
+        {/* Spacer to push first item to center */}
+        <div style={{ height: spacerHeight }} />
+
+        <div className="flex flex-col">
+          {cities.map((city, i) => (
+            <CityItem
+              key={city.id}
+              city={city}
+              containerRef={containerRef}
+              index={i}
+              spacerHeight={spacerHeight}
+              onClick={() => onSelect(city)}
+            />
+          ))}
+        </div>
+
+        {/* Spacer to allow last item to reach center */}
+        <div style={{ height: spacerHeight }} />
+      </div>
+
+      {/* Scroll Indicator */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1 h-20 bg-white/10 rounded-full overflow-hidden">
+        <div className="w-full h-6 bg-white/50 rounded-full" />
+      </div>
+    </motion.div>
+  )
+}
+
+function CityItem({ city, containerRef, index, spacerHeight, onClick }: {
+  city: any,
+  containerRef: React.RefObject<HTMLDivElement>,
+  index: number,
+  spacerHeight: number,
+  onClick: () => void
+}) {
+  const { scrollY } = useScroll({ container: containerRef, layoutEffect: false })
+
+  // Calculate distance from center of viewport (in pixels)
+  // Account for the spacer that pushes items down
+  const distanceFromCenter = useTransform(scrollY, (value) => {
+    const container = containerRef.current
+    if (!container) return 0
+
+    const viewportHeight = container.clientHeight
+    const centerY = viewportHeight / 2
+    const scrollTop = value
+    // Item position = spacer + (index * height) + half item height
+    const itemCenter = spacerHeight + (index * ITEM_HEIGHT) + (ITEM_HEIGHT / 2) - scrollTop
+
+    return itemCenter - centerY
+  })
+
+  // Normalize to -1 to 1 range
+  const normalized = useTransform(distanceFromCenter, (d) => {
+    const maxDist = 400 // Even more gradual transition
+    return Math.max(-1, Math.min(1, d / maxDist))
+  })
+
+  // RotateZ: Text follows the arc tangent
+  // In CSS: positive rotation = clockwise, negative = counterclockwise
+  // Top items (negative normalized) should tilt counterclockwise (negative angle) - like /
+  // Bottom items (positive normalized) should tilt clockwise (positive angle) - like \
+  const rotateZ = useTransform(normalized, [-1, 0, 1], [-MAX_ANGLE, 0, MAX_ANGLE])
+
+  // X offset: Items curve LEFT as they move away from center (arc effect)
+  // Using arc formula: offset = R - R*cos(θ) where θ is based on normalized position
+  const xOffset = useTransform(normalized, (n) => {
+    const angle = n * (MAX_ANGLE * Math.PI / 180)
+    const arcOffset = CIRCLE_RADIUS * (1 - Math.cos(angle))
+    return -arcOffset // Negative to move left
+  })
+
+  // Distance from center (0 to 1) for scale/opacity
+  const absNormalized = useTransform(normalized, (n) => Math.abs(n))
+
+  // Scale: 1.1 at center, 0.4 at edges (center MUCH bigger)
+  const scale = useTransform(absNormalized, [0, 0.3, 1], [1.1, 0.7, 0.4])
+
+  // Opacity: 1 at center, 0.15 at edges (sharper falloff)
+  const opacity = useTransform(absNormalized, [0, 0.3, 1], [1, 0.5, 0.15])
+
+  // Color: white at center, gray at edges
+  const color = useTransform(absNormalized, [0, 0.3, 1], ["#ffffff", "#9ca3af", "#4b5563"])
+
+  // Font weight: bold at center, normal at edges
+  const fontWeight = useTransform(absNormalized, [0, 0.3, 1], [700, 500, 400])
+
+  return (
+    <motion.div
+      onClick={onClick}
+      style={{
+        height: ITEM_HEIGHT,
+        scale,
+        opacity,
+        rotate: rotateZ,
+        x: xOffset,
+        transformOrigin: "left center", // Pivot from left edge
+      }}
+      className="flex items-center snap-center cursor-pointer pl-[100px]"
+    >
+      <motion.span
+        className="font-serif text-[1.7rem] uppercase tracking-widest whitespace-nowrap"
+        style={{ color, fontWeight }}
+      >
+        {city.name}
+      </motion.span>
+    </motion.div>
   )
 }

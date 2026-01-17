@@ -35,15 +35,7 @@ export function Header() {
             {/* Main Pill Container */}
             <nav className="relative h-[72px] pl-10 pr-3 rounded-full flex items-center gap-10 bg-primary/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden">
 
-              {/* Artistic Background Pattern */}
-              <div
-                className="absolute inset-0 opacity-[0.07] pointer-events-none z-0"
-                style={{
-                  backgroundImage: `url('/images/travel-pattern.svg')`,
-                  backgroundSize: '300px',
-                  backgroundRepeat: 'repeat'
-                }}
-              />
+
 
               {/* Navigation Links */}
               <div className="flex items-center gap-8 relative z-10">

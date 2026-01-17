@@ -19,7 +19,7 @@ import { HotelBookingDrawer } from '@/components/features/explore/hotel-booking-
 
 // Category filter mapping
 const CATEGORY_FILTERS: Record<SwipeCategory, string[]> = {
-    hotel: ['Hotel', 'Hotels'],
+    hotel: ['Hotel', 'Hotels', 'Lodging', 'Accommodation', 'Guesthouse', 'Apartment', 'Hostel', 'Bed and Breakfast', 'Resort', 'Villa', 'Motel'],
     restaurants: ['Restaurant', 'Cafe', 'Bar', 'Food', 'Cafes', 'Bars'],
     activities: ['Activities', 'Attraction', 'Museum', 'Nature', 'Shopping', 'Spa'],
 }
@@ -101,15 +101,30 @@ function ExploreContent() {
                 validResults.forEach(business => {
                     const category = business.category
 
+                    // Helper to check if a business is lodging/accommodation
+                    const isLodgingHelper = (b: MapBusiness) => {
+                        const terms = ['hotel', 'lodging', 'accommodation', 'hostel', 'resort', 'villa', 'apartment', 'bnb', 'bed and breakfast', 'pension', 'cazare', 'rooms', 'suites', 'inn', 'motel', 'guesthouse']
+                        const lowerCat = b.category.toLowerCase()
+                        const lowerName = b.name.toLowerCase()
+
+                        return terms.some(term => lowerCat.includes(term) || lowerName.includes(term))
+                    }
+
                     if (CATEGORY_FILTERS.hotel.some(c => c.toLowerCase() === category.toLowerCase())) {
                         categorized.hotel.push(business)
                     } else if (CATEGORY_FILTERS.restaurants.some(c => c.toLowerCase() === category.toLowerCase())) {
                         categorized.restaurants.push(business)
                     } else if (CATEGORY_FILTERS.activities.some(c => c.toLowerCase() === category.toLowerCase())) {
-                        categorized.activities.push(business)
+                        if (!isLodgingHelper(business)) {
+                            categorized.activities.push(business)
+                        }
                     } else {
-                        // Default to activities for unknown categories
-                        categorized.activities.push(business)
+                        // Default to activities for unknown categories, BUT exclude anything that sounds like lodging
+
+
+                        if (!isLodgingHelper(business)) {
+                            categorized.activities.push(business)
+                        }
                     }
                 })
 
@@ -305,39 +320,27 @@ function ExploreContent() {
     }
 
     return (
-        <div className="fixed inset-0 top-0 md:top-[72px] bg-white overflow-hidden flex flex-col">
+        <div className="fixed inset-0 top-0 md:top-[72px] bg-neutral-900 overflow-hidden flex flex-col">
             {/* Header with Progress */}
-            <div className="pt-4 px-4 pb-2 bg-white">
-                <div className="flex items-center justify-between mb-2">
-                    <div>
-                        <h1 className="text-lg font-bold text-gray-900">Descoperă</h1>
-                        <p className="text-sm text-gray-500 flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> {currentCity.name}
-                        </p>
-                    </div>
-                    <div className="text-sm text-gray-400">
-                        {currentBusinesses.length} locuri rămase
-                    </div>
+            <div className="pt-6 px-6 pb-2 bg-neutral-900 z-20 shrink-0">
+                <div className="flex flex-col items-center justify-center text-center">
+                    <span className="text-neutral-400 text-xs tracking-[0.2em] uppercase mb-1">DESTINAȚIA TA</span>
+                    <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tight">
+                        {currentCity?.name ? currentCity.name.toUpperCase() : 'EXPLORE'}
+                    </h1>
                 </div>
-
-                {/* Category Progress */}
-                <CategoryProgress
-                    currentCategory={currentCategory}
-                    completedCategories={completedCategories}
-                    selectedHotel={selectedHotel}
-                />
 
                 {/* Skip button for ALL categories */}
                 {currentBusinesses.length > 0 && (
                     <button
                         onClick={handleSkipCategory}
-                        className="text-sm text-gray-400 hover:text-gray-600 underline mx-auto block"
+                        className="text-[10px] text-neutral-600 hover:text-white transition-colors mt-2 mx-auto block uppercase tracking-wider"
                     >
                         {currentCategory === 'hotel'
-                            ? 'Nu am nevoie de cazare'
+                            ? 'SKIP HOTELS'
                             : currentCategory === 'restaurants'
-                                ? 'Sari peste restaurante'
-                                : 'Sari peste activități'}
+                                ? 'SKIP RESTAURANTS'
+                                : 'SKIP ACTIVITIES'}
                     </button>
                 )}
             </div>

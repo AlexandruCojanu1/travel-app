@@ -198,9 +198,11 @@ export function SwipeStack({
     }
 
     return (
-        <div className="relative w-full h-full flex flex-col items-center justify-between py-4 pb-24 md:pb-8 max-w-md mx-auto">
-            {/* Cards Container */}
-            <div className="relative w-full aspect-[3/4] md:aspect-[4/5] h-full max-h-[65vh] md:max-h-[600px] z-10 px-4">
+        <div className="relative w-full h-full flex flex-col items-center justify-center py-4 pb-40 md:pb-8 max-w-md mx-auto">
+            {/* Cards Container - Mobile Optimized */}
+            {/* Desktop: Maintains original sizing with md: prefixes */}
+            {/* Mobile: w-[85vw] and h-[65vh]. Centered by parent flex + pb-40 padding to counterbalance header */}
+            <div className="relative w-[85vw] md:w-full px-0 md:px-4 h-[65vh] md:h-[600px] max-h-[600px] min-h-[400px] z-10 flex items-center justify-center">
                 <AnimatePresence>
                     {nextBusiness && nextBusiness.id && (
                         <div
@@ -235,37 +237,8 @@ export function SwipeStack({
                 </AnimatePresence>
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center justify-center gap-6 mt-6 z-20">
-                <button
-                    onClick={handleRewind}
-                    disabled={history.length === 0}
-                    className="w-12 h-12 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-transform"
-                >
-                    <RotateCcw className="w-5 h-5 stroke-[2.5]" />
-                </button>
-
-                <button
-                    onClick={handleSwipeLeft}
-                    className="w-16 h-16 rounded-full bg-white shadow-[0_8px_30px_rgba(239,68,68,0.2)] border border-red-50 flex items-center justify-center text-red-500 hover:scale-110 hover:bg-red-50 transition-all"
-                >
-                    <X className="w-8 h-8 stroke-[3]" />
-                </button>
-
-                <button
-                    onClick={handleSwipeRight}
-                    className="w-16 h-16 rounded-full bg-gradient-to-tr from-green-400 to-emerald-500 shadow-[0_8px_30px_rgba(16,185,129,0.3)] flex items-center justify-center text-white hover:scale-110 hover:shadow-[0_12px_40px_rgba(16,185,129,0.4)] transition-all"
-                >
-                    <Heart className="w-8 h-8 fill-white stroke-[3]" />
-                </button>
-
-                <button
-                    onClick={handleTap}
-                    className="w-12 h-12 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-blue-500 hover:scale-110 transition-transform"
-                >
-                    <Info className="w-5 h-5 stroke-[2.5]" />
-                </button>
-            </div>
+            {/* Action buttons removed as requested */}
+            <div className="h-4" />
         </div>
     )
 }

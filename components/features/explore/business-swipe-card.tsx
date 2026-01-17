@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion"
-import { MapPin, Star, Heart, X, Info, Bookmark, Navigation } from "lucide-react"
+import { MapPin, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MapBusiness } from "@/services/business/business.service"
 
@@ -27,7 +27,7 @@ export function BusinessSwipeCard({
     const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null)
 
     const x = useMotionValue(0)
-    const rotate = useTransform(x, [-200, 200], [-25, 25])
+    const rotate = useTransform(x, [-200, 200], [-15, 15])
     const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0])
 
     // Overlay indicators
@@ -79,10 +79,11 @@ export function BusinessSwipeCard({
             } : {}}
             onClick={isTop ? onTap : undefined}
         >
-            {/* Card Container */}
-            <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl bg-white">
-                {/* Business Image */}
-                <div className="absolute inset-0">
+            {/* Card Container - Split Layout */}
+            <div className="relative w-full h-full rounded-[32px] overflow-hidden shadow-2xl bg-white flex flex-col">
+
+                {/* 1. Image Section (~65%) */}
+                <div className="relative h-[65%] w-full bg-gray-200">
                     {business.image_url && (business.image_url.startsWith('http') || business.image_url.startsWith('/')) ? (
                         <Image
                             src={business.image_url}
@@ -90,6 +91,7 @@ export function BusinessSwipeCard({
                             fill
                             className="object-cover"
                             sizes="(max-width: 768px) 100vw, 400px"
+                            priority={isTop}
                         />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center">
@@ -97,87 +99,63 @@ export function BusinessSwipeCard({
                         </div>
                     )}
 
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                </div>
-
-                {/* Like Indicator */}
-                <motion.div
-                    className="absolute top-8 left-8 px-6 py-3 rounded-xl border-4 border-green-500 bg-green-500/20 backdrop-blur-sm"
-                    style={{ opacity: likeOpacity }}
-                >
-                    <span className="text-3xl font-black text-green-500 tracking-wider">LIKE</span>
-                </motion.div>
-
-                {/* Nope Indicator */}
-                <motion.div
-                    className="absolute top-8 right-8 px-6 py-3 rounded-xl border-4 border-red-500 bg-red-500/20 backdrop-blur-sm"
-                    style={{ opacity: nopeOpacity }}
-                >
-                    <span className="text-3xl font-black text-red-500 tracking-wider">NOPE</span>
-                </motion.div>
-
-                {/* Category Badge */}
-                <div className="absolute top-6 left-1/2 -translate-x-1/2">
-                    <div className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-full shadow-lg">
-                        <span className="text-sm font-semibold text-gray-800">
-                            {getCategoryEmoji(business.category)} {business.category}
+                    {/* Rating Badge - Top Left */}
+                    <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full z-10">
+                        <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                        <span className="text-white font-bold text-sm">
+                            {business.rating ? business.rating.toFixed(1) : 'New'}
                         </span>
                     </div>
+
+                    {/* Like/Nope Overlays */}
+                    <motion.div
+                        className="absolute top-8 left-8 z-20 px-6 py-2 rounded-xl border-4 border-green-500 bg-green-500/20 backdrop-blur-sm -rotate-12"
+                        style={{ opacity: likeOpacity }}
+                    >
+                        <span className="text-2xl font-black text-green-500 tracking-wider">YES</span>
+                    </motion.div>
+
+                    <motion.div
+                        className="absolute top-8 right-8 z-20 px-6 py-2 rounded-xl border-4 border-red-500 bg-red-500/20 backdrop-blur-sm rotate-12"
+                        style={{ opacity: nopeOpacity }}
+                    >
+                        <span className="text-2xl font-black text-red-500 tracking-wider">NOPE</span>
+                    </motion.div>
                 </div>
 
-                {/* Business Info */}
-                <div className="absolute bottom-0 left-0 right-0 p-5 pb-6">
-                    {/* Name & Rating */}
-                    <div className="space-y-3">
-                        <h2 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg line-clamp-2">
-                            {business.name}
-                        </h2>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                            {business.rating && (
-                                <div className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full">
-                                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                    <span className="text-white font-semibold text-sm">{business.rating.toFixed(1)}</span>
+                {/* 2. Content Section (~35%) */}
+                <div className="flex-1 bg-white p-6 flex flex-col justify-between">
+                    <div>
+                        <div className="flex justify-between items-start mb-2">
+                            <h2 className="text-2xl font-bold text-gray-900 leading-tight line-clamp-2 pr-2">
+                                {business.name}
+                            </h2>
+                            {business.category.toLowerCase().includes('hotel') || business.category.toLowerCase().includes('attraction') ? (
+                                <div className="bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
+                                    <span className="text-gray-900 font-bold text-sm">
+                                        {(() => {
+                                            const level = business.price_level || '€€'
+                                            const basePrice = level === '€' ? 50 : level === '€€€' ? 400 : 150
+                                            return `€ ${basePrice}`
+                                        })()}
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
+                                    <span className="text-gray-900 font-bold text-sm">
+                                        {business.price_level || '€€'}
+                                    </span>
                                 </div>
                             )}
-
-                            {/* Price Level & Dynamic Cost */}
-                            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full">
-                                <span className="text-white font-medium text-sm">
-                                    {business.price_level || '€€'}
-                                </span>
-                                {business.category.toLowerCase().includes('hotel') && (
-                                    <>
-                                        <span className="text-white/40">|</span>
-                                        <span className="text-white font-bold text-sm">
-                                            {/* Estimate price: €=50, €€=150, €€€=400 per person/night */}
-                                            {(() => {
-                                                const level = business.price_level || '€€'
-                                                const basePrice = level === '€' ? 50 : level === '€€€' ? 400 : 150
-                                                const totalPrice = basePrice * guests
-                                                return `~${totalPrice} RON (${guests} pers)`
-                                            })()}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
                         </div>
 
-                        {/* Description */}
-                        {business.description && (
-                            <p className="text-white/90 text-sm md:text-base line-clamp-2 leading-relaxed max-w-[90%] drop-shadow-md">
-                                {business.description}
-                            </p>
-                        )}
+                        <p className="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-3">
+                            {business.description || `Experience the best ${business.category} in town. Great atmosphere and amazing service awaiting you.`}
+                        </p>
+                    </div>
 
-                        {/* Address */}
-                        {business.address && (
-                            <div className="flex items-center gap-1.5 text-white/70 text-xs md:text-sm mt-1">
-                                <MapPin className="w-3.5 h-3.5" />
-                                <span className="truncate">{business.address}</span>
-                            </div>
-                        )}
+                    <div className="flex items-center gap-2 text-xs text-gray-400 font-medium uppercase tracking-wide">
+                        {getCategoryEmoji(business.category)} {business.category}
                     </div>
                 </div>
             </div>
