@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
-import { Star, Clock, MapPin, Globe, Phone, Bookmark, Navigation, X, Wifi, Car, Utensils, Coffee, ChevronRight, Copy, CreditCard } from 'lucide-react'
+import { Star, Clock, MapPin, Globe, Phone, Bookmark, Navigation, X, Wifi, Car, Utensils, Coffee, ChevronRight, Copy, CreditCard, Ticket } from 'lucide-react'
 import { type Business, type MapBusiness } from '@/services/business/business.service'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -157,8 +157,23 @@ export function BusinessDetailsContent({ business, onClose, isFullPage = false }
             {business.description && (
                 <div className="space-y-3">
                     <h3 className="text-2xl font-black text-slate-900 tracking-tight">Despre acest loc</h3>
-                    <p className="text-slate-500 leading-relaxed font-medium text-lg">
-                        {business.description}
+                    <p className="text-slate-500 leading-relaxed font-medium text-lg whitespace-pre-line">
+                        {business.description.split(/(https?:\/\/[^\s]+)/g).map((part, i) => (
+                            part.match(/https?:\/\/[^\s]+/) ? (
+                                <a
+                                    key={i}
+                                    href={part}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 underline break-all"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {part}
+                                </a>
+                            ) : (
+                                part
+                            )
+                        ))}
                     </p>
                 </div>
             )}
@@ -263,6 +278,17 @@ export function BusinessDetailsContent({ business, onClose, isFullPage = false }
                 isFullPage && "max-w-4xl mx-auto"
             )}>
                 <div className="flex items-center justify-center gap-4 pointer-events-auto">
+                    {/* Ticket Button (if available) */}
+                    {business.ticket_url && !isHotel && (
+                        <button
+                            onClick={() => window.open(business.ticket_url!, '_blank')}
+                            className="flex-1 flex items-center justify-center gap-3 px-6 pt-4 pb-4.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full shadow-[0_20px_50px_rgba(16,185,129,0.3)] border border-transparent hover:scale-105 transition-all active:scale-95 group"
+                        >
+                            <Ticket className="h-6 w-6 text-white stroke-[2.5]" />
+                            <span className="font-black text-white text-lg tracking-tight">Bilete</span>
+                        </button>
+                    )}
+
                     {/* Main Action Action */}
                     {isHotel ? (
                         <button

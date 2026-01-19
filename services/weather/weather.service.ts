@@ -69,17 +69,13 @@ export async function getWeatherForecast(
     cityName: string
 ): Promise<WeatherForecast | null> {
     try {
-        const url = new URL('https://api.open-meteo.com/v1/forecast')
-        url.searchParams.append('latitude', latitude.toString())
-        url.searchParams.append('longitude', longitude.toString())
-        url.searchParams.append('daily', 'temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max,windspeed_10m_max')
-        url.searchParams.append('timezone', 'auto')
-        url.searchParams.append('forecast_days', '14')
+        // Use local API route to avoid CORS issues
+        const url = `/api/weather?latitude=${latitude}&longitude=${longitude}`
 
-        const response = await fetch(url.toString())
+        const response = await fetch(url)
 
         if (!response.ok) {
-            console.error('Open-Meteo API error:', response.status)
+            console.error('Weather API error:', response.status)
             return null
         }
 

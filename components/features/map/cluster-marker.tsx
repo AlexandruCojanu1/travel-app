@@ -18,7 +18,7 @@ export function ClusterMarker({ pointCount, count, lat, lng, onClick }: ClusterM
       style={{ left: `${lng || 0}px`, top: `${lat || 0}px` }}
       onClick={onClick}
     >
-      <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-lg">
+      <div className="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-lg">
         {pointCountValue}
       </div>
     </div>

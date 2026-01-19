@@ -11,10 +11,10 @@ interface DayNavigatorProps {
   daysCount?: number
 }
 
-export function DayNavigator({ 
-  selectedDayIndex, 
+export function DayNavigator({
+  selectedDayIndex,
   onDaySelect,
-  daysCount = 7 
+  daysCount = 7
 }: DayNavigatorProps) {
   const days = Array.from({ length: daysCount }, (_, i) => i)
 
@@ -29,7 +29,7 @@ export function DayNavigator({
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
-      
+
       <div className="flex gap-2 flex-1 min-w-0">
         {days.map((dayIndex) => (
           <button
@@ -38,7 +38,7 @@ export function DayNavigator({
             className={cn(
               "flex-shrink-0 px-4 py-2 rounded-lg font-semibold text-sm transition-colors",
               selectedDayIndex === dayIndex
-                ? "bg-blue-600 text-white"
+                ? "bg-primary text-primary-foreground"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             )}
           >

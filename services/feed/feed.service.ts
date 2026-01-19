@@ -116,7 +116,8 @@ export async function getCityFeed(
       .from('businesses')
       .select('*')
       .eq('city_id', cityId)
-      .limit(5)
+      .limit(20) // Increased limit to ensure new museums show up
+
 
     // Try to order by rating, but handle gracefully if column doesn't exist
     // We'll order by created_at as fallback
@@ -146,6 +147,18 @@ export async function getCityFeed(
 
     const { data: featuredBusinesses, error: businessError } = await businessQuery
 
+
+
+    // Process businesses to fallback to attributes.image_url if main image_url is missing
+    const processedBusinesses = (featuredBusinesses || []).map(b => {
+      // Check if attributes has image_url
+      const attrs = b.attributes as any
+      if ((!b.image_url || b.image_url.trim() === '') && attrs?.image_url) {
+        return { ...b, image_url: attrs.image_url }
+      }
+      return b
+    })
+
     if (businessError) {
       logger.error('Error fetching businesses', businessError, { cityId, categoryFilter })
       // If error is about rating column, try again without rating order
@@ -171,9 +184,19 @@ export async function getCityFeed(
         }
 
         const { data: fallbackBusinesses } = await fallbackQuery
+
+        // Also process fallback businesses
+        const processedFallback = (fallbackBusinesses || []).map(b => {
+          const attrs = b.attributes as any
+          if ((!b.image_url || b.image_url.trim() === '') && attrs?.image_url) {
+            return { ...b, image_url: attrs.image_url }
+          }
+          return b
+        })
+
         return {
           cityPosts: cityPosts || [],
-          featuredBusinesses: fallbackBusinesses || [],
+          featuredBusinesses: processedFallback,
           promotions: [],
         }
       }
@@ -195,7 +218,7 @@ export async function getCityFeed(
 
     return {
       cityPosts: cityPosts || [],
-      featuredBusinesses: featuredBusinesses || [],
+      featuredBusinesses: processedBusinesses,
       promotions: promotions || [],
     }
   } catch (error) {

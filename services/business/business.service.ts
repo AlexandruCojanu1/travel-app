@@ -59,6 +59,7 @@ export interface Business {
   room_types?: string[]
   check_in_time?: string | null
   check_out_time?: string | null
+  ticket_url?: string | null
 }
 
 export interface MapBusiness {
@@ -72,6 +73,7 @@ export interface MapBusiness {
   price_level: string
   address: string | null
   description: string | null
+  ticket_url?: string | null
 }
 
 /**
@@ -133,6 +135,7 @@ export async function getBusinessesForMap(
         address: business.address || attributes.address || attributes.address_line || null,
         price_level: attributes.price_level || getPriceLevelForCategory(business.category),
         description: business.description || attributes.description || null,
+        ticket_url: attributes.ticket_url || null,
       }
     })
   } catch (error) {
@@ -212,6 +215,7 @@ export async function getBusinessById(id: string): Promise<Business | null> {
       room_types: Array.isArray(attributes.room_types) ? attributes.room_types : [],
       check_in_time: attributes.check_in_time || null,
       check_out_time: attributes.check_out_time || null,
+      ticket_url: attributes.ticket_url || null,
     }
 
     return business
@@ -319,7 +323,8 @@ export async function searchBusinessesInBounds(
         image_url: imageUrl,
         address: business.address || attributes.address || attributes.address_line || null,
         price_level: attributes.price_level || getPriceLevelForCategory(business.category),
-      }
+        ticket_url: attributes.ticket_url || null,
+      } as MapBusiness
     }).filter((b): b is MapBusiness => b !== null)
   } catch (error) {
     console.error('Unexpected error searching businesses in bounds:', error)

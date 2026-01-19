@@ -112,7 +112,7 @@ export function VacationSelector({ onVacationSelected }: VacationSelectorProps) 
                         <Button
                             onClick={() => setIsCreateDialogOpen(true)}
                             size="lg"
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-blue-500/25"
+                            className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-primary/25"
                         >
                             <Plus className="h-5 w-5 mr-2" />
                             Creează prima vacanță
@@ -147,7 +147,7 @@ export function VacationSelector({ onVacationSelected }: VacationSelectorProps) 
                         setEditingVacation(null)
                         setIsCreateDialogOpen(true)
                     }}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25"
+                    className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25"
                 >
                     <Plus className="h-4 w-4 mr-2" />
                     Vacanță nouă
@@ -159,7 +159,7 @@ export function VacationSelector({ onVacationSelected }: VacationSelectorProps) 
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-4 py-3 rounded-xl"
+                    className="flex items-center gap-2 text-sm text-primary bg-primary/10 px-4 py-3 rounded-xl"
                 >
                     <Sparkles className="h-4 w-4" />
                     <span>
@@ -200,12 +200,12 @@ export function VacationSelector({ onVacationSelected }: VacationSelectorProps) 
                                 setEditingVacation(null)
                                 setIsCreateDialogOpen(true)
                             }}
-                            className="w-full h-full min-h-[280px] rounded-2xl border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all flex flex-col items-center justify-center gap-3 group"
+                            className="w-full h-full min-h-[280px] rounded-2xl border-2 border-dashed border-gray-200 hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-3 group"
                         >
-                            <div className="h-16 w-16 rounded-2xl bg-gray-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
-                                <Plus className="h-8 w-8 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                            <div className="h-16 w-16 rounded-2xl bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
+                                <Plus className="h-8 w-8 text-gray-400 group-hover:text-primary transition-colors" />
                             </div>
-                            <span className="text-gray-500 group-hover:text-blue-600 font-medium transition-colors">
+                            <span className="text-gray-500 group-hover:text-primary font-medium transition-colors">
                                 Adaugă vacanță nouă
                             </span>
                         </button>

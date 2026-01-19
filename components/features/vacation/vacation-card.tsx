@@ -46,7 +46,7 @@ export function VacationCard({ vacation, isActive, onSelect, onEdit, onDelete }:
             case 'completed':
                 return 'bg-gray-100 text-gray-600 border-gray-200'
             default:
-                return 'bg-blue-100 text-blue-700 border-blue-200'
+                return 'bg-primary/10 text-primary border-primary/20'
         }
     }
 
@@ -64,11 +64,10 @@ export function VacationCard({ vacation, isActive, onSelect, onEdit, onDelete }:
     // Generate a gradient based on city name for visual variety
     const getCardGradient = () => {
         const gradients = [
-            'from-blue-500 to-purple-600',
-            'from-emerald-500 to-teal-600',
-            'from-orange-500 to-pink-600',
-            'from-indigo-500 to-blue-600',
-            'from-rose-500 to-orange-600',
+            'from-primary to-secondary',
+            'from-secondary to-primary',
+            'from-primary/80 to-secondary/80',
+            'from-secondary/80 to-primary/80',
         ]
         const index = vacation.cityName.charCodeAt(0) % gradients.length
         return gradients[index]
@@ -79,8 +78,8 @@ export function VacationCard({ vacation, isActive, onSelect, onEdit, onDelete }:
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
             className={`relative rounded-2xl overflow-hidden shadow-lg cursor-pointer transition-all duration-300 ${isActive
-                    ? 'ring-4 ring-blue-500 ring-offset-2 shadow-blue-500/25'
-                    : 'hover:shadow-xl'
+                ? 'ring-4 ring-primary ring-offset-2 shadow-primary/25'
+                : 'hover:shadow-xl'
                 }`}
             onClick={onSelect}
         >
@@ -106,7 +105,7 @@ export function VacationCard({ vacation, isActive, onSelect, onEdit, onDelete }:
                 {/* Active Indicator */}
                 {isActive && (
                     <div className="absolute top-3 right-3 bg-white rounded-full p-1.5 shadow-lg">
-                        <Check className="h-4 w-4 text-blue-600" />
+                        <Check className="h-4 w-4 text-primary" />
                     </div>
                 )}
 
@@ -162,13 +161,13 @@ export function VacationCard({ vacation, isActive, onSelect, onEdit, onDelete }:
                 <div className="space-y-2">
                     {/* City */}
                     <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                         <span className="text-sm truncate">{vacation.cityName}</span>
                     </div>
 
                     {/* Dates */}
                     <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                        <Calendar className="h-4 w-4 text-secondary flex-shrink-0" />
                         <span className="text-sm">
                             {formatDate(vacation.startDate)} - {formatDate(vacation.endDate)} ({getDaysCount()} zile)
                         </span>

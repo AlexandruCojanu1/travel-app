@@ -141,7 +141,7 @@ export function ChatWindow({ conversationId, currentUserId }: ChatWindowProps) {
                 className={cn(
                   "max-w-[70%] rounded-lg px-4 py-2",
                   isOwn
-                    ? "bg-blue-600 text-white"
+                    ? "bg-primary text-white"
                     : "bg-gray-100 text-gray-900"
                 )}
               >
@@ -149,7 +149,7 @@ export function ChatWindow({ conversationId, currentUserId }: ChatWindowProps) {
                 <p
                   className={cn(
                     "text-xs mt-1",
-                    isOwn ? "text-blue-100" : "text-gray-500"
+                    isOwn ? "text-white/80" : "text-gray-500"
                   )}
                 >
                   {format(new Date(message.created_at), 'HH:mm')}

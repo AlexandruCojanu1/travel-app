@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from "next"
-import { DM_Sans } from "next/font/google"
+import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
 import "./globals.css"
 import { ConditionalLayout } from "@/components/shared/conditional-layout"
 import { AuthListener } from "@/components/auth/auth-listener"
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-dm-sans",
+  variable: "--font-inter",
 })
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={dmSans.variable} suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="antialiased relative min-h-screen">
         <AuthListener />
 

@@ -20,6 +20,8 @@ import { TravelGuideCard } from "@/components/features/feed/travel-guide-card"
 import { TripSummaryCard } from "@/components/features/feed/trip-summary-card"
 import { getCityFeed } from "@/services/feed/feed.service"
 import { WeatherWidget } from "@/components/features/weather/weather-widget"
+import { GroupWalletCard } from "@/components/features/pay/group-wallet-card"
+import { CheckInButton } from "@/components/features/gamification/check-in-button"
 
 // Lazy load heavy trip components
 const BudgetMeter = lazy(() => import("@/components/features/trip/budget-meter").then(m => ({ default: m.BudgetMeter })))
@@ -27,7 +29,8 @@ const TimelineView = lazy(() => import("@/components/features/trip/timeline-view
 import { BookingsDialog } from "@/components/features/bookings/bookings-dialog"
 import { InviteDialog } from "@/components/features/trip/invite-dialog"
 import { exportTripToPDF } from "@/utils/export-trip-pdf"
-import { FileDown } from "lucide-react"
+import { FileDown, Banknote } from "lucide-react"
+import { GroupCheckoutModal } from "@/components/features/pay/group-checkout-modal"
 
 // ViewMode removed
 
@@ -87,6 +90,7 @@ function PlanPageContent() {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [isEditBudgetOpen, setIsEditBudgetOpen] = useState(false)
   const [isBookingsOpen, setIsBookingsOpen] = useState(false)
+  const [isGroupCheckoutOpen, setIsGroupCheckoutOpen] = useState(false)
   const [isLoadingTrip, setIsLoadingTrip] = useState(false)
 
   const [profile, setProfile] = useState<{ avatar_url: string | null; full_name: string | null } | null>(null)
@@ -244,10 +248,13 @@ function PlanPageContent() {
                   format(new Date(tripDetails.endDate), "d MMM yyyy", { locale: ro })}
               </span>
             </div>
-            {/* Location removed as requested */}
+
+            {/* Check-in Added Here */}
+            {tripDetails.cityName && (
+              <CheckInButton cityName={tripDetails.cityName} />
+            )}
           </div>
         </div>
-
       </div>
 
       {/* Budget Meter Hero Widget */}
@@ -260,6 +267,11 @@ function PlanPageContent() {
           </Suspense>
         </div>
       )}
+
+      {/* Group Wallet Widget (MOVA Pay) */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <GroupWalletCard />
+      </div>
 
       {/* Weather Forecast Widget */}
       {currentCity?.latitude && currentCity?.longitude && tripDetails.startDate && tripDetails.endDate && (
@@ -314,20 +326,22 @@ function PlanPageContent() {
         <Button
           variant="outline"
           onClick={() => setIsBookingsOpen(true)}
-          className="flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+          className="flex items-center justify-center gap-2 text-primary border-primary/20 hover:bg-primary/5"
         >
           <BookCheck className="h-4 w-4" />
           Rezervările mele
         </Button>
+
         <Button
-          asChild
-          className="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white border-0"
+          variant="outline"
+          onClick={() => setIsGroupCheckoutOpen(true)}
+          className="flex items-center justify-center gap-2 text-primary border-primary/20 hover:bg-primary/5"
         >
-          <Link href={`/plan/${tripId}/vote`}>
-            <Sparkles className="h-4 w-4" />
-            Găsește Activități
-          </Link>
+          <Banknote className="h-4 w-4" />
+          Pay & Split Hotel
         </Button>
+
+
       </div>
 
       {/* Timeline View */}
@@ -399,6 +413,19 @@ function PlanPageContent() {
           onOpenChange={setIsInviteDialogOpen}
           tripId={tripId}
           tripTitle={tripDetails.title || activeVacation?.title}
+        />
+      )}
+      {tripId && (
+        <GroupCheckoutModal
+          isOpen={isGroupCheckoutOpen}
+          onClose={() => setIsGroupCheckoutOpen(false)}
+          tripId={tripId}
+          totalAmount={2500} // This would ideally be dynamic based on the hotel item cost
+          businessName={items.find(i => i.business_category === 'Hotel' || i.business_category === 'Accommodation')?.business_name || "Hotel Booking"}
+          businessId={items.find(i => i.business_category === 'Hotel' || i.business_category === 'Accommodation')?.business_id}
+          startDate={tripDetails.startDate}
+          endDate={tripDetails.endDate}
+          collaboratorCount={tripDetails.guests || 1}
         />
       )}
     </div>

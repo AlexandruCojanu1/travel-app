@@ -448,7 +448,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
             <div className="relative group">
               {/* Main marker */}
               <div className="relative flex items-center justify-center cursor-pointer">
-                <div className="w-10 h-10 bg-green-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-primary rounded-full border-4 border-white shadow-lg flex items-center justify-center">
                   <svg
                     className="w-5 h-5 text-white"
                     fill="currentColor"
@@ -462,12 +462,12 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
                   </svg>
                 </div>
                 {/* Pin point */}
-                <div className="absolute top-9 w-0 h-0 border-l-5 border-r-5 border-t-8 border-l-transparent border-r-transparent border-t-green-600" />
+                <div className="absolute top-9 w-0 h-0 border-l-5 border-r-5 border-t-8 border-l-transparent border-r-transparent border-t-primary" />
               </div>
               {/* Tooltip on hover */}
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                <div className="bg-white rounded-lg shadow-xl p-3 border-2 border-green-200 min-w-[200px] max-w-[250px]">
-                  <h3 className="font-bold text-green-800 text-sm mb-1">{reserve.name}</h3>
+                <div className="bg-white rounded-lg shadow-xl p-3 border-2 border-primary/20 min-w-[200px] max-w-[250px]">
+                  <h3 className="font-bold text-primary text-sm mb-1">{reserve.name}</h3>
                   <p className="text-xs text-gray-600 mb-1">{reserve.description}</p>
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <span>{reserve.area_hectares} ha</span>
@@ -497,7 +497,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
             <div className="relative group">
               {/* Main marker */}
               <div className="relative flex items-center justify-center cursor-pointer">
-                <div className="w-10 h-10 bg-purple-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-secondary rounded-full border-4 border-white shadow-lg flex items-center justify-center">
                   <svg
                     className="w-5 h-5 text-white"
                     fill="currentColor"
@@ -507,12 +507,12 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
                   </svg>
                 </div>
                 {/* Pin point */}
-                <div className="absolute top-9 w-0 h-0 border-l-5 border-r-5 border-t-8 border-l-transparent border-r-transparent border-t-purple-600" />
+                <div className="absolute top-9 w-0 h-0 border-l-5 border-r-5 border-t-8 border-l-transparent border-r-transparent border-t-secondary" />
               </div>
               {/* Tooltip on hover */}
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                <div className="bg-white rounded-lg shadow-xl p-3 border-2 border-purple-200 min-w-[200px] max-w-[250px]">
-                  <h3 className="font-bold text-purple-800 text-sm mb-1">{area.name}</h3>
+                <div className="bg-white rounded-lg shadow-xl p-3 border-2 border-secondary/20 min-w-[200px] max-w-[250px]">
+                  <h3 className="font-bold text-secondary text-sm mb-1">{area.name}</h3>
                   <p className="text-xs text-gray-600">{area.description}</p>
                 </div>
               </div>
@@ -530,15 +530,15 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
             <div className="relative">
               {/* Pulse animation circle */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 bg-blue-500 rounded-full opacity-20 animate-ping" />
+                <div className="w-16 h-16 bg-primary rounded-full opacity-20 animate-ping" />
               </div>
               {/* Main pin */}
               <div className="relative flex items-center justify-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-primary rounded-full border-4 border-white shadow-lg flex items-center justify-center">
                   <div className="w-3 h-3 bg-white rounded-full" />
                 </div>
                 {/* Pin point */}
-                <div className="absolute top-7 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-blue-600" />
+                <div className="absolute top-7 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-primary" />
               </div>
             </div>
           </Marker>
@@ -552,7 +552,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
         {/* Transit Stop Info Popup */}
         {showTransit && selectedStop && (
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50">
-            <div className="bg-white rounded-xl shadow-xl p-4 max-w-xs border-2 border-blue-200">
+            <div className="bg-white rounded-xl shadow-xl p-4 max-w-xs border-2 border-secondary/20">
               <h3 className="font-semibold text-slate-900 mb-1">{selectedStop.name}</h3>
               {selectedStop.description && (
                 <p className="text-xs text-slate-600 mb-2">{selectedStop.description}</p>
@@ -562,7 +562,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(({
                   {selectedStop.routeNames.map((routeName, idx) => (
                     <span
                       key={idx}
-                      className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded"
+                      className="px-2 py-1 bg-secondary/10 text-secondary text-xs font-semibold rounded"
                     >
                       {routeName}
                     </span>

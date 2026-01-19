@@ -86,7 +86,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
           {shouldTruncate && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              className="text-sm font-medium text-primary hover:text-primary/90 transition-colors"
             >
               {isExpanded ? 'Read less' : 'Read more'}
             </button>

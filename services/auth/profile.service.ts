@@ -86,6 +86,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
           .insert({
             id: authUser.id,
             full_name: authUser.user_metadata?.full_name || null,
+            role: 'tourist', // Default role to satisfy profiles_role_check constraint
           })
           .select()
           .single()

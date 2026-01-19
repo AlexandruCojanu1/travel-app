@@ -7,13 +7,14 @@ import { getBusinessById } from '@/services/business/business.service'
 import { MapPin, Navigation, Loader2 } from 'lucide-react'
 import { logger } from '@/lib/logger'
 import { toast } from 'sonner'
-import { RouteOptimizer } from '@/components/features/map/route-optimizer'
-import { DirectionsButton } from '@/components/features/map/directions-button'
+// RouteOptimizer removed - not needed
+// DirectionsButton removed
 import { TransportCostsPanel } from './transport-costs-panel'
-import { calculateRealRoute } from '@/services/map/routing.service'
+import { calculateOSRMRoute } from '@/services/map/routing.service'
 import type { RoutePoint } from '@/services/map/routing.service'
 import { useAppStore } from '@/store/app-store'
 import type { Business } from '@/services/business/business.service'
+import { cn } from '@/lib/utils'
 import type { TransportMode } from '@/services/map/transport-costs.service'
 
 interface RouteMapViewProps {
@@ -168,15 +169,15 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           name: b.name,
         }))
 
-        // Use local routing (no Docker, no external services)
-        const routingMode = transportMode === 'walking' ? 'walking' : transportMode === 'car' ? 'driving' : 'driving'
+        // Use OSRM API for real road-based routing
+        const routingMode = transportMode === 'walking' ? 'walking' : transportMode === 'car' || transportMode === 'taxi' ? 'driving' : 'driving'
         const routePoints: RoutePoint[] = points.map(p => ({
           latitude: p.latitude,
           longitude: p.longitude,
           name: p.name,
         }))
 
-        const routeResult = calculateRealRoute(routePoints, routingMode)
+        const routeResult = await calculateOSRMRoute(routePoints, routingMode)
 
         if (routeResult && routeResult.geometry) {
           setRouteGeometry(routeResult.geometry)
@@ -242,37 +243,54 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
 
   // Calculate route from user location to first activity
   useEffect(() => {
+    // Only calculate if we have user location and businesses
+    // We check businesses.length > 0, but if all are visited, nextUnvisited might be undefined
     if (userLocation && businesses.length > 0) {
-      // Recalculate route with user location as start
-      const points: RoutePoint[] = [
-        { latitude: userLocation.lat, longitude: userLocation.lng, name: 'Locația mea' },
-        ...businesses.map(b => ({
-          latitude: b.latitude!,
-          longitude: b.longitude!,
-          name: b.name,
-        })),
-      ]
+      const calculateRoute = async () => {
+        // Find first unvisited business
+        // We need to merge businesses with items to get visited status
+        const mergedBusinesses = businesses.map(b => {
+          const item = items.find(i => i.business_id === b.id)
+          return { ...b, isVisited: !!item?.is_visited }
+        })
 
-      setIsCalculatingRoute(true)
-      const routingMode = transportMode === 'walking' ? 'walking' : 'driving'
-      const routePoints: RoutePoint[] = points.map(p => ({
-        latitude: p.latitude,
-        longitude: p.longitude,
-        name: p.name,
-      }))
+        const nextUnvisited = mergedBusinesses.find(b => !b.isVisited)
 
-      try {
-        const routeResult = calculateRealRoute(routePoints, routingMode)
-        if (routeResult && routeResult.geometry) {
-          setRouteGeometry(routeResult.geometry)
+        // Target points: User -> Next Unvisited
+        const targetPoints: RoutePoint[] = [
+          { latitude: userLocation.lat, longitude: userLocation.lng, name: 'Locația mea' },
+          ...(nextUnvisited ? [{
+            latitude: nextUnvisited.latitude!,
+            longitude: nextUnvisited.longitude!,
+            name: nextUnvisited.name,
+          }] : [])
+        ]
+
+        // If no target unvisited business, route geometry is cleared (or could route to hotel/end)
+        if (!nextUnvisited) {
+          setRouteGeometry(null)
+          setIsCalculatingRoute(false)
+          return
         }
-      } catch (error) {
-        logger.error('Error calculating route from location', error, { userLocation, businessesCount: businesses.length })
-      } finally {
-        setIsCalculatingRoute(false)
+
+        setIsCalculatingRoute(true)
+        const routingMode = transportMode === 'walking' ? 'walking' : 'driving'
+
+        try {
+          const routeResult = await calculateOSRMRoute(targetPoints, routingMode)
+          if (routeResult && routeResult.geometry) {
+            setRouteGeometry(routeResult.geometry)
+          }
+        } catch (error) {
+          logger.error('Error calculating route from location', error, { userLocation, businessesCount: businesses.length })
+        } finally {
+          setIsCalculatingRoute(false)
+        }
       }
+
+      calculateRoute()
     }
-  }, [userLocation, businesses, transportMode])
+  }, [userLocation, businesses, transportMode, items])
 
   // Create route line from calculated geometry
   const routeLine = useMemo(() => {
@@ -318,30 +336,11 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
     <div className="space-y-4">
       {businesses.length >= 2 && (
         <>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <RouteOptimizer
-                points={routePoints}
-                onOptimized={handleOptimized}
-              />
-              <DirectionsButton points={routePoints} />
-              <button
-                onClick={handleGetLocation}
-                disabled={isLocating}
-                className="px-4 py-2 rounded-lg font-semibold text-sm transition-all border-2 bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50 flex items-center gap-2 disabled:opacity-50"
-              >
-                {isLocating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Navigation className="h-4 w-4" />
-                )}
-                <span>Locația mea</span>
-              </button>
-            </div>
+          <div className="flex items-center gap-3 flex-wrap">
             {isCalculatingRoute && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Se calculează ruta...</span>
+                <span>Se calculează...</span>
               </div>
             )}
           </div>
@@ -368,11 +367,20 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
           )}
 
           {/* Transport Costs Panel */}
+          {/* Transport Costs Panel - Pass only the Next Unvisited as destination */}
           <TransportCostsPanel
-            points={routePoints}
-            selectedMode={transportMode}
-            onModeChange={setTransportMode}
-            cityName={currentCity?.name}
+            points={(() => {
+              const mergedBusinesses = businesses.map(b => {
+                const item = items.find(i => i.business_id === b.id)
+                return { ...b, isVisited: !!item?.is_visited }
+              })
+              const nextUnvisited = mergedBusinesses.find(b => !b.isVisited)
+              return nextUnvisited ? [{
+                latitude: nextUnvisited.latitude!,
+                longitude: nextUnvisited.longitude!,
+                name: nextUnvisited.name || '',
+              }] : []
+            })()}
           />
         </>
       )}
@@ -417,40 +425,50 @@ export function RouteMapView({ dayIndex, height = '400px' }: RouteMapViewProps) 
             <Marker
               latitude={userLocation.lat}
               longitude={userLocation.lng}
-              anchor="center"
+              anchor="bottom"
             >
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 bg-blue-500 rounded-full opacity-20 animate-ping" />
-                </div>
-                <div className="relative flex items-center justify-center">
+              <div className="flex flex-col items-center">
+                <div className="relative flex items-center justify-center z-10">
+                  <div className="absolute inset-0 w-full h-full bg-blue-500 rounded-full animate-ping opacity-20" />
                   <div className="w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
                     <div className="w-3 h-3 bg-white rounded-full" />
                   </div>
-                  <div className="absolute top-7 w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-blue-600" />
                 </div>
+                <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-blue-600 -mt-0.5" />
               </div>
             </Marker>
           )}
 
           {/* Business Markers */}
-          {businesses.map((business, index) => (
-            <Marker
-              key={business.id}
-              latitude={business.latitude!}
-              longitude={business.longitude!}
-              anchor="center"
-            >
-              <div className="relative">
-                <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white">
-                  {userLocation ? index + 1 : index + 1}
+          {businesses.map((business, index) => {
+            const item = items.find(i => i.business_id === business.id)
+            const isVisited = !!item?.is_visited
+            // Highlight next unvisited
+            // const isNext = ... logic if needed
+            const isGray = isVisited
+
+            return (
+              <Marker
+                key={business.id}
+                latitude={business.latitude!}
+                longitude={business.longitude!}
+                anchor="bottom"
+              >
+                <div className="flex flex-col items-center group cursor-pointer" style={{ opacity: isVisited ? 0.6 : 1 }}>
+                  <div className={cn(
+                    "rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg border-2 border-white z-10 transition-transform group-hover:scale-110",
+                    isVisited ? "bg-slate-500 text-white" : "bg-blue-600 text-white"
+                  )}>
+                    {index + 1}
+                  </div>
+                  <div className={cn(
+                    "w-0 h-0 border-l-4 border-r-4 border-t-6 border-l-transparent border-r-transparent -mt-0.5",
+                    isVisited ? "border-t-slate-500" : "border-t-blue-600"
+                  )} />
                 </div>
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
-                  <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-600" />
-                </div>
-              </div>
-            </Marker>
-          ))}
+              </Marker>
+            )
+          })}
         </Map>
       </div>
     </div>

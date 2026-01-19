@@ -6,35 +6,35 @@
   :root {
     /* MOVE brand color palette - PASTEL & PROFESSIONAL THEME */
 
-    /* Background: #FFFDF5 (Cream) */
-    --background: 48 100% 98%;
+    /* Background: #FFFFFF (White) */
+    --background: 0 0% 100%;
 
-    /* Foreground: Dark Slate/Blue (Darker version of #364C84 for text readability) */
-    --foreground: 223 42% 20%;
+    /* Foreground: #081116 (Dark) */
+    --foreground: 206 47% 6%;
 
     /* Card: White */
     --card: 0 0% 100%;
-    --card-foreground: 223 42% 20%;
+    --card-foreground: 206 47% 6%;
 
     /* Popover: White */
     --popover: 0 0% 100%;
-    --popover-foreground: 223 42% 20%;
+    --popover-foreground: 206 47% 6%;
 
-    /* Primary: #364C84 (Dark Blue) */
-    --primary: 223 42% 36%;
+    /* Primary: #325FEC (Deep Blue) */
+    --primary: 226 83% 56%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: #95B1EE (Light Blue) */
-    --secondary: 221 75% 76%;
-    --secondary-foreground: 223 42% 20%;
+    /* Secondary: #518FFF (Bright Blue) */
+    --secondary: 219 100% 66%;
+    --secondary-foreground: 0 0% 100%;
 
     /* Muted: Very light blueish gray */
     --muted: 221 30% 94%;
     --muted-foreground: 223 20% 40%;
 
-    /* Accent: #E7F1A8 (Light Green) */
-    --accent: 74 71% 80%;
-    --accent-foreground: 223 42% 20%;
+    /* Accent: #518FFF (Bright Blue) - Replaced Green */
+    --accent: 219 100% 66%;
+    --accent-foreground: 0 0% 100%;
 
     /* Destructive */
     --destructive: 0 84.2% 60.2%;
@@ -43,7 +43,7 @@
     /* Borders: Light Blue/Gray */
     --border: 221 30% 90%;
     --input: 221 30% 90%;
-    --ring: 223 42% 36%;
+    --ring: 226 83% 56%;
 
     /* Border radius */
     --radius: 1rem;

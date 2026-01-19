@@ -89,7 +89,7 @@ function PaymentForm({
 
             <Button
                 type="submit"
-                className="w-full h-12 text-lg font-bold bg-blue-600 hover:bg-blue-700 mt-4"
+                className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90 mt-4"
                 disabled={isProcessing || (paymentOption !== 'on_site' && (!stripe || !elements))}
             >
                 {isProcessing ? (
@@ -306,18 +306,18 @@ export function HotelBookingDrawer({ business, isOpen, onClose, onBooked }: Hote
                             {/* Room List (unchanged) */}
                             <div className="space-y-4 pt-4">
                                 {loadingRooms ? (
-                                    <div className="flex justify-center py-8"><Loader2 className="animate-spin text-blue-500" /></div>
+                                    <div className="flex justify-center py-8"><Loader2 className="animate-spin text-primary" /></div>
                                 ) : rooms.length === 0 ? (
                                     <div className="text-center py-8 text-gray-500">Nu sunt camere disponibile.</div>
                                 ) : (
                                     rooms.map((room) => (
                                         <div key={room.id}
-                                            className={cn("border rounded-xl p-4 cursor-pointer hover:shadow-md", selectedRoom?.id === room.id ? "border-blue-500 bg-blue-50" : "")}
+                                            className={cn("border rounded-xl p-4 cursor-pointer hover:shadow-md", selectedRoom?.id === room.id ? "border-primary bg-primary/5" : "")}
                                             onClick={() => setSelectedRoom(room)}
                                         >
                                             <div className="flex justify-between">
                                                 <h4 className="font-bold">{room.name}</h4>
-                                                <span className="text-blue-600 font-bold">{room.price_per_night} RON/noapte</span>
+                                                <span className="text-primary font-bold">{room.price_per_night} RON/noapte</span>
                                             </div>
                                             <p className="text-sm text-gray-500">{room.room_type} • {room.max_guests} pers</p>
                                         </div>
@@ -325,7 +325,7 @@ export function HotelBookingDrawer({ business, isOpen, onClose, onBooked }: Hote
                                 )}
                             </div>
 
-                            <Button className="w-full mt-4" disabled={!selectedRoom || !startDate || !endDate} onClick={() => setStep('details')}>
+                            <Button className="w-full mt-4 bg-primary hover:bg-primary/90" disabled={!selectedRoom || !startDate || !endDate} onClick={() => setStep('details')}>
                                 Continuă
                             </Button>
                         </div>
@@ -342,13 +342,13 @@ export function HotelBookingDrawer({ business, isOpen, onClose, onBooked }: Hote
 
                             {/* Payment Options (unchanged logic, just ensuring state updates) */}
                             <div className="space-y-3">
-                                <div onClick={() => setPaymentOption('full')} className={cn("p-3 border rounded-lg cursor-pointer flex gap-3", paymentOption === 'full' && "border-blue-500 bg-blue-50")}>
+                                <div onClick={() => setPaymentOption('full')} className={cn("p-3 border rounded-lg cursor-pointer flex gap-3", paymentOption === 'full' && "border-primary bg-primary/5")}>
                                     <div className="font-medium">Plată integrală</div>
                                 </div>
-                                <div onClick={() => setPaymentOption('deposit')} className={cn("p-3 border rounded-lg cursor-pointer flex gap-3", paymentOption === 'deposit' && "border-blue-500 bg-blue-50")}>
+                                <div onClick={() => setPaymentOption('deposit')} className={cn("p-3 border rounded-lg cursor-pointer flex gap-3", paymentOption === 'deposit' && "border-primary bg-primary/5")}>
                                     <div className="font-medium">Avans (20%)</div>
                                 </div>
-                                <div onClick={() => setPaymentOption('on_site')} className={cn("p-3 border rounded-lg cursor-pointer flex gap-3", paymentOption === 'on_site' && "border-blue-500 bg-blue-50")}>
+                                <div onClick={() => setPaymentOption('on_site')} className={cn("p-3 border rounded-lg cursor-pointer flex gap-3", paymentOption === 'on_site' && "border-primary bg-primary/5")}>
                                     <div className="font-medium">Plată la locație</div>
                                 </div>
                             </div>
@@ -360,7 +360,7 @@ export function HotelBookingDrawer({ business, isOpen, onClose, onBooked }: Hote
                                     <div className="flex justify-between"><span>Taxe</span><span>{pricing.taxes.toFixed(2)} RON</span></div>
                                     <div className="border-t border-slate-700 my-2" />
                                     <div className="flex justify-between font-bold text-lg"><span>Total</span><span>{pricing.total.toFixed(2)} RON</span></div>
-                                    {paymentOption === 'deposit' && <div className="text-blue-300 font-bold pt-2">De plată acum: {pricing.deposit_amount?.toFixed(2)} RON</div>}
+                                    {paymentOption === 'deposit' && <div className="text-secondary font-bold pt-2">De plată acum: {pricing.deposit_amount?.toFixed(2)} RON</div>}
                                 </div>
                             )}
 
@@ -386,7 +386,7 @@ export function HotelBookingDrawer({ business, isOpen, onClose, onBooked }: Hote
                                             </div>
                                         )
                                     ) : (
-                                        <Button className="w-full h-12 text-lg font-bold bg-green-600 hover:bg-green-700" onClick={() => handleBook()} disabled={submitting}>
+                                        <Button className="w-full h-12 text-lg font-bold bg-green-600 hover:bg-green-700 text-white" onClick={() => handleBook()} disabled={submitting}>
                                             {submitting ? <Loader2 className="animate-spin" /> : "Rezervă acum"}
                                         </Button>
                                     )}

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
 import { createClient } from '@/lib/supabase/client'
 import { useAppStore, City } from './app-store'
+import { awardBadgeForTripCreation } from '@/actions/gamification'
 
 export interface Vacation {
     id: string
@@ -198,6 +199,11 @@ export const useVacationStore = create<VacationState>()(
                         set((state) => ({
                             vacations: [newVacation, ...state.vacations],
                         }))
+
+                        // Award "first-trip" badge (will only award once)
+                        awardBadgeForTripCreation().catch(err =>
+                            console.error('[VacationStore] Badge award error:', err)
+                        )
 
                         return { success: true, vacationId: data.id }
                     } catch (error: any) {

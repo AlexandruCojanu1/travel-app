@@ -43,6 +43,8 @@ export type Database = {
           updated_at: string
           user_id: string
           user_notes: string | null
+          payment_method: 'prepay_full' | 'split' | null
+          split_status: 'collecting' | 'completed' | 'voided' | null
         }
         Insert: {
           amount?: number | null
@@ -139,6 +141,163 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      achievements: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          description: string | null
+          criteria: Json
+          icon_url: string | null
+          tier: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          description?: string | null
+          criteria?: Json
+          icon_url?: string | null
+          tier?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
+          description?: string | null
+          criteria?: Json
+          icon_url?: string | null
+          tier?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          id: string
+          user_id: string
+          achievement_id: string
+          unlocked_at: string | null
+          progress: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          achievement_id: string
+          unlocked_at?: string | null
+          progress?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          achievement_id?: string
+          unlocked_at?: string | null
+          progress?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+        ]
+      }
+      payment_splits: {
+        Row: {
+          id: string
+          booking_id: string | null
+          bill_id: string | null
+          user_id: string
+          amount: number
+          status: 'pending' | 'paid' | 'failed'
+          stripe_intent_id: string | null
+          created_at: string
+          expires_at: string | null
+        }
+        Insert: {
+          id?: string
+          booking_id?: string | null
+          bill_id?: string | null
+          user_id: string
+          amount: number
+          status?: 'pending' | 'paid' | 'failed'
+          stripe_intent_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+        }
+        Update: {
+          id?: string
+          booking_id?: string | null
+          bill_id?: string | null
+          user_id?: string
+          amount?: number
+          status?: 'pending' | 'paid' | 'failed'
+          stripe_intent_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_splits_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_splits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      restaurant_bills: {
+        Row: {
+          id: string
+          trip_id: string | null
+          restaurant_name: string
+          items: Json
+          total_amount: number
+          status: 'active' | 'paid'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          trip_id?: string | null
+          restaurant_name: string
+          items?: Json
+          total_amount: number
+          status?: 'active' | 'paid'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          trip_id?: string | null
+          restaurant_name?: string
+          items?: Json
+          total_amount?: number
+          status?: 'active' | 'paid'
+          created_at?: string
+        }
+        Relationships: []
       }
       trip_collaborators: {
         Row: {

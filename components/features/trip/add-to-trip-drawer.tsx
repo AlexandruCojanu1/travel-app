@@ -176,9 +176,9 @@ export function AddToTripDrawer({
 
               {/* Budget Impact - Only show for paid activities */}
               {budget && remaining > 0 && estimatedCost > 0 && (
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <div className="bg-secondary/10 rounded-xl p-4 border border-secondary/20">
                   <div className="flex items-start gap-3">
-                    <DollarSign className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <DollarSign className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900 mb-1">
                         Impact buget
@@ -196,7 +196,7 @@ export function AddToTripDrawer({
               {/* Confirm Button */}
               <Button
                 onClick={handleAddToDay}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6"
               >
                 <Plus className="h-5 w-5 mr-2" />
                 Adaugă la Ziua {selectedDayIndex + 1}

@@ -21,6 +21,7 @@ export interface TripItem {
   day_index: number // 0-based day index
   block?: string // morning, afternoon, evening
   created_at?: string
+  is_visited?: boolean
 }
 
 export interface Budget {
@@ -57,6 +58,7 @@ interface TripState {
   getDaysCount: () => number
   getItemsByDay: (dayIndex: number) => TripItem[]
   changeItemDay: (itemId: string, newDayIndex: number) => void
+  toggleItemVisited: (itemId: string) => void
 }
 
 /**
@@ -88,12 +90,16 @@ export const useTripStore = create<TripState>()(
         },
 
         initTrip: (details, budget, tripId) => {
+          // Validate UUID format to prevent "invalid input syntax for type uuid" errors
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          const validTripId = tripId && uuidRegex.test(tripId) ? tripId : null
+
           set({
             tripDetails: { ...details, metadata: details.metadata || {} },
             budget,
             items: [],
-            tripId: tripId || null,
-            syncStatus: 'synced',
+            tripId: validTripId,
+            syncStatus: validTripId ? 'synced' : 'saving', // Mark as saving if we dropped the ID
           })
         },
 
@@ -205,6 +211,14 @@ export const useTripStore = create<TripState>()(
           set((state) => ({
             items: state.items.map((item) =>
               item.id === itemId ? { ...item, day_index: newDayIndex } : item
+            ),
+          }))
+        },
+
+        toggleItemVisited: (itemId) => {
+          set((state) => ({
+            items: state.items.map((item) =>
+              item.id === itemId ? { ...item, is_visited: !item.is_visited } : item
             ),
           }))
         },

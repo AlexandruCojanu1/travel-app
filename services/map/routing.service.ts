@@ -59,7 +59,7 @@ function calculateRouteSegment(
   // Roads are typically 1.2-1.5x longer than straight line in cities
   let roadCorrectionFactor = 1.3 // Default for driving
   let speed = 40 / 3.6 // m/s - default for driving (40 km/h)
-  
+
   switch (profile) {
     case 'foot-walking':
       roadCorrectionFactor = 1.15 // Walking paths are closer to straight line
@@ -108,7 +108,74 @@ function calculateHaversineDistance(
 }
 
 /**
- * Calculate route for a series of points with road distance approximation
+ * Calculate route using OSRM API via our proxy endpoint
+ * Falls back to Haversine calculation if API fails
+ */
+export async function calculateOSRMRoute(
+  points: RoutePoint[],
+  mode: 'walking' | 'driving' | 'cycling' = 'driving'
+): Promise<RouteResult & { isRealRoute: boolean }> {
+  if (points.length < 2) {
+    return {
+      distance: 0,
+      duration: 0,
+      segments: [],
+      isRealRoute: false,
+    }
+  }
+
+  // Build coordinates string for OSRM: "lon1,lat1;lon2,lat2;..."
+  const coordinates = points
+    .map(p => `${p.longitude},${p.latitude}`)
+    .join(';')
+
+  try {
+    const response = await fetch(
+      `/api/route?coordinates=${encodeURIComponent(coordinates)}&profile=${mode}`
+    )
+
+    if (!response.ok) {
+      throw new Error('API request failed')
+    }
+
+    const data = await response.json()
+
+    if (data.error || data.fallback) {
+      throw new Error(data.error || 'No route found')
+    }
+
+    // Calculate segments from the overall route
+    const segments: RouteSegment[] = []
+    for (let i = 0; i < points.length - 1; i++) {
+      // Approximate segment distance based on proportion
+      const segmentDistance = data.distance / (points.length - 1)
+      const segmentDuration = data.duration / (points.length - 1)
+      segments.push({
+        distance: segmentDistance,
+        duration: segmentDuration,
+      })
+    }
+
+    return {
+      distance: data.distance,
+      duration: data.duration,
+      segments,
+      geometry: data.geometry, // Real road geometry from OSRM
+      isRealRoute: true,
+    }
+  } catch (error) {
+    console.warn('OSRM routing failed, using fallback:', error)
+    // Fallback to Haversine calculation
+    const fallbackResult = calculateRealRoute(points, mode)
+    return {
+      ...fallbackResult,
+      isRealRoute: false,
+    }
+  }
+}
+
+/**
+ * Calculate route for a series of points with road distance approximation (fallback)
  */
 export function calculateRealRoute(
   points: RoutePoint[],
@@ -140,22 +207,14 @@ export function calculateRealRoute(
   }
 
   // Build geometry from points (straight lines between points)
-  const geometry: number[][] = []
-  points.forEach((point, index) => {
-    if (index === 0) {
-      geometry.push([point.longitude, point.latitude])
-    }
-    if (index < points.length - 1) {
-      geometry.push([points[index + 1].longitude, points[index + 1].latitude])
-    }
-  })
+  const geometry: number[][] = points.map(point => [point.longitude, point.latitude])
 
   return {
     distance: totalDistance,
     duration: totalDuration,
     segments: segments.map(seg => ({
       ...seg,
-      geometry: undefined, // No detailed geometry for local calculation
+      geometry: undefined,
     })),
     geometry,
   }

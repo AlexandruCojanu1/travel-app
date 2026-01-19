@@ -226,7 +226,7 @@ export function CreateVacationDialog({
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder={selectedCity ? `Vacanță la ${selectedCity.name}` : 'ex: Aventură în munți'}
-                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                     />
                                 </div>
 
@@ -243,7 +243,7 @@ export function CreateVacationDialog({
                                                 setSelectedCity(city)
                                             }
                                         }}
-                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-white"
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none bg-white"
                                     >
                                         <option value="">Selectează un oraș...</option>
                                         {cities.map((city) => (
@@ -255,7 +255,7 @@ export function CreateVacationDialog({
                                     <button
                                         type="button"
                                         onClick={openCitySelector}
-                                        className="mt-2 text-sm text-blue-600 hover:underline flex items-center gap-1"
+                                        className="mt-2 text-sm text-primary hover:underline flex items-center gap-1"
                                     >
                                         <MapPin className="h-3 w-3" />
                                         Răsfoiește toate orașele
@@ -275,7 +275,7 @@ export function CreateVacationDialog({
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
                                                 min={today}
-                                                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                             />
                                         </div>
                                     </div>
@@ -291,7 +291,7 @@ export function CreateVacationDialog({
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.target.value)}
                                                 min={startDate || today}
-                                                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                             />
                                         </div>
                                     </div>
@@ -310,7 +310,7 @@ export function CreateVacationDialog({
                             <div className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-4">
-                                        Buget total: <span className="text-blue-600 font-bold">{budget[0].toLocaleString()} RON</span>
+                                        Buget total: <span className="text-primary font-bold">{budget[0].toLocaleString()} RON</span>
                                     </label>
                                     <Slider
                                         value={budget}
@@ -326,8 +326,8 @@ export function CreateVacationDialog({
                                     </div>
                                 </div>
 
-                                <div className="bg-blue-50 rounded-xl p-4">
-                                    <p className="text-sm text-blue-800">
+                                <div className="bg-primary/5 rounded-xl p-4">
+                                    <p className="text-sm text-primary">
                                         <strong>Sfat:</strong> Acesta este bugetul total pentru vacanță. Poți ajusta costurile individuale ulterior în planificare.
                                     </p>
                                 </div>
@@ -337,7 +337,7 @@ export function CreateVacationDialog({
                         {/* Step 3: Review */}
                         {step === 3 && (
                             <div className="space-y-4">
-                                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-5 space-y-4">
+                                <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl p-5 space-y-4">
                                     <div>
                                         <p className="text-xs text-gray-500 mb-1">Titlu</p>
                                         <p className="font-semibold text-gray-900">
@@ -384,7 +384,7 @@ export function CreateVacationDialog({
                             {[1, 2, 3].map((s) => (
                                 <div
                                     key={s}
-                                    className={`h-2 rounded-full transition-all ${s <= step ? 'bg-blue-600 w-6' : 'bg-gray-200 w-2'
+                                    className={`h-2 rounded-full transition-all ${s <= step ? 'bg-primary w-6' : 'bg-gray-200 w-2'
                                         }`}
                                 />
                             ))}
@@ -409,7 +409,7 @@ export function CreateVacationDialog({
                                 <Button
                                     onClick={handleNext}
                                     disabled={!canProceedStep1}
-                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                                    className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white"
                                 >
                                     Următorul
                                     <ArrowRight className="h-4 w-4" />
@@ -418,7 +418,7 @@ export function CreateVacationDialog({
                                 <Button
                                     onClick={handleFinish}
                                     disabled={!canFinish || isSubmitting}
-                                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                                    className="flex-1 bg-primary hover:bg-primary/90 text-white"
                                 >
                                     {isSubmitting ? 'Se salvează...' : editingVacation ? 'Salvează modificările' : 'Creează vacanța'}
                                 </Button>

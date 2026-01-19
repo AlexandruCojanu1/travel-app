@@ -1,15 +1,13 @@
 "use client"
 
-import React, { useState, useRef } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
-import { Plus, Map, Share2 } from 'lucide-react'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus } from 'lucide-react'
 import { DayNavigator } from './day-navigator'
 import { TimelineItem } from './timeline-item'
-import { RouteMapView } from './route-map-view'
 import { ShareTripDialog } from './share-trip-dialog'
 import { useTripStore } from '@/store/trip-store'
 import { Button } from '@/components/shared/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs'
 import type { TripItem } from '@/store/trip-store'
 
 export function TimelineView() {
@@ -78,93 +76,75 @@ export function TimelineView() {
         daysCount={daysCount}
       />
 
-      {/* Route Map and Timeline Tabs */}
-      <Tabs defaultValue="timeline" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="timeline" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Cronologie
-          </TabsTrigger>
-          <TabsTrigger value="map" className="flex items-center gap-2">
-            <Map className="h-4 w-4" />
-            Hartă rută
-          </TabsTrigger>
-        </TabsList>
+      {/* Timeline Content - Removed Tabs */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-6">
+          <AnimatePresence mode="wait">
+            {dayItems.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className="py-12 text-center"
+              >
+                <div className="max-w-sm mx-auto">
+                  <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                    <Plus className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+                    Planul este gol
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Adaugă primele activități pentru această zi
+                  </p>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={`day-${selectedDayIndex}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-0"
+              >
+                {localItems.map((item, index) => (
+                  <TimelineItem
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    isLast={index === localItems.length - 1}
+                    totalItems={localItems.length}
+                    isDragging={draggedItemId === item.id}
+                    onDragStart={() => setDraggedItemId(item.id)}
+                    onDragEnd={() => handleItemDragEnd(item.id)}
+                    onDrag={(y) => handleItemDrag(item.id, y)}
+                    daysCount={daysCount}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        <TabsContent value="map" className="mt-4">
-          <RouteMapView dayIndex={selectedDayIndex} />
-        </TabsContent>
-
-        <TabsContent value="timeline" className="mt-4">
-          {/* Timeline Content */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-6">
-              <AnimatePresence mode="wait">
-                {dayItems.length === 0 ? (
-                  <motion.div
-                    key="empty"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.2 }}
-                    className="py-12 text-center"
-                  >
-                    <div className="max-w-sm mx-auto">
-                      <div className="h-12 w-12 rounded-full bg-blue-50/50 flex items-center justify-center mx-auto mb-4">
-                        <Plus className="h-6 w-6 text-blue-500" />
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-1">
-                        Planul este gol
-                      </h3>
-                      <p className="text-sm text-gray-500 mb-6">
-                        Adaugă primele activități pentru această zi
-                      </p>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key={`day-${selectedDayIndex}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-0"
-                  >
-                    {localItems.map((item, index) => (
-                      <TimelineItem
-                        key={item.id}
-                        item={item}
-                        index={index}
-                        isLast={index === localItems.length - 1}
-                        totalItems={localItems.length}
-                        isDragging={draggedItemId === item.id}
-                        onDragStart={() => setDraggedItemId(item.id)}
-                        onDragEnd={() => handleItemDragEnd(item.id)}
-                        onDrag={(y) => handleItemDrag(item.id, y)}
-                        daysCount={daysCount}
-                      />
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Constant Add Activity Button */}
-              <div className="mt-4 flex justify-center pb-4">
-                <Button
-                  className="rounded-full px-6 bg-primary hover:bg-red-600 shadow-lg shadow-primary/20 text-white border-none"
-                  onClick={() => {
-                    // Navigate to explore page to add items
-                    window.location.href = '/explore'
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  <span className="font-semibold">Adaugă activitate</span>
-                </Button>
-              </div>
-            </div>
+          {/* Constant Add Activity Button */}
+          <div className="mt-4 flex justify-center pb-4">
+            <Button
+              className="rounded-full px-6 bg-primary hover:bg-red-600 shadow-lg shadow-primary/20 text-white border-none"
+              onClick={() => {
+                // Navigate to vote/swipe mode to add items
+                if (tripId) {
+                  window.location.href = `/plan/${tripId}/vote`
+                }
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="font-semibold">Adaugă activitate</span>
+            </Button>
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
 
       {tripId && (
         <ShareTripDialog
@@ -176,4 +156,3 @@ export function TimelineView() {
     </div>
   )
 }
-

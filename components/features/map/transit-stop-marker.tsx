@@ -33,8 +33,8 @@ export function TransitStopMarker({
   }
 
   const getColor = () => {
-    if (isSelected) return 'bg-blue-600 border-blue-800'
-    return 'bg-blue-500 border-blue-700'
+    if (isSelected) return 'bg-secondary border-secondary-foreground'
+    return 'bg-secondary/80 border-secondary'
   }
 
   return (
@@ -56,7 +56,7 @@ export function TransitStopMarker({
       >
         {getIcon()}
       </div>
-      
+
       {/* Route names badge */}
       {routeNames.length > 0 && (
         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">

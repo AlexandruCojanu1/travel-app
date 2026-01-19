@@ -9,20 +9,24 @@ import { ProfileHeader } from "@/components/features/auth/profile-header"
 
 import { LogoutButton } from "@/components/shared/logout-button"
 import { Skeleton } from "@/components/shared/ui/skeleton"
-import { cn } from "@/lib/utils"
 import {
   Settings,
   HelpCircle,
   Bookmark,
   ChevronRight,
-
 } from "lucide-react"
+
+import { getUserPassport } from "@/actions/gamification"
+import { PassportView } from "@/components/features/gamification/passport-view"
 
 export default function ProfilePage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [profileData, setProfileData] = useState<UserProfileData | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Gamification State
+  const [passportData, setPassportData] = useState<{ profile: any, badges: any[] } | null>(null)
 
   useEffect(() => {
     async function loadProfile() {
@@ -33,24 +37,18 @@ export default function ProfilePage() {
         const supabase = createClient()
 
         // Force fresh user check
-        console.log('[ProfilePage] Getting current user...')
         const {
           data: { user },
           error: userError,
         } = await supabase.auth.getUser()
 
-        console.log('[ProfilePage] Current user:', user?.id, user?.email)
-
         if (userError || !user) {
-          console.log('[ProfilePage] No user, redirecting to login')
           router.push("/auth/login")
           return
         }
 
         // Fetch profile data
-        console.log('[ProfilePage] Fetching profile for user:', user.id)
         const data = await getUserProfile(user.id)
-        console.log('[ProfilePage] Profile loaded:', data.email, 'id:', data.id)
 
         // Double-check the loaded profile matches current user
         if (data.id !== user.id) {
@@ -60,6 +58,11 @@ export default function ProfilePage() {
         }
 
         setProfileData(data)
+
+        // Fetch Passport Data
+        const passport = await getUserPassport()
+        setPassportData(passport)
+
       } catch (err) {
         console.error("Error loading profile:", err)
         setError("Failed to load profile. Please try again.")
@@ -146,57 +149,65 @@ export default function ProfilePage() {
           <ChevronRight className="h-5 w-5 text-mova-gray group-hover:text-mova-blue transition-colors" />
         </Link>
 
-        {/* Account Settings */}
-        <Link
-          href="/profile/settings"
-          className="flex items-center justify-between airbnb-card p-5 group"
-        >
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-airbnb bg-mova-light-gray flex items-center justify-center">
-              <Settings className="h-6 w-6 text-mova-blue" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-mova-dark group-hover:text-mova-blue transition-colors text-base">
-                Setări cont
-              </h3>
-              <p className="text-sm text-mova-gray">
-                Gestionează detaliile contului tău
-              </p>
-            </div>
+        {/* Passport / Gamification Section */}
+        {passportData && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-mova-dark px-2">Pașaport Digital</h2>
+            <PassportView passportData={passportData} />
           </div>
-          <ChevronRight className="h-5 w-5 text-mova-gray group-hover:text-mova-blue transition-colors" />
-        </Link>
+        )}
 
-        {/* Help & Support */}
-        <Link
-          href="/profile/help"
-          className="flex items-center justify-between airbnb-card p-5 group"
-        >
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-airbnb bg-green-50 flex items-center justify-center">
-              <HelpCircle className="h-6 w-6 text-green-600" />
+        <div className="space-y-3">
+          {/* Account Settings */}
+          <Link
+            href="/profile/settings"
+            className="flex items-center justify-between airbnb-card p-5 group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-airbnb bg-mova-light-gray flex items-center justify-center">
+                <Settings className="h-6 w-6 text-mova-blue" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-mova-dark group-hover:text-mova-blue transition-colors text-base">
+                  Setări cont
+                </h3>
+                <p className="text-sm text-mova-gray">
+                  Gestionează detaliile contului tău
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-mova-dark group-hover:text-mova-blue transition-colors text-base">
-                Ajutor și suport
-              </h3>
-              <p className="text-sm text-mova-gray">Obține ajutor când ai nevoie</p>
+            <ChevronRight className="h-5 w-5 text-mova-gray group-hover:text-mova-blue transition-colors" />
+          </Link>
+
+          {/* Help & Support */}
+          <Link
+            href="/profile/help"
+            className="flex items-center justify-between airbnb-card p-5 group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-airbnb bg-green-50 flex items-center justify-center">
+                <HelpCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-mova-dark group-hover:text-mova-blue transition-colors text-base">
+                  Ajutor și suport
+                </h3>
+                <p className="text-sm text-mova-gray">Obține ajutor când ai nevoie</p>
+              </div>
             </div>
-          </div>
-          <ChevronRight className="h-5 w-5 text-mova-gray group-hover:text-mova-blue transition-colors" />
-        </Link>
-      </div>
+            <ChevronRight className="h-5 w-5 text-mova-gray group-hover:text-mova-blue transition-colors" />
+          </Link>
+        </div>
 
+        {/* Logout Section */}
+        <div className="pt-4">
+          <LogoutButton />
+        </div>
 
-
-      {/* Logout Section */}
-      <div className="pt-4">
-        <LogoutButton />
-      </div>
-
-      {/* App Version */}
-      <div className="text-center py-4">
-        <p className="text-xs text-mova-gray">MOVA v1.0.0</p>
+        {/* App Version */}
+        <div className="text-center py-4">
+          <p className="text-xs text-mova-gray">MOVA v1.0.0</p>
+        </div>
       </div>
     </div>
   )

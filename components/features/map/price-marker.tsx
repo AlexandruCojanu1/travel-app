@@ -55,7 +55,7 @@ export function PriceMarker({ price, category, lat, lng, isSelected, onClick }: 
     >
       <div className={`
         flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-lg whitespace-nowrap
-        ${isSelected ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'}
+        ${isSelected ? 'bg-secondary text-white' : 'bg-primary text-white'}
         transition-all hover:scale-105
       `}>
         {Icon}
@@ -63,9 +63,8 @@ export function PriceMarker({ price, category, lat, lng, isSelected, onClick }: 
       </div>
       {/* Pin pointer */}
       <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
-        <div className={`w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent ${
-          isSelected ? 'border-t-purple-600' : 'border-t-blue-600'
-        }`} />
+        <div className={`w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent ${isSelected ? 'border-t-secondary' : 'border-t-primary'
+          }`} />
       </div>
     </div>
   )

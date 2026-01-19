@@ -26,7 +26,7 @@ export function PreferencesForm({ profileData }: PreferencesFormProps) {
       <InfoCard
         icon={MapPin}
         title="Locație"
-        color="text-indigo-600 bg-indigo-50"
+        color="text-primary bg-primary/5"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <DetailRow label="Oraș de reședință" value={profileData?.home_city?.name || "Neselectat"} />
@@ -37,7 +37,7 @@ export function PreferencesForm({ profileData }: PreferencesFormProps) {
       <InfoCard
         icon={Users}
         title="Cine călătorește?"
-        color="text-blue-600 bg-blue-50"
+        color="text-secondary bg-secondary/10"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <DetailRow label="Tip Grup" value={capitalize(data.protagonist)} />
@@ -70,7 +70,7 @@ export function PreferencesForm({ profileData }: PreferencesFormProps) {
       <InfoCard
         icon={Car}
         title="Mobilitate"
-        color="text-purple-600 bg-purple-50"
+        color="text-primary bg-primary/5"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <DetailRow label="Mod Deplasare" value={mapMobility(data.mobility)} />

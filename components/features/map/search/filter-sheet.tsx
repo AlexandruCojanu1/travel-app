@@ -99,7 +99,7 @@ export function FilterSheet({
                   className={cn(
                     'px-4 py-2.5 rounded-lg text-sm font-medium transition-colors',
                     sortBy === option.value
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-primary text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   )}
                 >
@@ -145,7 +145,7 @@ export function FilterSheet({
                   className={cn(
                     'px-4 py-2 rounded-full text-sm font-medium transition-colors',
                     filters.categories.includes(category)
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-primary text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   )}
                 >
@@ -169,14 +169,14 @@ export function FilterSheet({
                     className={cn(
                       'px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2',
                       filters.difficulty === option.value
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-primary text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     )}
                   >
                     <span
                       className={cn(
                         'w-2 h-2 rounded-full',
-                        option.color
+                        option.value === 'hard' ? 'bg-secondary' : option.color
                       )}
                     />
                     {option.label}
@@ -202,7 +202,7 @@ export function FilterSheet({
                       type="checkbox"
                       checked={filters.amenities.includes(amenity)}
                       onChange={() => toggleFilter('amenities', amenity)}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-primary rounded focus:ring-primary"
                     />
                     <span className="text-sm text-gray-700">{amenity}</span>
                   </label>
@@ -227,7 +227,7 @@ export function FilterSheet({
         <SheetFooter className="sticky bottom-0 bg-white border-t pt-4 pb-6 -mx-6 px-6">
           <Button
             onClick={handleApplyFilters}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
             size="lg"
           >
             {resultCount > 0 ? `Show ${resultCount} Results` : 'Apply Filters'}

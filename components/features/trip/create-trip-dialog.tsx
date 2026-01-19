@@ -321,13 +321,13 @@ export function CreateTripDialog({
                         className={cn(
                           "flex flex-col items-center justify-center p-4 rounded-3xl border-2 transition-all gap-2 text-center",
                           protagonist === opt.id
-                            ? "border-yellow-500 bg-yellow-50 shadow-sm"
+                            ? "border-secondary bg-secondary/10 shadow-sm"
                             : "border-gray-100 bg-white hover:border-gray-200"
                         )}
                       >
                         <div className={cn(
                           "w-12 h-12 rounded-full flex items-center justify-center mb-1",
-                          protagonist === opt.id ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-500"
+                          protagonist === opt.id ? "bg-secondary/20 text-secondary" : "bg-gray-100 text-gray-500"
                         )}>
                           <opt.icon className="h-6 w-6" />
                         </div>
@@ -398,21 +398,21 @@ export function CreateTripDialog({
                       className={cn(
                         "w-full flex items-center justify-between p-5 rounded-[24px] border-2 transition-all",
                         mobility === opt.id
-                          ? "border-sky-500 bg-sky-50 shadow-sm"
+                          ? "border-primary bg-primary/5 shadow-sm"
                           : "border-gray-50 hover:border-gray-100 bg-white"
                       )}
                     >
                       <div className="flex items-center gap-4">
                         <div className={cn(
                           "p-3 rounded-2xl",
-                          mobility === opt.id ? "bg-sky-100 text-sky-700" : "bg-gray-50 text-gray-400"
+                          mobility === opt.id ? "bg-primary/10 text-primary" : "bg-gray-50 text-gray-400"
                         )}>
                           <opt.icon className="h-6 w-6" />
                         </div>
                         <span className="font-bold text-lg text-foreground">{opt.label}</span>
                       </div>
                       {mobility === opt.id && (
-                        <div className="h-6 w-6 bg-sky-500 rounded-full flex items-center justify-center">
+                        <div className="h-6 w-6 bg-primary rounded-full flex items-center justify-center">
                           <Check className="h-3 w-3 text-white stroke-[3]" />
                         </div>
                       )}
