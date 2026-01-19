@@ -25,6 +25,8 @@ interface VacationState {
     activeVacationId: string | null
     isLoading: boolean
     userId: string | null // Track ownership of data
+    isHydrated: boolean;
+    setHydrated: (val: boolean) => void;
 
     // Actions
     loadVacations: () => Promise<void>
@@ -48,13 +50,16 @@ export const useVacationStore = create<VacationState>()(
                 activeVacationId: null,
                 isLoading: false,
                 userId: null,
-
+                isHydrated: false,
+                setHydrated: (val: boolean) => set({ isHydrated: val }),
                 reset: () => {
+                    const currentHydrated = get().isHydrated
                     set({
                         vacations: [],
                         activeVacationId: null,
                         isLoading: false,
-                        userId: null
+                        userId: null,
+                        isHydrated: currentHydrated,
                     })
                 },
 
@@ -316,7 +321,13 @@ export const useVacationStore = create<VacationState>()(
                 name: 'travel-vacation-storage',
                 partialize: (state) => ({
                     activeVacationId: state.activeVacationId,
+                    vacations: state.vacations,
+                    userId: state.userId,
                 }),
+                onRehydrateStorage: () => (state) => {
+                    console.log('[VacationStore] Hydration finished')
+                    state?.setHydrated(true)
+                },
             }
         )
     )

@@ -38,6 +38,7 @@ interface TripState {
   items: TripItem[]
   tripId: string | null // Database trip ID
   syncStatus: SyncStatus
+  isHydrated: boolean
 
   // Actions
   initTrip: (details: TripDetails, budget: Budget, tripId: string | null) => void
@@ -84,6 +85,7 @@ export const useTripStore = create<TripState>()(
         items: [],
         tripId: null,
         syncStatus: 'synced' as SyncStatus,
+        isHydrated: false,
 
         setSyncStatus: (status) => {
           set({ syncStatus: status })
@@ -386,6 +388,9 @@ export const useTripStore = create<TripState>()(
           items: state.items,
           tripId: state.tripId,
         }),
+        onRehydrateStorage: () => (state) => {
+          useTripStore.setState({ isHydrated: true })
+        },
       }
     )
   )

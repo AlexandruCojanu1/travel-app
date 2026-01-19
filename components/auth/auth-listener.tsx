@@ -29,25 +29,27 @@ export function AuthListener() {
 
                 // Force hard reload to clear any other state
                 window.location.href = '/'
-            } else if (event === 'SIGNED_IN') {
-                console.log('[AuthListener] User signed in')
+            } else if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                const currentUserId = session?.user?.id
+                const storedUserId = useVacationStore.getState().userId
 
-                // CRITICAL: Clear any previous user data first
-                // This prevents cross-user data leakage
-                useVacationStore.getState().reset()
-                useTripStore.getState().clearTrip()
+                if (currentUserId && currentUserId === storedUserId) {
+                    console.log('[AuthListener] Session restored for same user, skipping reset')
+                    // Only load if we have no data, otherwise trust persistence
+                    if (useVacationStore.getState().vacations.length === 0) {
+                        useVacationStore.getState().loadVacations()
+                    }
+                } else {
+                    console.log('[AuthListener] New user or session mismatch, resetting state')
+                    useVacationStore.getState().reset()
+                    useTripStore.getState().clearTrip()
 
-                // Clear localStorage to prevent persist middleware from rehydrating old data
-                if (typeof window !== 'undefined') {
-                    window.localStorage.removeItem('travel-vacation-storage')
-                    window.localStorage.removeItem('travel-app-storage')
-                    window.localStorage.removeItem('travel-ui-storage')
+                    if (currentUserId) {
+                        setTimeout(() => {
+                            useVacationStore.getState().loadVacations()
+                        }, 0)
+                    }
                 }
-
-                // NOTE: Do NOT redirect to onboarding here.
-                // The login action and middleware already handle onboarding checks.
-                // Redirecting from here causes race conditions and loops.
-                console.log('[AuthListener] Stores cleared, letting normal flow continue')
             }
         })
 

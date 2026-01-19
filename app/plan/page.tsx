@@ -123,8 +123,21 @@ function PlanPageContent() {
     loadData()
   }, [])
 
+  const { isHydrated: isVacationHydrated } = useVacationStore()
+  const { isHydrated: isTripHydrated } = useTripStore()
+
   // Check if we should go directly to planner (if there's an active vacation)
   useEffect(() => {
+    // Wait for hydration before doing any navigation logic
+    console.log('[PlanPage] Checking state:', { isVacationHydrated, isTripHydrated, activeVacationId, vacLength: vacations.length, isLoadingTrip, tripId })
+
+    // Wait for hydration before doing any navigation logic
+    // If we already have vacations loaded (e.g. from network), we can proceed even if hydration flag is lagging
+    if (!isVacationHydrated && vacations.length === 0) {
+      console.log('[PlanPage] Waiting for vacation hydration...')
+      return
+    }
+
     if (activeVacationId && vacations.length > 0) {
       // Always load active trip if present
       const activeVacation = getActiveVacation()
@@ -140,7 +153,7 @@ function PlanPageContent() {
       // No vacations at all
       router.push('/home')
     }
-  }, [activeVacationId, vacations.length, tripId, router])
+  }, [activeVacationId, vacations.length, tripId, router, isVacationHydrated])
 
   // Function to load trip data for a specific vacation
   const loadVacationTrip = async (vacationId: string) => {

@@ -49,13 +49,13 @@ export function Header() {
                       className={cn(
                         "text-sm font-bold tracking-[0.15em] uppercase transition-all duration-300 relative group flex items-center gap-2",
                         isActive
-                          ? "text-accent"
-                          : "text-white/60 hover:text-white"
+                          ? "text-white"
+                          : "text-white/70 hover:text-white"
                       )}
                     >
-                      <link.icon className={cn("h-5 w-5", isActive ? "text-accent" : "text-white/60 group-hover:text-white")} />
+                      <link.icon className={cn("h-5 w-5", isActive ? "text-white" : "text-white/70 group-hover:text-white")} />
                       {isActive && (
-                        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-1 w-1 bg-accent rounded-full shadow-[0_0_8px_rgba(231,241,168,0.8)]" />
+                        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-1 w-1 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
                       )}
                     </Link>
                   )
@@ -64,7 +64,7 @@ export function Header() {
 
               {/* Avatar Circle (Inside Pill) */}
               <Link href="/profile" className="ml-4 relative z-10">
-                <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-primary font-bold text-sm shadow-inner ring-2 ring-white/10 hover:scale-105 transition-transform">
+                <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-white font-bold text-sm shadow-inner ring-2 ring-white/10 hover:scale-105 transition-transform">
                   <User className="h-5 w-5" />
                 </div>
               </Link>
