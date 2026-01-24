@@ -216,7 +216,7 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-        ]
+
       }
       payment_splits: {
         Row: {
@@ -1539,7 +1539,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_booking_price: {
+        Args: {
+          p_room_id: string
+          p_check_in: string
+          p_check_out: string
+          p_rooms_count?: number
+        }
+        Returns: {
+          nights: number
+          price_per_night: number
+          subtotal: number
+          taxes: number
+          total: number
+        }[]
+      }
     }
     Enums: {
       booking_status:

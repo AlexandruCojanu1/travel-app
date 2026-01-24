@@ -29,7 +29,7 @@ export function TravelGuideCard({ title, city, spotsCount, imageUrl, onClick, pr
                 alt={title}
                 fill
                 priority={priority}
-                sizes={fullWidth ? "100vw" : "240px"}
+                sizes={fullWidth ? "(max-width: 640px) 100vw, 50vw" : "(max-width: 640px) 160px, 240px"}
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
             />
 

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useVacationStore } from "@/store/vacation-store"
 import { useTripStore } from "@/store/trip-store"
 import { useRouter } from "next/navigation"
+import { logger } from "@/lib/logger"
 
 export function AuthListener() {
     const router = useRouter()
@@ -16,7 +17,7 @@ export function AuthListener() {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT') {
-                console.log('[AuthListener] User signed out - clearing stores')
+                logger.info('[AuthListener] User signed out - clearing stores')
                 useVacationStore.getState().reset()
                 useTripStore.getState().clearTrip()
 
@@ -34,13 +35,13 @@ export function AuthListener() {
                 const storedUserId = useVacationStore.getState().userId
 
                 if (currentUserId && currentUserId === storedUserId) {
-                    console.log('[AuthListener] Session restored for same user, skipping reset')
+                    // console.log('[AuthListener] Session restored for same user, skipping reset')
                     // Only load if we have no data, otherwise trust persistence
                     if (useVacationStore.getState().vacations.length === 0) {
                         useVacationStore.getState().loadVacations()
                     }
                 } else {
-                    console.log('[AuthListener] New user or session mismatch, resetting state')
+                    // console.log('[AuthListener] New user or session mismatch, resetting state')
                     useVacationStore.getState().reset()
                     useTripStore.getState().clearTrip()
 

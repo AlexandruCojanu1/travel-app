@@ -5,6 +5,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from "@/components/shared/ui/dialog"
 import { Button } from "@/components/shared/ui/button"
 
@@ -38,6 +39,9 @@ export function NavigationDialog({ isOpen, onOpenChange, destination }: Navigati
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Navighează către {destination.name}</DialogTitle>
+                    <DialogDescription>
+                        Alege aplicația de navigație preferată.
+                    </DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-2 gap-4 py-4">
                     <Button

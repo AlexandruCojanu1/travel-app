@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/shared/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/shared/ui/dialog'
 import { Button } from '@/components/shared/ui/button'
 import { Input } from '@/components/shared/ui/input'
 import { Label } from '@/components/shared/ui/label'
@@ -105,6 +105,9 @@ export function ShareTripDialog({ isOpen, onOpenChange, tripId }: ShareTripDialo
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Share Trip</DialogTitle>
+          <DialogDescription>
+            Invite others or copy the link to share your trip details.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

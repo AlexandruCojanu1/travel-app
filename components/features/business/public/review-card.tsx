@@ -43,6 +43,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
               width={48}
               height={48}
               className="rounded-full object-cover"
+              sizes="48px"
             />
           ) : (
             <User className="h-6 w-6 text-gray-400" />

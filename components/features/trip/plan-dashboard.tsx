@@ -1,9 +1,12 @@
+"use client"
+
 import { useState } from "react"
 import { Plus, Home, Search, Calendar as CalendarIcon, User, Map, Globe } from "lucide-react"
 import { TripSummaryCard } from "@/components/features/feed/trip-summary-card"
 
 import { CreateTripDialog } from "@/components/features/trip/create-trip-dialog"
 import { JoinTripDialog } from "@/components/features/trip/join-trip-dialog"
+import { TravelGuideCard } from "@/components/features/feed/travel-guide-card"
 
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -49,12 +52,12 @@ export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardPr
                 <h1 className="text-3xl font-bold text-foreground mb-6">Planificări</h1>
 
                 {/* Custom Segmented Control */}
-                <div className="bg-muted p-1 rounded-full flex mb-12 relative border border-black/5 max-w-xs mx-auto md:mx-0">
+                <div className="glass-card p-1.5 rounded-full flex mb-12 relative border border-white/20 max-w-xs mx-auto md:mx-0 shadow-lg">
                     <button
                         onClick={() => setActiveTab('active')}
                         className={cn(
-                            "flex-1 py-1.5 text-xs font-semibold rounded-full text-center transition-all duration-300 z-10",
-                            activeTab === 'active' ? "text-white" : "text-muted-foreground hover:text-foreground"
+                            "flex-1 py-2 text-sm font-medium rounded-full text-center transition-all duration-300 z-10",
+                            activeTab === 'active' ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         Active
@@ -62,8 +65,8 @@ export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardPr
                     <button
                         onClick={() => setActiveTab('past')}
                         className={cn(
-                            "flex-1 py-1.5 text-xs font-semibold rounded-full text-center transition-all duration-300 z-10",
-                            activeTab === 'past' ? "text-white" : "text-muted-foreground hover:text-foreground"
+                            "flex-1 py-2 text-sm font-medium rounded-full text-center transition-all duration-300 z-10",
+                            activeTab === 'past' ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         Anterioare
@@ -83,22 +86,27 @@ export function PlanDashboard({ vacations, onSelect, onCreate }: PlanDashboardPr
                     <>
                         {/* Mobile: Show limited, Desktop: Show all */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Add New Trip Card & Join Card - FIRST on mobile, last on desktop */}
+                            {/* Add New Trip Card & Join Card */}
                             <div className="order-first md:order-last flex flex-col gap-4">
                                 <button
                                     onClick={handleOpenCreate}
-                                    className="w-full flex-1 min-h-[80px] py-4 border-2 border-dashed border-border rounded-3xl text-muted-foreground font-medium hover:bg-secondary/20 hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-2"
+                                    className="w-full h-[220px] rounded-[32px] border-2 border-dashed border-gray-200 hover:border-primary/30 hover:bg-white/50 transition-all flex flex-col items-center justify-center gap-4 group"
                                 >
-                                    <Plus className="h-8 w-8" />
-                                    Planifică o nouă călătorie
+                                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform text-primary">
+                                        <Plus className="h-8 w-8" />
+                                    </div>
+                                    <div className="text-center">
+                                        <span className="block text-lg font-bold text-gray-900 group-hover:text-primary transition-colors">Planifică o călătorie</span>
+                                        <span className="text-sm text-gray-500">Începe o nouă aventură</span>
+                                    </div>
                                 </button>
 
                                 <button
                                     onClick={() => setIsJoinDialogOpen(true)}
-                                    className="w-full py-4 border border-border rounded-3xl text-muted-foreground font-medium hover:bg-secondary/10 hover:text-foreground transition-colors flex items-center justify-center gap-2 text-sm"
+                                    className="w-full py-4 rounded-[24px] bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
                                 >
                                     <User className="h-4 w-4" />
-                                    Colaborează la un plan
+                                    Ai un cod? Intră în grup
                                 </button>
                             </div>
 

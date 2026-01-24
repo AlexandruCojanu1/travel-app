@@ -104,133 +104,116 @@ export async function POST(request: NextRequest) {
     // RLS policy checks auth.uid() which is available if getUser() succeeds
     // Try to refresh session to ensure it's available for RLS
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         logger.log('API: Session available for RLS', { userId: session.user.id })
       } else {
         logger.warn('API: No session from getSession(), but user is authenticated. RLS should still work with auth.uid()')
       }
     } catch (e) {
-      logger.warn('API: Could not get session, but user is authenticated. Proceeding with insert.', { error: e })
+      logger.warn('API: Could not get session, but user is authenticated. Proceeding.', { error: e })
     }
 
-    // Map category to type enum
-    // If category is not in map, use a default type to satisfy NOT NULL constraint
-    const businessType = CATEGORY_TO_TYPE_MAP[validated.category] || 'restaurant'
-
-    if (!CATEGORY_TO_TYPE_MAP[validated.category]) {
-      logger.warn('API: Category not in map, using default type', { category: validated.category })
-    }
-
-    // Prepare attributes JSONB with type-specific fields
-    const attributes: Record<string, any> = {}
-
-    // Hotel fields
-    if (validated.star_rating) attributes.star_rating = validated.star_rating
-    if (validated.check_in_time) attributes.check_in_time = validated.check_in_time
-    if (validated.check_out_time) attributes.check_out_time = validated.check_out_time
-    if (validated.amenities) attributes.amenities = validated.amenities
-
-    // Restaurant/Cafe fields
-    if (validated.cuisine_type) attributes.cuisine_type = validated.cuisine_type
-    if (validated.price_level) attributes.price_level = validated.price_level
-    if (validated.accepts_reservations !== undefined) attributes.accepts_reservations = validated.accepts_reservations
-
-    // Nature fields
-    if (validated.difficulty) attributes.difficulty = validated.difficulty
-    if (validated.length_km) attributes.length_km = validated.length_km
-    if (validated.elevation_gain_m) attributes.elevation_gain_m = validated.elevation_gain_m
-    if (validated.estimated_duration_hours) attributes.estimated_duration_hours = validated.estimated_duration_hours
-    if (validated.trail_conditions) attributes.trail_conditions = validated.trail_conditions
-
-    // Spa/Activity fields
-    if (validated.activity_type) attributes.activity_type = validated.activity_type
-    if (validated.duration_minutes) attributes.duration_minutes = validated.duration_minutes
-    if (validated.max_participants) attributes.max_participants = validated.max_participants
-    if (validated.equipment_provided !== undefined) attributes.equipment_provided = validated.equipment_provided
-
-    // Prepare business data - use ONLY absolute minimum columns that MUST exist
-    // Store ALL other fields in attributes JSONB to avoid schema cache errors
-    // This is the safest approach when schema cache is unreliable
-    // BUT: owner_user_id and type MUST be direct columns (NOT NULL constraints)
-    const businessData: any = {
-      city_id: validated.city_id,
-      name: validated.name,
-      description: validated.description || null,
-      category: validated.category,
-      owner_user_id: user.id, // REQUIRED: NOT NULL constraint, must be direct column
-      type: businessType, // REQUIRED: NOT NULL constraint, must be direct column
-    }
-
-    // Store ALL other fields in attributes JSONB (safer approach - avoids schema cache errors)
-    const extendedAttributes: Record<string, any> = {
-      ...attributes,
-      // Location (all location data in attributes)
-      latitude: validated.latitude || validated.latitude === 0 ? validated.latitude : null,
-      longitude: validated.longitude || validated.longitude === 0 ? validated.longitude : null,
-      lat: validated.latitude || validated.latitude === 0 ? validated.latitude : null,
-      lng: validated.longitude || validated.longitude === 0 ? validated.longitude : null,
-      address: validated.address_line || null,
-      address_line: validated.address_line || null,
-      // Images (all in attributes since image_url might not be in cache)
-      image_url: validated.image_url || null,
-      image_urls: validated.image_urls && validated.image_urls.length > 0 ? validated.image_urls : null,
-      logo_url: validated.logo_url || null,
-      cover_image_url: validated.cover_image_url || null,
-      // Contact
-      phone: validated.phone || null,
-      website: validated.website || null,
-      email: validated.email || null,
-      // Note: type is already in businessData as direct column (NOT NULL constraint), no need to duplicate in attributes
-      // Extended info
-      tagline: validated.tagline || null,
-      social_media: validated.social_media && Object.keys(validated.social_media).length > 0
-        ? validated.social_media
-        : null,
-      operating_hours: validated.operating_hours && Object.keys(validated.operating_hours).length > 0
-        ? validated.operating_hours
-        : null,
-      facilities: validated.facilities && Object.keys(validated.facilities).length > 0
-        ? validated.facilities
-        : null,
-    }
-
-    // Remove null/undefined values to keep attributes clean
-    Object.keys(extendedAttributes).forEach(key => {
-      if (extendedAttributes[key] === null || extendedAttributes[key] === undefined) {
-        delete extendedAttributes[key]
-      }
-    })
-
-    businessData.attributes = Object.keys(extendedAttributes).length > 0 ? extendedAttributes : {}
-
-    // Insert business using service role client to bypass RLS
-    // This is necessary because auth.uid() is not available in API routes
+    // Initialize insertClient (using service role to bypass RLS/foreign key issues)
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     let insertClient = supabase
 
     if (serviceRoleKey) {
-      // Use service role client to bypass RLS for insert
       insertClient = createServiceClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         serviceRoleKey
       )
-      logger.log('API: Using service role client for insert (bypassing RLS)')
-    } else {
-      logger.warn('API: Service role key not found, using regular client (RLS may fail)')
-      logger.warn('API: Add SUPABASE_SERVICE_ROLE_KEY to .env.local to bypass RLS')
+      logger.log('API: Using service role client for insert')
     }
 
-    // Log the data being inserted for debugging
-    logger.log('API: Inserting business data', {
-      city_id: businessData.city_id,
-      name: businessData.name,
-      category: businessData.category,
-      owner_user_id: businessData.owner_user_id,
-      hasAttributes: !!businessData.attributes,
-      attributesKeys: businessData.attributes ? Object.keys(businessData.attributes) : [],
-      usingServiceRole: !!serviceRoleKey
+    // Verify or Create Profile (Required for foreign key constraint)
+    try {
+      const { data: profile } = await insertClient
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (!profile) {
+        logger.log('API: Profile missing, creating minimal profile', { userId: user.id })
+
+        // Extract a name from email if possible, else use a default
+        const userEmail = (user as any).email || 'business.owner'
+        const displayName = userEmail.split('@')[0].replace(/[._]/g, ' ')
+
+        const { error: createProfileError } = await insertClient
+          .from('profiles')
+          .insert({
+            id: user.id,
+            full_name: displayName,
+            role: 'local', // Must be 'tourist' or 'local' per DB check constraint
+            xp: 0,
+            coins: 0,
+            level: 1
+          })
+
+        if (createProfileError) {
+          logger.error('API: Failed to create essential profile', createProfileError)
+          return NextResponse.json(
+            failure(`Could not create user profile: ${createProfileError.message}`, 'PROFILE_CREATE_ERROR'),
+            { status: 400 }
+          )
+        }
+      }
+    } catch (e: any) {
+      logger.error('API: Error checking/creating profile', e)
+      return NextResponse.json(
+        failure(`Profile verification error: ${e.message}`, 'PROFILE_CHECK_ERROR'),
+        { status: 500 }
+      )
+    }
+
+    // Map category to type enum
+    const businessType = CATEGORY_TO_TYPE_MAP[validated.category] || 'restaurant'
+
+    // Prepare attributes JSONB
+    const attributes: Record<string, any> = {
+      latitude: validated.latitude ?? null,
+      longitude: validated.longitude ?? null,
+      lat: validated.latitude ?? null,
+      lng: validated.longitude ?? null,
+      address: validated.address_line || null,
+      address_line: validated.address_line || null,
+      image_url: validated.image_url || null,
+      image_urls: validated.image_urls && validated.image_urls.length > 0 ? validated.image_urls : null,
+      phone: validated.phone || null,
+      website: validated.website || null,
+      tagline: validated.tagline || null,
+      social_media: (validated.social_media && Object.keys(validated.social_media).length > 0) ? validated.social_media : null,
+      operating_hours: (validated.operating_hours && Object.keys(validated.operating_hours).length > 0) ? validated.operating_hours : null,
+      facilities: (validated.facilities && Object.keys(validated.facilities).length > 0) ? validated.facilities : null,
+      star_rating: validated.star_rating,
+      check_in_time: validated.check_in_time,
+      check_out_time: validated.check_out_time,
+      amenities: validated.amenities,
+      cuisine_type: validated.cuisine_type,
+      price_level: validated.price_level,
+      accepts_reservations: validated.accepts_reservations
+    }
+
+    // Clean up attributes
+    Object.keys(attributes).forEach(key => {
+      if (attributes[key] === null || attributes[key] === undefined) {
+        delete attributes[key]
+      }
     })
+
+    const businessData = {
+      city_id: validated.city_id,
+      name: validated.name,
+      description: validated.description || null,
+      category: validated.category,
+      owner_user_id: user.id,
+      type: businessType,
+      attributes: attributes
+    }
+
+    logger.log('API: Inserting business data', { name: businessData.name, userId: user.id })
 
     const { data: business, error } = await insertClient
       .from('businesses')

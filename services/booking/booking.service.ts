@@ -92,29 +92,32 @@ export async function calculateBookingPrice(
   roomsCount: number = 1,
   paymentOption: PaymentOption = 'full'
 ): Promise<BookingPriceCalculation | null> {
-  const room = await getRoomById(roomId)
-  if (!room) return null
+  const supabase = createClient()
 
-  const startDate = new Date(checkIn)
-  const endDate = new Date(checkOut)
-  const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+  const { data, error } = await supabase.rpc('calculate_booking_price', {
+    p_room_id: roomId,
+    p_check_in: checkIn,
+    p_check_out: checkOut,
+    p_rooms_count: roomsCount
+  })
 
-  if (nights <= 0) return null
+  if (error || !data || data.length === 0) {
+    logger.error('Error calculating price via RPC', error, { roomId, checkIn, checkOut })
+    return null
+  }
 
-  const subtotal = room.price_per_night * nights * roomsCount
-  const taxes = subtotal * 0.09 // 9% TVA
-  const total = subtotal + taxes
+  const result = data[0]
 
   // Calculate deposit if needed (20% of total)
-  const depositAmount = paymentOption === 'deposit' ? total * 0.2 : null
+  const depositAmount = paymentOption === 'deposit' ? result.total * 0.2 : null
 
   return {
-    nights,
-    price_per_night: room.price_per_night,
+    nights: result.nights,
+    price_per_night: result.price_per_night,
     rooms_count: roomsCount,
-    subtotal,
-    taxes,
-    total,
+    subtotal: result.subtotal,
+    taxes: result.taxes,
+    total: result.total,
     deposit_amount: depositAmount,
   }
 }

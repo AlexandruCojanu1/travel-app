@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { logger } from '@/lib/logger'
 import type { Database } from '@/types/database.types'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 type CityPost = Database['public']['Tables']['city_posts']['Row']
 type Business = Database['public']['Tables']['businesses']['Row']
@@ -28,8 +29,8 @@ export interface FeedError {
 /**
  * Fetches the user's home city context
  */
-export async function getHomeContext(userId: string): Promise<HomeContext> {
-  const supabase = createClient()
+export async function getHomeContext(userId: string, supabaseClient?: SupabaseClient<Database>): Promise<HomeContext> {
+  const supabase = supabaseClient || createClient()
 
   try {
     const { data: profile, error: profileError } = await supabase
@@ -54,7 +55,7 @@ export async function getHomeContext(userId: string): Promise<HomeContext> {
         userId,
         homeCity: null,
         homeCityId: null,
-        role: profile.role || null,
+        role: (profile.role as "tourist" | "local") || null,
       }
     }
 
@@ -71,7 +72,7 @@ export async function getHomeContext(userId: string): Promise<HomeContext> {
         userId,
         homeCity: null,
         homeCityId: profile.home_city_id,
-        role: profile.role || null,
+        role: (profile.role as "tourist" | "local") || null,
       }
     }
 
@@ -79,7 +80,7 @@ export async function getHomeContext(userId: string): Promise<HomeContext> {
       userId,
       homeCity: city,
       homeCityId: profile.home_city_id,
-      role: profile.role || null,
+      role: (profile.role as "tourist" | "local") || null,
     }
   } catch (error) {
     logger.error('Error in getHomeContext', error, { userId })
@@ -92,66 +93,109 @@ export async function getHomeContext(userId: string): Promise<HomeContext> {
  */
 export async function getCityFeed(
   cityId: string,
-  categoryFilter?: string
+  categoryFilter?: string,
+  supabaseClient?: SupabaseClient<Database>
 ): Promise<CityFeedData> {
-  const supabase = createClient()
+  const supabase = supabaseClient || createClient()
 
   try {
-    // Fetch city posts (news/events)
-    // Note: Don't filter by category as city_posts.category may not exist
-    const { data: cityPosts, error: postsError } = await supabase
-      .from('city_posts')
-      .select('*')
-      .eq('city_id', cityId)
-      .eq('is_published', true)
-      .order('created_at', { ascending: false })
-      .limit(10)
+    // Execute fetches in parallel for better performance
+    const [postsResult, businessesResult, promotionsResult] = await Promise.all([
+      // 1. Fetch city posts
+      supabase
+        .from('city_posts')
+        .select('*')
+        .eq('city_id', cityId)
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(10)
+        .then(res => {
+          if (res.error) logger.error('Error fetching city posts', res.error, { cityId })
+          return res.data || []
+        }),
 
-    if (postsError) {
-      logger.error('Error fetching city posts', postsError, { cityId })
-    }
+      // 2. Fetch featured businesses logic wrapped in a promise
+      (async () => {
+        let businessQuery = supabase
+          .from('businesses')
+          .select('*')
+          .eq('city_id', cityId)
+          .limit(20)
 
-    // Fetch featured businesses (top rated or verified)
-    let businessQuery = supabase
-      .from('businesses')
-      .select('*')
-      .eq('city_id', cityId)
-      .limit(20) // Increased limit to ensure new museums show up
+        // Try to order by rating
+        try {
+          businessQuery = businessQuery.order('rating', { ascending: false, nullsFirst: false })
+        } catch (e) {
+          businessQuery = businessQuery.order('created_at', { ascending: false })
+        }
 
+        // Apply filters
+        if (categoryFilter && categoryFilter !== 'All') {
+          const categoryMap: Record<string, string> = {
+            'Food': 'Restaurant',
+            'Hotels': 'Hotels',
+            'Nature': 'Nature',
+            'Activities': 'Activities',
+          }
+          const dbCategory = categoryMap[categoryFilter] || categoryFilter
+          businessQuery = businessQuery.eq('category', dbCategory)
+        } else {
+          // Default filter: exclude lodging (simplified for reliability)
+          businessQuery = businessQuery
+            .neq('category', 'Hotel')
+            .neq('category', 'Hotels')
+            .neq('category', 'Accommodation')
+            .neq('category', 'Guesthouse')
+            .neq('category', 'Apartment')
+        }
 
-    // Try to order by rating, but handle gracefully if column doesn't exist
-    // We'll order by created_at as fallback
-    try {
-      businessQuery = businessQuery.order('rating', { ascending: false, nullsFirst: false })
-    } catch (e) {
-      // Rating column doesn't exist, order by created_at instead
-      businessQuery = businessQuery.order('created_at', { ascending: false })
-    }
+        const { data: featuredBusinesses, error: businessError } = await businessQuery
 
-    // Map filter IDs to database category values
-    if (categoryFilter && categoryFilter !== 'All') {
-      const categoryMap: Record<string, string> = {
-        'Food': 'Restaurant', // Map "Food" filter to "Restaurant" category in DB
-        'Hotels': 'Hotels',
-        'Nature': 'Nature',
-        'Activities': 'Activities',
-      }
-      const dbCategory = categoryMap[categoryFilter] || categoryFilter
-      businessQuery = businessQuery.eq('category', dbCategory)
-    } else {
-      // If no specific filter is applied (Homepage default), EXCLUDE lodging to separate them
-      // This ensures 'Activities in City' section doesn't show hotels
-      businessQuery = businessQuery.not('category', 'in', '("Hotel","Hotels","Lodging","Accommodation","Guesthouse","Resort","Villa","Apartment","Hostel")')
-      // Also try to exclude by name pattern if possible, but strict category exclude is safer for SQL
-    }
+        if (businessError) {
+          logger.error('Error fetching businesses', businessError, { cityId, categoryFilter })
+          // If error is about rating column, try again without rating order
+          if (businessError.message?.includes('rating') || businessError.code === '42703') {
+            logger.warn('Rating column not found, fetching businesses without rating order', { cityId })
+            const fallbackQuery = supabase
+              .from('businesses')
+              .select('*')
+              .eq('city_id', cityId)
+              .order('created_at', { ascending: false })
+              .limit(5)
 
-    const { data: featuredBusinesses, error: businessError } = await businessQuery
+            if (categoryFilter && categoryFilter !== 'All') {
+              const categoryMap: Record<string, string> = {
+                'Food': 'Restaurant',
+                'Hotels': 'Hotels',
+                'Nature': 'Nature',
+                'Activities': 'Activities',
+              }
+              const dbCategory = categoryMap[categoryFilter] || categoryFilter
+              fallbackQuery.eq('category', dbCategory)
+            }
 
+            const { data: fallbackBusinesses } = await fallbackQuery
+            return fallbackBusinesses || []
+          }
+          return []
+        }
 
+        return featuredBusinesses || []
+      })(),
 
-    // Process businesses to fallback to attributes.image_url if main image_url is missing
-    const processedBusinesses = (featuredBusinesses || []).map(b => {
-      // Check if attributes has image_url
+      // 3. Fetch active promotions
+      supabase
+        .from('promotions')
+        .select('*')
+        .limit(5)
+        .then(res => {
+          if (res.error) logger.warn('Error fetching promotions (non-critical)', { error: res.error, cityId })
+          return res.data || []
+        })
+    ])
+
+    // Process businesses (image fallback) - this happens in memory, fast
+    const processedBusinesses = businessesResult.map(b => {
       const attrs = b.attributes as any
       if ((!b.image_url || b.image_url.trim() === '') && attrs?.image_url) {
         return { ...b, image_url: attrs.image_url }
@@ -159,67 +203,10 @@ export async function getCityFeed(
       return b
     })
 
-    if (businessError) {
-      logger.error('Error fetching businesses', businessError, { cityId, categoryFilter })
-      // If error is about rating column, try again without rating order
-      if (businessError.message?.includes('rating') || businessError.code === '42703') {
-        logger.warn('Rating column not found, fetching businesses without rating order', { cityId })
-        const fallbackQuery = supabase
-          .from('businesses')
-          .select('*')
-          .eq('city_id', cityId)
-          .order('created_at', { ascending: false })
-          .limit(5)
-
-        // Map filter IDs to database category values
-        if (categoryFilter && categoryFilter !== 'All') {
-          const categoryMap: Record<string, string> = {
-            'Food': 'Restaurant', // Map "Food" filter to "Restaurant" category in DB
-            'Hotels': 'Hotels',
-            'Nature': 'Nature',
-            'Activities': 'Activities',
-          }
-          const dbCategory = categoryMap[categoryFilter] || categoryFilter
-          fallbackQuery.eq('category', dbCategory)
-        }
-
-        const { data: fallbackBusinesses } = await fallbackQuery
-
-        // Also process fallback businesses
-        const processedFallback = (fallbackBusinesses || []).map(b => {
-          const attrs = b.attributes as any
-          if ((!b.image_url || b.image_url.trim() === '') && attrs?.image_url) {
-            return { ...b, image_url: attrs.image_url }
-          }
-          return b
-        })
-
-        return {
-          cityPosts: cityPosts || [],
-          featuredBusinesses: processedFallback,
-          promotions: [],
-        }
-      }
-    }
-
-    // Fetch active promotions
-    // Handle case where is_active column might not exist
-    // Don't try to filter by is_active or dates - just fetch all promotions
-    // This avoids 400 errors if columns don't exist
-    const { data: promotions, error: promotionsError } = await supabase
-      .from('promotions')
-      .select('*')
-      .limit(5)
-
-    if (promotionsError) {
-      // Silently fail - promotions are optional
-      logger.warn('Error fetching promotions (non-critical)', { error: promotionsError, cityId })
-    }
-
     return {
-      cityPosts: cityPosts || [],
+      cityPosts: postsResult,
       featuredBusinesses: processedBusinesses,
-      promotions: promotions || [],
+      promotions: promotionsResult,
     }
   } catch (error) {
     logger.error('Error in getCityFeed', error, { cityId, categoryFilter })

@@ -14,14 +14,14 @@ interface BookingSummaryProps {
   pricePerNight?: number
 }
 
-export function BookingSummary({ 
-  booking, 
-  business, 
-  startDate, 
-  endDate, 
-  guests, 
-  totalPrice, 
-  pricePerNight 
+export function BookingSummary({
+  booking,
+  business,
+  startDate,
+  endDate,
+  guests,
+  totalPrice,
+  pricePerNight
 }: BookingSummaryProps) {
   if (!business) return null
 
@@ -40,7 +40,7 @@ export function BookingSummary({
               alt={business.name}
               fill
               className="object-cover"
-              sizes="100%"
+              sizes="(max-width: 768px) 100vw, 500px"
             />
           </div>
         )}
@@ -64,7 +64,7 @@ export function BookingSummary({
       {/* Booking Details */}
       <div className="airbnb-card p-6">
         <h3 className="text-lg font-bold text-mova-dark mb-4">Booking Details</h3>
-        
+
         <div className="space-y-4">
           {startDate && endDate && (
             <div className="flex items-start gap-3">
@@ -99,7 +99,7 @@ export function BookingSummary({
       {totalPrice && pricePerNight && nights > 0 && (
         <div className="airbnb-card p-6">
           <h3 className="text-lg font-bold text-mova-dark mb-4">Price Breakdown</h3>
-          
+
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-mova-gray">
@@ -109,7 +109,7 @@ export function BookingSummary({
                 {(pricePerNight * nights).toFixed(2)} RON
               </span>
             </div>
-            
+
             <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
               <span className="text-lg font-bold text-mova-dark">Total</span>
               <span className="text-2xl font-bold text-mova-blue">

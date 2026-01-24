@@ -8,7 +8,12 @@ import { useTripStore } from "@/store/trip-store"
 import { useVacationStore } from "@/store/vacation-store"
 import { useAppStore } from "@/store/app-store"
 import { VacationSelector } from "@/components/features/vacation/vacation-selector"
-import { CreateTripDialog } from "@/components/features/trip/create-trip-dialog"
+import dynamic from "next/dynamic"
+
+const CreateTripDialog = dynamic(
+  () => import("@/components/features/trip/create-trip-dialog").then(m => m.CreateTripDialog),
+  { ssr: false }
+)
 import { SyncIndicator } from "@/components/features/trip/sync-indicator"
 import { Button } from "@/components/shared/ui/button"
 import { format } from "date-fns"
@@ -111,13 +116,23 @@ function PlanPageContent() {
       if (user) {
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('avatar_url, full_name')
+          .select('avatar_url, full_name, home_city_id')
           .eq('id', user.id)
           .single()
-        if (profileData) setProfile(profileData)
 
-        const feed = await getCityFeed(user.id) // Or use a default city ID
-        setFeedData(feed)
+        if (profileData) {
+          setProfile(profileData)
+
+          // Fix: Use home_city_id for feed, not user.id
+          if (profileData.home_city_id) {
+            const feed = await getCityFeed(profileData.home_city_id)
+            setFeedData(feed)
+          } else if (currentCity?.id) {
+            // Fallback to current selected city if no home city set
+            const feed = await getCityFeed(currentCity.id)
+            setFeedData(feed)
+          }
+        }
       }
     }
     loadData()

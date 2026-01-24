@@ -11,6 +11,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from "@/components/shared/ui/dialog"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -31,6 +32,24 @@ interface Booking {
         name: string
         image_url?: string
         city_id?: string
+    }
+}
+
+// Helper to normalize booking data
+function normalizeBooking(b: any): Booking {
+    return {
+        id: b.id,
+        user_id: b.user_id,
+        business_id: b.business_id,
+        resource_id: b.resource_id,
+        start_date: b.start_date || b.start_at, // Handle both schemas
+        end_date: b.end_date || b.end_at,
+        guest_count: b.guest_count || b.persons,
+        total_amount: b.total_amount,
+        status: b.status,
+        created_at: b.created_at,
+        updated_at: b.updated_at || b.created_at,
+        business: b.business
     }
 }
 
@@ -76,11 +95,27 @@ export function BookingsDialog({ isOpen, onOpenChange }: BookingsDialogProps) {
                 .order("created_at", { ascending: false })
 
             if (bookingsError) {
-                logger.error("Error loading bookings", bookingsError)
+                logger.error("Error loading hotel_bookings", bookingsError)
                 setError("Failed to load bookings.")
-            } else {
-                setBookings(bookingsData || [])
             }
+
+            // Fetch new 'bookings' (Split Payments etc)
+            const { data: genericBookings, error: genericError } = await supabase
+                .from("bookings")
+                .select("*, business:businesses(*)")
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false })
+
+            if (genericError) {
+                console.warn("Error loading generic bookings", genericError)
+            }
+
+            const allBookings = [
+                ...(bookingsData || []).map(normalizeBooking),
+                ...(genericBookings || []).map(normalizeBooking)
+            ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+            setBookings(allBookings)
 
             // Fetch planned hotels from trips
             const { data: tripsData, error: tripsError } = await supabase
@@ -136,6 +171,9 @@ export function BookingsDialog({ isOpen, onOpenChange }: BookingsDialogProps) {
                         <BookCheck className="h-6 w-6 text-primary" />
                         Rezervările mele
                     </DialogTitle>
+                    <DialogDescription className="text-muted-foreground">
+                        Vezi toate rezervările tale, confirmate sau în așteptare.
+                    </DialogDescription>
                 </DialogHeader>
 
                 {isLoading ? (
@@ -169,6 +207,7 @@ export function BookingsDialog({ isOpen, onOpenChange }: BookingsDialogProps) {
                                                         src={item.business.image_url}
                                                         alt={item.business.name}
                                                         fill
+                                                        sizes="(max-width: 768px) 100vw, 96px"
                                                         className="object-cover"
                                                     />
                                                 ) : (
@@ -226,6 +265,7 @@ export function BookingsDialog({ isOpen, onOpenChange }: BookingsDialogProps) {
                                                         src={booking.business.image_url}
                                                         alt={booking.business.name}
                                                         fill
+                                                        sizes="(max-width: 768px) 100vw, 80px"
                                                         className="object-cover"
                                                     />
                                                 ) : (

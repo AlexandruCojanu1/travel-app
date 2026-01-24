@@ -11,21 +11,23 @@ import { BookingsKanban } from "@/components/features/business/portal/bookings-k
 import { ReviewsReputation } from "@/components/features/business/portal/reviews-reputation"
 import { Button } from "@/components/shared/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shared/ui/tabs"
-import { 
-  Building2, 
-  Calendar, 
-  DollarSign, 
-  Star, 
+import {
+  Building2,
+  Calendar,
+  DollarSign,
+  Star,
   Loader2,
   Plus,
   LayoutDashboard,
   MessageSquare,
   Package,
-  TrendingUp
+  TrendingUp,
+  CalendarRange
 } from "lucide-react"
 import { toast } from "sonner"
 import { logger } from "@/lib/logger"
 import Link from "next/link"
+import { EventsManager } from "@/components/features/business/portal/events-manager"
 
 interface Business {
   id: string
@@ -65,7 +67,7 @@ export default function BusinessPortalDashboard() {
     const timer = setTimeout(() => {
       loadBusinesses()
     }, 500) // Increased delay to ensure cookies are propagated
-    
+
     return () => clearTimeout(timer)
   }, [])
 
@@ -73,46 +75,46 @@ export default function BusinessPortalDashboard() {
     setIsLoading(true)
     try {
       logger.log("Business Dashboard: Loading businesses")
-      
+
       // First verify user is authenticated on client side
       const supabase = createClient()
       const { data: { user }, error: authError } = await supabase.auth.getUser()
-      
+
       if (authError || !user) {
         logger.error("Business Dashboard: User not authenticated", authError)
         toast.error("Sesiunea a expirat. Te rugăm să te autentifici din nou.")
         router.push("/auth/login?redirect=/business-portal/dashboard")
         return
       }
-      
+
       logger.log("Business Dashboard: User authenticated", { userId: user.id })
-      
+
       // Get session token to send with request
       const { data: { session } } = await supabase.auth.getSession()
       const authToken = session?.access_token
-      
+
       // Use API route instead of server action for better cookie handling
       const headers: HeadersInit = {
         'Cache-Control': 'no-cache',
       }
-      
+
       // If we have a session token, send it as Authorization header as fallback
       if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`
       }
-      
+
       const response = await fetch('/api/business/list', {
         method: 'GET',
         credentials: 'include', // CRITICAL: Include cookies for session
         headers,
       })
-      
+
       const result = await response.json()
       logger.log("Business Dashboard: Result", { success: result.success })
-      
+
       // Handle both 'businesses' and 'data' response formats
       const businessesList = result.businesses || result.data || []
-      
+
       if (result.success && businessesList.length > 0) {
         logger.log("Business Dashboard: Found businesses", { count: businessesList.length })
         setBusinesses(businessesList)
@@ -185,58 +187,62 @@ export default function BusinessPortalDashboard() {
           <nav className="flex-1 p-4 space-y-2">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
-                activeTab === "overview"
-                  ? "bg-mova-blue text-white"
-                  : "hover:bg-mova-light-gray text-mova-dark"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${activeTab === "overview"
+                ? "bg-mova-blue text-white"
+                : "hover:bg-mova-light-gray text-mova-dark"
+                }`}
             >
               <LayoutDashboard className="h-5 w-5" />
               <span className="font-medium">Prezentare</span>
             </button>
             <button
               onClick={() => setActiveTab("bookings")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
-                activeTab === "bookings"
-                  ? "bg-mova-blue text-white"
-                  : "hover:bg-mova-light-gray text-mova-dark"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${activeTab === "bookings"
+                ? "bg-mova-blue text-white"
+                : "hover:bg-mova-light-gray text-mova-dark"
+                }`}
             >
               <Calendar className="h-5 w-5" />
               <span className="font-medium">Rezervări</span>
             </button>
             <button
               onClick={() => setActiveTab("reviews")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
-                activeTab === "reviews"
-                  ? "bg-mova-blue text-white"
-                  : "hover:bg-mova-light-gray text-mova-dark"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${activeTab === "reviews"
+                ? "bg-mova-blue text-white"
+                : "hover:bg-mova-light-gray text-mova-dark"
+                }`}
             >
               <Star className="h-5 w-5" />
               <span className="font-medium">Recenzii</span>
             </button>
             <button
               onClick={() => setActiveTab("resources")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
-                activeTab === "resources"
-                  ? "bg-mova-blue text-white"
-                  : "hover:bg-mova-light-gray text-mova-dark"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${activeTab === "resources"
+                ? "bg-mova-blue text-white"
+                : "hover:bg-mova-light-gray text-mova-dark"
+                }`}
             >
               <Package className="h-5 w-5" />
               <span className="font-medium">Inventar</span>
             </button>
             <button
               onClick={() => setActiveTab("availability")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${
-                activeTab === "availability"
-                  ? "bg-mova-blue text-white"
-                  : "hover:bg-mova-light-gray text-mova-dark"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${activeTab === "availability"
+                ? "bg-mova-blue text-white"
+                : "hover:bg-mova-light-gray text-mova-dark"
+                }`}
             >
-              <Calendar className="h-5 w-5" />
               <span className="font-medium">Calendar</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("events")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-airbnb transition-colors ${activeTab === "events"
+                ? "bg-mova-blue text-white"
+                : "hover:bg-mova-light-gray text-mova-dark"
+                }`}
+            >
+              <CalendarRange className="h-5 w-5" />
+              <span className="font-medium">Evenimente</span>
             </button>
             <Link
               href="/business-portal/promote"
@@ -297,9 +303,9 @@ export default function BusinessPortalDashboard() {
 
               <TabsContent value="resources" className="mt-6">
                 {selectedBusiness && (
-                  <InventoryManager 
-                    businessId={selectedBusiness.id} 
-                    businessType={selectedBusiness.type || selectedBusiness.category} 
+                  <InventoryManager
+                    businessId={selectedBusiness.id}
+                    businessType={selectedBusiness.type || selectedBusiness.category}
                   />
                 )}
               </TabsContent>
@@ -307,6 +313,15 @@ export default function BusinessPortalDashboard() {
               <TabsContent value="availability" className="mt-6">
                 {selectedBusiness && (
                   <AvailabilityCalendarSelector businessId={selectedBusiness.id} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="events" className="mt-6">
+                {selectedBusiness && (
+                  <EventsManager
+                    businessId={selectedBusiness.id}
+                    cityId={(selectedBusiness as any).city_id} // Cast as any if city_id missing in type def, or better fix type
+                  />
                 )}
               </TabsContent>
             </Tabs>

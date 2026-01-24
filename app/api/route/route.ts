@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 // OSRM public API profiles
 type OSRMProfile = 'driving' | 'walking' | 'cycling'
 
 export async function GET(request: NextRequest) {
+    // Authenticate user
+    const supabase = await createClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    if (error || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const coordinates = searchParams.get('coordinates') // format: "lon1,lat1;lon2,lat2;..."
     const profile = (searchParams.get('profile') || 'driving') as OSRMProfile

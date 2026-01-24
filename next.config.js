@@ -9,6 +9,18 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'lookaside.fbsbx.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.fbcdn.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.facebook.com',
+      },
+      {
+        protocol: 'https',
         hostname: '**.supabase.in',
       },
       {
@@ -62,6 +74,9 @@ const nextConfig = {
     ]
   },
   transpilePackages: ['framer-motion'],
+  experimental: {
+    serverComponentsExternalPackages: ['undici', 'cheerio'],
+  },
 }
 
 module.exports = nextConfig

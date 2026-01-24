@@ -44,7 +44,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
   const supabase = createClient()
 
   try {
-    console.log('getUserProfile: Fetching profile for user:', userId)
+
 
     // First, verify user is authenticated
     const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
@@ -91,13 +91,35 @@ export async function getUserProfile(userId: string): Promise<UserProfileData> {
           .select()
           .single()
 
-        if (createError || !newProfile) {
-          logger.error('getUserProfile: Failed to create profile', createError, { userId })
-          throw new Error(`Profile not found and could not be created: ${createError?.message || 'Unknown error'}`)
-        }
+        if (createError) {
+          // Check for duplicate key violation (race condition)
+          if (createError.code === '23505') {
+            logger.log('getUserProfile: Race condition detected - profile already created by another request, refetching...', { userId })
 
-        logger.log('getUserProfile: Profile created successfully', { userId })
-        profile = newProfile
+            // Retry fetch
+            const { data: retryProfile, error: retryError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', userId)
+              .single()
+
+            if (retryError || !retryProfile) {
+              logger.error('getUserProfile: Failed to refetch profile after race condition', retryError, { userId })
+              throw new Error(`Profile creation conflict and refetch failed: ${retryError?.message || 'Unknown error'}`)
+            }
+
+            profile = retryProfile
+          } else {
+            logger.error('getUserProfile: Failed to create profile', createError, { userId })
+            throw new Error(`Profile not found and could not be created: ${createError?.message || 'Unknown error'}`)
+          }
+        } else if (!newProfile) {
+          logger.error('getUserProfile: Profile creation returned no data', null, { userId })
+          throw new Error('Profile creation returned no data')
+        } else {
+          logger.log('getUserProfile: Profile created successfully', { userId })
+          profile = newProfile
+        }
       } else {
         // Other error (like 406 - RLS issue)
         // For 406, it might be an RLS policy issue
@@ -283,11 +305,11 @@ export async function saveBusinessForUser(
 
     // Silently ignore all errors - RLS/duplicate/etc
     if (error) {
-      console.log('[saveBusinessForUser] Note: Could not save to favorites (RLS or duplicate):', error.code)
+
     }
   } catch (error: any) {
     // Silently ignore all errors
-    console.log('[saveBusinessForUser] Silently ignoring error:', error?.message || 'unknown')
+
   }
 }
 
@@ -312,6 +334,44 @@ export async function unsaveBusinessForUser(
     }
   } catch (error) {
     console.error('Error in unsaveBusinessForUser:', error)
+    throw error
+  }
+}
+
+/**
+ * Completes user onboarding by updating profile
+ */
+export async function completeUserProfileOnboarding(
+  userId: string,
+  data: {
+    homeCityId?: string
+    role?: string
+    persona?: string
+    onboarding_data?: any
+  }
+): Promise<void> {
+  const supabase = createClient()
+
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        id: userId,
+        home_city_id: data.homeCityId,
+        role: data.role || 'tourist',
+        persona: data.persona,
+        onboarding_data: data.onboarding_data || {},
+        onboarding_completed: true,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+      })
+
+    if (error) {
+      throw new Error(`Failed to complete onboarding: ${error.message}`)
+    }
+  } catch (error) {
+    console.error('Error in completeUserProfileOnboarding:', error)
     throw error
   }
 }

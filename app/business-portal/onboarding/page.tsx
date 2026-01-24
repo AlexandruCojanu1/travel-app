@@ -30,48 +30,34 @@ import {
   Wind,
   X
 } from "lucide-react"
-import 'maplibre-gl/dist/maplibre-gl.css'
+
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState, useTransition } from "react"
-import Map, { Marker, NavigationControl } from 'react-map-gl'
 import { toast } from "sonner"
 
 const BUSINESS_CATEGORIES = [
-  { value: 'Restaurant', label: 'Restaurante', icon: '🍽️', description: 'Restaurante, baruri' },
-  { value: 'Cafe', label: 'Cafelele', icon: '☕', description: 'Cafenele, cofetării' },
   { value: 'Hotel', label: 'Hoteluri și Cazări', icon: '🏨', description: 'Hoteluri, pensiuni, B&Bs' },
-  { value: 'Spa', label: 'Centre Spa', icon: '🧘', description: 'Spa, wellness, relaxare' },
-  { value: 'AmusementPark', label: 'Parcuri de Distracții', icon: '🎢', description: 'Parcuri tematice, distracții' },
-  { value: 'Shop', label: 'Magazine', icon: '🛍️', description: 'Magazine, retail' },
-  { value: 'Mall', label: 'Mall-uri și Centre Comerciale', icon: '🏬', description: 'Centre comerciale, mall-uri' },
-  { value: 'Museum', label: 'Muzee/Galerii/Schituri/Biserici', icon: '🏛️', description: 'Cultură, istorie, artă' },
-  { value: 'Event', label: 'Evenimente', icon: '🎪', description: 'Evenimente, festivaluri' },
-  { value: 'Theater', label: 'Teatre/Operă/Spectacole', icon: '🎭', description: 'Teatru, operă, spectacole' },
-  { value: 'Nature', label: 'Atracții Naturale', icon: '🏔️', description: 'Trasee montane, natură' },
-  { value: 'CurrencyExchange', label: 'Servicii de Schimb Valutar', icon: '💱', description: 'Schimb valutar' },
-  { value: 'Parking', label: 'Parcări', icon: '🅿️', description: 'Parcări publice și private' },
-  { value: 'Laundry', label: 'Spălătorii de Haine', icon: '🧺', description: 'Spălătorie, curățătorie' },
-  { value: 'DutyFree', label: 'Duty Free', icon: '✈️', description: 'Magazine duty free' },
-  { value: 'Hospital', label: 'Spitale', icon: '🏥', description: 'Spitale, clinici' },
-  { value: 'Pharmacy', label: 'Farmacii', icon: '💊', description: 'Farmacii, medicamente' },
+  { value: 'Restaurant', label: 'Restaurante și Cafenele', icon: '🍽️', description: 'Restaurante, baruri, cafenele' },
+  { value: 'Spa', label: 'Spa și Divertisment', icon: '🧘', description: 'Spa, wellness, parcuri distracții' },
+  { value: 'Shop', label: 'Magazine și Centre Comerciale', icon: '🛍️', description: 'Magazine, mall-uri' },
 ] as const
 
-type Step = 1 | 2 | 3 | 4 | 5
+type Step = 1 | 2 | 3 | 4
 type BusinessCategory =
-  | "Restaurant" | "Cafe" | "Hotel" | "Spa" | "AmusementPark"
-  | "Shop" | "Mall" | "Museum" | "Event" | "Theater"
-  | "Nature" | "CurrencyExchange" | "Parking" | "Laundry"
-  | "DutyFree" | "Hospital" | "Pharmacy" | ""
+  | "Restaurant" | "Hotel" | "Spa" | "Shop" | ""
 
 interface BusinessFormData {
-  // Step 1: Identity & Category
+  // Step 1: Identity & Category (Simplified)
   name: string
   tagline?: string
-  description: string
   phone: string
   website: string
-  email?: string
   category: BusinessCategory
+
+  // Step 1 Media (Moved from Step 4)
+  image_url: string
+  image_urls: string[] // Gallery
+  cover_image_url?: string // Fotografie principală alias (kept for compatibility or UI label change)
 
   // Step 2: Location
   city_id: string
@@ -89,7 +75,8 @@ interface BusinessFormData {
   hotel_amenities?: string[]
   smoking_allowed?: boolean
   children_policy?: string
-  // Restaurant
+
+  // Restaurant (Merged with Cafe)
   cuisine_type?: string[]
   price_level?: '€' | '€€' | '€€€' | '€€€€'
   opening_hours?: Record<string, string>
@@ -101,71 +88,32 @@ interface BusinessFormData {
   reservation_link?: string
   menu_url?: string
   dietary_tags?: string[]
-  specialty?: string
-  // Nature
-  difficulty?: 'Easy' | 'Moderate' | 'Hard' | 'Expert'
-  length_km?: number
-  elevation_gain_m?: number
-  estimated_duration_hours?: number
-  trail_conditions?: string
-  equipment_needed?: string
-  seasonal?: string
-  // Spa/Activity
+  specialty?: string // From Cafe
+
+  // Spa (Merged with AmusementPark)
   activity_type?: string
   duration_minutes?: number
   max_participants?: number
   equipment_provided?: boolean
   spa_services?: Array<{ name: string; price: number; duration: number }>
-  // Museum/Event/Theater
-  ticket_type?: string
-  prices?: Record<string, number>
-  average_visit_duration_hours?: number
-  museum_type?: string
-  events_calendar_url?: string
-  ticket_prices?: Record<string, number>
-  // Shop/Mall
-  shop_type?: string
-  stores?: string[]
-  floors?: number
-  food_court?: boolean
-  cinema?: boolean
-  playground?: boolean
-  // Currency Exchange
-  commission_type?: string
-  commission_value?: number
-  currencies_available?: string[]
-  // Parking
-  parking_type?: string
-  parking_pricing?: Record<string, any>
-  capacity?: number
-  max_height_meters?: number
-  // Laundry
-  service_type?: string
-  laundry_pricing?: Record<string, any>
-  average_wait_time_minutes?: number
-  // Duty Free
-  duty_free_location?: string
-  // Hospital
-  hospital_type?: string
-  specializations?: string[]
-  emergency_phone?: string
-  // Pharmacy
-  pharmacy_type?: string
-  accepts_compensated_prescriptions?: boolean
-  has_lab?: boolean
-  pharmacy_emergency_phone?: string
+  ticket_type?: string // From AmusementPark
+  prices?: Record<string, number> // From AmusementPark
+  average_visit_duration_hours?: number // From AmusementPark
 
-  // Step 4: Media
-  image_url: string
-  image_urls: string[] // Gallery
-  logo_url?: string
-  cover_image_url?: string
+  // Shop (Merged with Mall)
+  shop_type?: string
+  stores?: string[] // From Mall
+  floors?: number // From Mall
+  food_court?: boolean // From Mall
+  cinema?: boolean // From Mall
+  playground?: boolean // From Mall
+
   social_media?: Record<string, string>
   facilities?: Record<string, boolean>
 }
 
 const AMENITIES_OPTIONS = [
-  'WiFi', 'Pool', 'Gym', 'Parking', 'AC', 'TV', 'Mini Bar', 'Balcony', 'Sea View', 'Breakfast'
+  'WiFi', 'Pool', 'Gym', 'TV', 'Mini Bar', 'Balcony', 'Sea View', 'Breakfast'
 ]
 
 const CUISINE_OPTIONS = [
@@ -182,13 +130,9 @@ export default function BusinessOnboardingPage() {
   const [formData, setFormData] = useState<BusinessFormData>({
     name: "",
     tagline: "",
-    description: "",
     phone: "",
     website: "",
-    email: "",
     category: "",
-    logo_url: "",
-    cover_image_url: "",
     social_media: {},
     operating_hours: {},
     facilities: {},
@@ -203,11 +147,6 @@ export default function BusinessOnboardingPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string>("")
   const [userCity, setUserCity] = useState<{ lat: number; lng: number } | null>(null)
-  const [mapViewState, setMapViewState] = useState({
-    latitude: 45.9432,
-    longitude: 24.9668,
-    zoom: 13
-  })
 
   // Check if user is authenticated and has completed regular onboarding
   useEffect(() => {
@@ -229,7 +168,7 @@ export default function BusinessOnboardingPage() {
         .from('profiles')
         .select('home_city_id')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
       // Get user's city coordinates for map initial center (if profile exists)
       if (profile?.home_city_id) {
@@ -280,6 +219,10 @@ export default function BusinessOnboardingPage() {
         setErrors({ category: "Please select a category" })
         return
       }
+      if (!formData.image_url && formData.image_urls.length === 0) {
+        setErrors({ image_url: "Te rugăm să adaugi cel puțin o imagine" })
+        return
+      }
       setStep(2)
     } else if (step === 2) {
       if (!formData.city_id) {
@@ -290,12 +233,6 @@ export default function BusinessOnboardingPage() {
     } else if (step === 3) {
       // Type-specific validation happens in submit
       setStep(4)
-    } else if (step === 4) {
-      if (!formData.image_url && formData.image_urls.length === 0) {
-        setErrors({ image_url: "Please add at least one image" })
-        return
-      }
-      setStep(5)
     }
   }
 
@@ -349,17 +286,14 @@ export default function BusinessOnboardingPage() {
         const submitData: any = {
           name: formData.name,
           tagline: formData.tagline || undefined,
-          description: formData.description || undefined,
           phone: formData.phone || undefined,
           website: formData.website || undefined,
-          email: formData.email || undefined,
           category: formData.category,
           city_id: formData.city_id,
           address_line: formData.address_line || undefined,
           latitude: formData.latitude || undefined,
           longitude: formData.longitude || undefined,
           image_url: formData.image_url || formData.image_urls[0] || undefined,
-          logo_url: formData.logo_url || undefined,
           cover_image_url: formData.cover_image_url || undefined,
           social_media: Object.keys(formData.social_media || {}).length > 0 ? formData.social_media : undefined,
           operating_hours: Object.keys(formData.operating_hours || {}).length > 0 ? formData.operating_hours : undefined,
@@ -382,82 +316,53 @@ export default function BusinessOnboardingPage() {
           if (formData.reservation_link) submitData.reservation_link = formData.reservation_link
           if (formData.menu_url) submitData.menu_url = formData.menu_url
           if (formData.dietary_tags) submitData.dietary_tags = formData.dietary_tags
-        } else if (formData.category === 'Cafe') {
-          if (formData.specialty) submitData.specialty = formData.specialty
-          if (formData.price_level) submitData.price_level = formData.price_level
-          if (formData.menu_url) submitData.menu_url = formData.menu_url
-          if (formData.dietary_tags) submitData.dietary_tags = formData.dietary_tags
+
         } else if (formData.category === 'Spa') {
           if (formData.spa_services && formData.spa_services.length > 0) {
             submitData.spa_services = formData.spa_services
           }
-        } else if (formData.category === 'Nature') {
-          if (formData.difficulty) submitData.difficulty = formData.difficulty
-          if (formData.length_km) submitData.length_km = formData.length_km
-          if (formData.elevation_gain_m) submitData.elevation_gain_m = formData.elevation_gain_m
-          if (formData.estimated_duration_hours) submitData.estimated_duration_hours = formData.estimated_duration_hours
-          if (formData.trail_conditions) submitData.trail_conditions = formData.trail_conditions
-          if (formData.equipment_needed) submitData.equipment_needed = formData.equipment_needed
-          if (formData.seasonal !== undefined) submitData.seasonal = formData.seasonal
-        } else if (formData.category === 'Museum') {
-          if (formData.ticket_type) submitData.ticket_type = formData.ticket_type
-          if (formData.prices) submitData.prices = formData.prices
-          if (formData.average_visit_duration_hours) submitData.average_visit_duration_hours = formData.average_visit_duration_hours
-          if (formData.museum_type) submitData.museum_type = formData.museum_type
-        } else if (formData.category === 'Theater') {
-          if (formData.events_calendar_url) submitData.events_calendar_url = formData.events_calendar_url
-          if (formData.ticket_prices) submitData.ticket_prices = formData.ticket_prices
-        } else if (formData.category === 'AmusementPark') {
-          if (formData.ticket_type) submitData.ticket_type = formData.ticket_type
-          if (formData.prices) submitData.prices = formData.prices
-          if (formData.average_visit_duration_hours) submitData.average_visit_duration_hours = formData.average_visit_duration_hours
         } else if (formData.category === 'Shop') {
           if (formData.shop_type) submitData.shop_type = formData.shop_type
-        } else if (formData.category === 'Mall') {
           if (formData.stores) submitData.stores = formData.stores
           if (formData.floors) submitData.floors = formData.floors
           if (formData.food_court !== undefined) submitData.food_court = formData.food_court
           if (formData.cinema !== undefined) submitData.cinema = formData.cinema
           if (formData.playground !== undefined) submitData.playground = formData.playground
-        } else if (formData.category === 'CurrencyExchange') {
-          if (formData.commission_type) submitData.commission_type = formData.commission_type
-          if (formData.commission_value) submitData.commission_value = formData.commission_value
-          if (formData.currencies_available) submitData.currencies_available = formData.currencies_available
-        } else if (formData.category === 'Parking') {
-          if (formData.parking_type) submitData.parking_type = formData.parking_type
-          if (formData.parking_pricing) submitData.parking_pricing = formData.parking_pricing
-          if (formData.capacity) submitData.capacity = formData.capacity
-          if (formData.max_height_meters) submitData.max_height_meters = formData.max_height_meters
-        } else if (formData.category === 'Laundry') {
-          if (formData.service_type) submitData.service_type = formData.service_type
-          if (formData.laundry_pricing) submitData.laundry_pricing = formData.laundry_pricing
-          if (formData.average_wait_time_minutes) submitData.average_wait_time_minutes = formData.average_wait_time_minutes
-        } else if (formData.category === 'DutyFree') {
-          if (formData.duty_free_location) submitData.duty_free_location = formData.duty_free_location
-        } else if (formData.category === 'Hospital') {
-          if (formData.hospital_type) submitData.hospital_type = formData.hospital_type
-          if (formData.specializations) submitData.specializations = formData.specializations
-          if (formData.emergency_phone) submitData.emergency_phone = formData.emergency_phone
-        } else if (formData.category === 'Pharmacy') {
-          if (formData.pharmacy_type) submitData.pharmacy_type = formData.pharmacy_type
-          if (formData.accepts_compensated_prescriptions !== undefined) submitData.accepts_compensated_prescriptions = formData.accepts_compensated_prescriptions
-          if (formData.has_lab !== undefined) submitData.has_lab = formData.has_lab
-          if (formData.pharmacy_emergency_phone) submitData.pharmacy_emergency_phone = formData.pharmacy_emergency_phone
         }
 
         const validated = businessSchema.safeParse(submitData)
+        console.log("Business onboarding: Validation result:", validated.success ? "SUCCESS" : "FAILED")
 
         if (!validated.success) {
+          console.error("Business onboarding: Validation errors:", validated.error.format())
           const fieldErrors: Record<string, string> = {}
           validated.error.errors.forEach((error: any) => {
             if (error.path[0]) {
-              fieldErrors[error.path[0].toString()] = error.message
+              const fieldName = error.path[0].toString()
+              fieldErrors[fieldName] = error.message
+              toast.error(`Eroare la ${fieldName}: ${error.message}`)
             }
           })
           setErrors(fieldErrors)
+
+          // Map fields to steps for redirection
+          const step1Fields = ["name", "category", "tagline", "phone", "website", "image_url"]
+          const step2Fields = ["city_id", "address_line", "latitude", "longitude"]
+
+          const firstErrorField = validated.error.errors[0].path[0].toString()
+          if (step1Fields.includes(firstErrorField)) {
+            setStep(1)
+          } else if (step2Fields.includes(firstErrorField)) {
+            setStep(2)
+          } else {
+            setStep(3)
+          }
+
+          setServerError("Te rugăm să verifici datele introduse. Am găsit erori de validare.")
           return
         }
 
+        console.log("Business onboarding: Proceeding to auth check...")
         // Verify user is authenticated before calling server action
         const supabase = createClient()
         const { data: { user: currentUser }, error: authCheckError } = await supabase.auth.getUser()
@@ -475,24 +380,31 @@ export default function BusinessOnboardingPage() {
         console.log("Business onboarding: User verified before createBusiness:", currentUser.id)
 
         // Use API route instead of server action for better cookie handling
-        // Include credentials to ensure cookies are sent
         const response = await fetch('/api/business/create', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // CRITICAL: Include cookies for session
+          credentials: 'include',
           body: JSON.stringify({
             data: validated.data,
             userId: currentUser.id,
           }),
         })
 
-        const result = await response.json()
+        let result;
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          result = await response.json();
+        } else {
+          const text = await response.text();
+          console.error("Business onboarding: Received non-JSON response:", text);
+          throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
+        }
 
-        console.log("Business onboarding: Create business result:", JSON.stringify(result, null, 2))
+        console.log("Business onboarding: Create business result:", result)
 
-        if (result && result.success) {
+        if (response.ok && result && result.success) {
           console.log("Business onboarding: Business created successfully, redirecting to dashboard", result)
           toast.success("Business-ul a fost creat cu succes!")
 
@@ -575,7 +487,7 @@ export default function BusinessOnboardingPage() {
                     Spune-ne despre business-ul tău
                   </h2>
                   <p className="text-slate-600">
-                    Să începem cu elementele de bază
+                    Să începem cu elementele de bază și fotografiile
                   </p>
                 </div>
 
@@ -609,13 +521,13 @@ export default function BusinessOnboardingPage() {
                   <label className="block text-sm font-semibold text-foreground mb-3">
                     Categoria Business-ului *
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto overflow-x-hidden">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {BUSINESS_CATEGORIES.map((cat) => (
                       <button
                         key={cat.value}
                         type="button"
                         onClick={() => {
-                          setFormData((prev) => ({ ...prev, category: cat.value }))
+                          setFormData((prev) => ({ ...prev, category: cat.value as BusinessCategory }))
                           if (errors.category) setErrors({ ...errors, category: "" })
                         }}
                         className={cn(
@@ -658,23 +570,7 @@ export default function BusinessOnboardingPage() {
                   </p>
                 </div>
 
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-2">
-                    Descriere Detaliată *
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, description: e.target.value }))
-                    }
-                    placeholder="Povestea locului, misiune, ce face business-ul tău special..."
-                    rows={4}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-                  />
-                </div>
-
-                {/* Contact Information */}
+                {/* Contact Information (Simplified - Phone Only) */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-foreground border-b pb-2">Informații de Contact</h3>
 
@@ -696,35 +592,83 @@ export default function BusinessOnboardingPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-2">
-                        <Mail className="inline h-4 w-4 mr-1" />
-                        Email Public (Opțional)
+                        <Globe className="inline h-4 w-4 mr-1" />
+                        Website (Opțional)
                       </label>
                       <input
-                        type="email"
-                        value={formData.email || ""}
+                        type="url"
+                        value={formData.website || ""}
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, email: e.target.value }))
+                          setFormData((prev) => ({ ...prev, website: e.target.value }))
                         }
-                        placeholder="contact@example.com"
+                        placeholder="https://example.com"
                         className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                   </div>
+                </div>
 
+                {/* Photos (Moved from Step 4) */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Fotografii</h3>
+
+                  {/* Main Photo */}
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
-                      <Globe className="inline h-4 w-4 mr-1" />
-                      Website (Opțional)
+                      Fotografie Principală *
                     </label>
-                    <input
-                      type="url"
-                      value={formData.website || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, website: e.target.value }))
-                      }
-                      placeholder="https://example.com"
-                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    <ImageUpload
+                      value={formData.image_url}
+                      onChange={(url) => {
+                        setFormData((prev) => ({ ...prev, image_url: url }))
+                        if (errors.image_url) setErrors({ ...errors, image_url: "" })
+                      }}
+                      onRemove={() => setFormData((prev) => ({ ...prev, image_url: "" }))}
+                      className="h-48"
                     />
+                    {errors.image_url && (
+                      <p className="mt-1 text-sm text-destructive">{errors.image_url}</p>
+                    )}
+                  </div>
+
+                  {/* Gallery */}
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-2">
+                      Galerie Foto (Opțional)
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {formData.image_urls.map((url, index) => (
+                        <ImageUpload
+                          key={index}
+                          value={url}
+                          onChange={(newUrl) => {
+                            const newUrls = [...formData.image_urls]
+                            newUrls[index] = newUrl
+                            setFormData(prev => ({ ...prev, image_urls: newUrls }))
+                          }}
+                          onRemove={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              image_urls: prev.image_urls.filter((_, i) => i !== index)
+                            }))
+                          }}
+                          className="h-32"
+                        />
+                      ))}
+                      {formData.image_urls.length < 9 && (
+                        <ImageUpload
+                          value=""
+                          onChange={(url) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              image_urls: [...prev.image_urls, url]
+                            }))
+                          }}
+                          onRemove={() => { }}
+                          className="h-32"
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -788,254 +732,6 @@ export default function BusinessOnboardingPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Visual Identity */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Identitate Vizuală</h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-foreground mb-2">
-                        Logo (Opțional)
-                      </label>
-                      <ImageUpload
-                        value={formData.logo_url}
-                        onChange={(url) => setFormData((prev) => ({ ...prev, logo_url: url }))}
-                        onRemove={() => setFormData((prev) => ({ ...prev, logo_url: "" }))}
-                        className="h-40"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-foreground mb-2">
-                        Cover Image (Opțional)
-                      </label>
-                      <ImageUpload
-                        value={formData.cover_image_url}
-                        onChange={(url) => setFormData((prev) => ({ ...prev, cover_image_url: url }))}
-                        onRemove={() => setFormData((prev) => ({ ...prev, cover_image_url: "" }))}
-                        className="h-40"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Operating Hours */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 border-b pb-2">Program de Funcționare</h3>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Tip Program
-                    </label>
-                    <select
-                      value={formData.operating_hours?.type || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          operating_hours: {
-                            ...prev.operating_hours,
-                            type: e.target.value as '24/7' | 'daily' | 'weekdays' | 'by_appointment'
-                          }
-                        }))
-                      }
-                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    >
-                      <option value="">Selectează tip program</option>
-                      <option value="24/7">24/7</option>
-                      <option value="daily">Zilnic</option>
-                      <option value="weekdays">Luni-Vineri</option>
-                      <option value="by_appointment">Doar pe bază de programare</option>
-                    </select>
-                  </div>
-
-                  {formData.operating_hours?.type && formData.operating_hours.type !== '24/7' && formData.operating_hours.type !== 'by_appointment' && (
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-foreground mb-2">
-                        Orare Specifice
-                      </label>
-                      {['Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă', 'Duminică'].map((day) => (
-                        <div key={day} className="flex items-center gap-2">
-                          <span className="w-24 text-sm text-foreground">{day}:</span>
-                          <input
-                            type="text"
-                            value={(formData.operating_hours?.schedule as any)?.[day.toLowerCase()] || ""}
-                            onChange={(e) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                operating_hours: {
-                                  ...(prev.operating_hours || {}),
-                                  schedule: {
-                                    ...((prev.operating_hours?.schedule as Record<string, string>) || {}),
-                                    [day.toLowerCase()]: e.target.value
-                                  }
-                                }
-                              }))
-                            }
-                            placeholder="09:00-18:00"
-                            className="flex-1 px-4 py-2 rounded-lg border-2 border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* General Facilities */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Facilități Generale</h3>
-
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
-                      <input
-                        type="checkbox"
-                        checked={formData.facilities?.accepts_card || false}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            facilities: { ...prev.facilities, accepts_card: e.target.checked }
-                          }))
-                        }
-                        className="rounded text-primary focus:ring-primary"
-                      />
-                      <CreditCard className="h-4 w-4" />
-                      <span className="text-sm font-semibold">Acceptă Card</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
-                      <input
-                        type="checkbox"
-                        checked={formData.facilities?.wifi || false}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            facilities: { ...prev.facilities, wifi: e.target.checked }
-                          }))
-                        }
-                        className="rounded text-primary focus:ring-primary"
-                      />
-                      <Wifi className="h-4 w-4" />
-                      <span className="text-sm font-semibold">WiFi Gratuit</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
-                      <input
-                        type="checkbox"
-                        checked={formData.facilities?.wheelchair_accessible || false}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            facilities: { ...prev.facilities, wheelchair_accessible: e.target.checked }
-                          }))
-                        }
-                        className="rounded text-primary focus:ring-primary"
-                      />
-                      <Users className="h-4 w-4" />
-                      <span className="text-sm font-semibold">Accesibilitate</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
-                      <input
-                        type="checkbox"
-                        checked={formData.facilities?.pet_friendly || false}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            facilities: { ...prev.facilities, pet_friendly: e.target.checked }
-                          }))
-                        }
-                        className="rounded text-primary focus:ring-primary"
-                      />
-                      <Heart className="h-4 w-4" />
-                      <span className="text-sm font-semibold">Pet Friendly</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
-                      <input
-                        type="checkbox"
-                        checked={formData.facilities?.parking || false}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            facilities: { ...prev.facilities, parking: e.target.checked }
-                          }))
-                        }
-                        className="rounded text-primary focus:ring-primary"
-                      />
-                      <Car className="h-4 w-4" />
-                      <span className="text-sm font-semibold">Parcare</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-primary/50">
-                      <input
-                        type="checkbox"
-                        checked={formData.facilities?.air_conditioning || false}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            facilities: { ...prev.facilities, air_conditioning: e.target.checked }
-                          }))
-                        }
-                        className="rounded text-primary focus:ring-primary"
-                      />
-                      <Wind className="h-4 w-4" />
-                      <span className="text-sm font-semibold">Aer Condiționat</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-blue-300">
-                      <input
-                        type="checkbox"
-                        checked={formData.facilities?.air_conditioning || false}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            facilities: { ...prev.facilities, air_conditioning: e.target.checked }
-                          }))
-                        }
-                        className="rounded"
-                      />
-                      <Wind className="h-4 w-4" />
-                      <span className="text-sm font-semibold">Aer Condiționat</span>
-                    </label>
-
-                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:border-blue-300">
-                      <input
-                        type="checkbox"
-                        checked={formData.facilities?.public_restrooms || false}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            facilities: { ...prev.facilities, public_restrooms: e.target.checked }
-                          }))
-                        }
-                        className="rounded"
-                      />
-                      <CheckSquare className="h-4 w-4" />
-                      <span className="text-sm font-semibold">Toalete Publice</span>
-                    </label>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-mova-dark mb-2">
-                      <Car className="inline h-4 w-4 mr-1" />
-                      Parcare
-                    </label>
-                    <select
-                      value={typeof formData.facilities?.parking === 'string' ? formData.facilities.parking : ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          facilities: { ...prev.facilities, parking: e.target.value as any }
-                        }))
-                      }
-                      className="w-full px-4 py-3 rounded-airbnb-lg border-2 border-gray-300 bg-white focus:border-mova-blue focus:ring-2 focus:ring-mova-blue/20 transition-all"
-                    >
-                      <option value="">Selectează opțiune</option>
-                      <option value="None">Fără parcare</option>
-                      <option value="Free">Parcare gratuită</option>
-                      <option value="Paid">Parcare cu plată</option>
-                    </select>
-                  </div>
-                </div>
               </motion.div>
             )}
 
@@ -1073,57 +769,33 @@ export default function BusinessOnboardingPage() {
                         setErrors({})
                       }}
                       onCityChange={(city) => {
+                        // Update form data coordinates if city has them
                         if (city?.latitude && city?.longitude) {
-                          setMapViewState({
-                            latitude: city.latitude,
-                            longitude: city.longitude,
-                            zoom: 13
-                          })
+                          setFormData(prev => ({
+                            ...prev,
+                            latitude: city.latitude ?? null,
+                            longitude: city.longitude ?? null
+                          }))
                         }
                       }}
                       error={errors.city_id}
                     />
                   </div>
 
-                  {/* Interactive Map */}
+                  {/* Interactive Map Removed */}
                   <div>
-                    <label className="block text-sm font-semibold text-mova-dark mb-2">
-                      Indică Locația pe Hartă *
-                    </label>
-                    <div className="h-64 md:h-96 rounded-xl overflow-hidden border-2 border-slate-200">
-                      <Map
-                        {...mapViewState}
-                        onMove={evt => setMapViewState(evt.viewState)}
-                        onClick={handleMapClick}
-                        onLoad={() => setMapLoaded(true)}
-                        mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-                        mapLib={import('maplibre-gl') as any}
-                        style={{ width: '100%', height: '100%' }}
-                      >
-                        {formData.latitude && formData.longitude && (
-                          <Marker
-                            latitude={formData.latitude}
-                            longitude={formData.longitude}
-                            draggable
-                            onDragEnd={(event) => {
-                              setFormData(prev => ({
-                                ...prev,
-                                latitude: event.lngLat.lat,
-                                longitude: event.lngLat.lng
-                              }))
-                            }}
-                          >
-                            <div className="relative">
-                              <MapPin className="h-8 w-8 text-blue-600 fill-blue-600" />
-                            </div>
-                          </Marker>
-                        )}
-                        <NavigationControl position="top-right" />
-                      </Map>
+                    <div className="bg-slate-50 p-6 rounded-xl border-2 border-slate-200 text-center">
+                      <MapPin className="h-10 w-10 text-slate-400 mx-auto mb-3" />
+                      <h3 className="font-semibold text-slate-700 mb-1">Locație Automată</h3>
+                      <p className="text-sm text-slate-500 mb-2">
+                        Coordonatele au fost setate automat pe baza orașului selectat.
+                      </p>
+                      {formData.latitude && formData.longitude && (
+                        <div className="text-xs font-mono bg-white inline-block px-3 py-1 rounded border border-slate-200 text-slate-400">
+                          {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                        </div>
+                      )}
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">
-                      Apasă pe hartă sau trage pin-ul pentru a seta locația business-ului tău
-                    </p>
                   </div>
 
                   {/* Address Line */}
@@ -1323,61 +995,7 @@ export default function BusinessOnboardingPage() {
                         <span className="text-sm font-semibold">Acceptă Rezervări</span>
                       </label>
                     </div>
-                  </div>
-                )}
 
-                {/* Cafe Configuration */}
-                {formData.category === 'Cafe' && (
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-foreground mb-2">
-                        Specialitate
-                      </label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {['Specialty Coffee', 'To Go', 'Brunch', 'Co-working friendly'].map((spec) => (
-                          <label key={spec} className="flex items-center gap-2 p-3 rounded-lg border-2 border-border hover:border-primary/50 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={formData.specialty?.includes(spec) || false}
-                              onChange={(e) => {
-                                const current = Array.isArray(formData.specialty) ? formData.specialty : (formData.specialty ? [formData.specialty] : [])
-                                setFormData(prev => ({
-                                  ...prev,
-                                  specialty: e.target.checked
-                                    ? [...current, spec].join(', ')
-                                    : current.filter((s: string) => s !== spec).join(', ')
-                                }))
-                              }}
-                              className="rounded border-border text-primary focus:ring-primary"
-                            />
-                            <span className="text-sm">{spec}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-foreground mb-2">
-                        Nivel Preț
-                      </label>
-                      <div className="flex gap-3">
-                        {(['€', '€€', '€€€', '€€€€'] as const).map((level) => (
-                          <button
-                            key={level}
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, price_level: level }))}
-                            className={cn(
-                              "px-6 py-3 rounded-xl border-2 font-semibold transition-all",
-                              formData.price_level === level
-                                ? "border-primary bg-primary/10 text-primary"
-                                : "border-border hover:border-primary/50"
-                            )}
-                          >
-                            {level}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
 
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-2">
@@ -1396,105 +1014,14 @@ export default function BusinessOnboardingPage() {
                   </div>
                 )}
 
-                {/* Nature/Hiking Configuration */}
-                {formData.category === 'Nature' && (
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-foreground mb-2">
-                        Nivel Dificultate
-                      </label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {(['Easy', 'Moderate', 'Hard', 'Expert'] as const).map((diff) => (
-                          <button
-                            key={diff}
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, difficulty: diff }))}
-                            className={cn(
-                              "px-4 py-3 rounded-xl border-2 font-semibold transition-all",
-                              formData.difficulty === diff
-                                ? "border-primary bg-primary/10 text-primary"
-                                : "border-border hover:border-primary/50"
-                            )}
-                          >
-                            {diff}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-foreground mb-2">
-                          Lungime (km)
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.length_km || ""}
-                          onChange={(e) =>
-                            setFormData(prev => ({ ...prev, length_km: parseFloat(e.target.value) || undefined }))
-                          }
-                          placeholder="5.2"
-                          min="0"
-                          step="0.1"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-foreground mb-2">
-                          Elevație (m)
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.elevation_gain_m || ""}
-                          onChange={(e) =>
-                            setFormData(prev => ({ ...prev, elevation_gain_m: parseFloat(e.target.value) || undefined }))
-                          }
-                          placeholder="500"
-                          min="0"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-foreground mb-2">
-                          Durată (ore)
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.estimated_duration_hours || ""}
-                          onChange={(e) =>
-                            setFormData(prev => ({ ...prev, estimated_duration_hours: parseFloat(e.target.value) || undefined }))
-                          }
-                          placeholder="3.5"
-                          min="0"
-                          step="0.5"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-foreground mb-2">
-                        Condiții Traseu (Opțional)
-                      </label>
-                      <textarea
-                        value={formData.trail_conditions || ""}
-                        onChange={(e) =>
-                          setFormData(prev => ({ ...prev, trail_conditions: e.target.value }))
-                        }
-                        placeholder="Starea actuală a traseului, avertismente, etc."
-                        rows={3}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-border bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
-                      />
-                    </div>
-                  </div>
-                )}
 
                 {/* Spa Configuration */}
                 {formData.category === 'Spa' && (
                   <div className="space-y-6">
                     <div>
                       <label className="block text-sm font-semibold text-foreground mb-2">
-                        Servicii Spa
+                        Servicii / Activități
                       </label>
                       <p className="text-sm text-muted-foreground mb-4">
                         Adaugă serviciile oferite cu prețuri (ex: Masaj Relaxare - 150 RON, 60 min)
@@ -1569,15 +1096,7 @@ export default function BusinessOnboardingPage() {
                   </div>
                 )}
 
-                {/* Other Categories - Generic Message */}
-                {!['Hotel', 'Restaurant', 'Cafe', 'Nature', 'Spa'].includes(formData.category) && formData.category && (
-                  <div className="p-6 bg-primary/10 border-2 border-primary/20 rounded-xl">
-                    <p className="text-sm text-primary">
-                      Câmpurile specifice pentru categoria <strong>{BUSINESS_CATEGORIES.find(c => c.value === formData.category)?.label}</strong> vor fi implementate în curând.
-                      Poți continua cu pașii următori pentru a finaliza înregistrarea business-ului.
-                    </p>
-                  </div>
-                )}
+
 
                 {/* No Category Selected */}
                 {!formData.category && (
@@ -1588,204 +1107,119 @@ export default function BusinessOnboardingPage() {
                   </div>
                 )}
               </motion.div>
-            )}
+            )
+            }
 
-            {/* Step 4: Media Gallery */}
-            {step === 4 && (
-              <motion.div
-                key="step4"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-6"
-              >
-                <div className="text-center mb-8">
-                  <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-pink-600 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <ImageIcon className="h-10 w-10 text-white" />
-                  </div>
-                  <h2 className="text-3xl font-bold text-foreground mb-2">
-                    Adaugă Fotografii
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Prezintă business-ul tău cu imagini frumoase
-                  </p>
-                </div>
+            {/* Step 4: Review & Submit */}
+            {
+              step === 4 && (
+                <motion.div
+                  key="step4"
 
-                <div className="space-y-6">
-                  {/* Primary Image */}
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Imagine Principală *
-                    </label>
-                    <ImageUpload
-                      value={formData.image_url}
-                      onChange={(url) => {
-                        setFormData((prev) => ({ ...prev, image_url: url }))
-                        if (errors.image_url) setErrors({ ...errors, image_url: "" })
-                      }}
-                      onRemove={() => setFormData((prev) => ({ ...prev, image_url: "" }))}
-                      className="h-48"
-                    />
-                    {errors.image_url && (
-                      <p className="mt-1 text-sm text-destructive">{errors.image_url}</p>
-                    )}
-                  </div>
 
-                  {/* Additional Images */}
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Imagini Adiționale (Opțional)
-                    </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {formData.image_urls.map((url, index) => (
-                        <ImageUpload
-                          key={index}
-                          value={url}
-                          onChange={(newUrl) => {
-                            const newUrls = [...formData.image_urls]
-                            newUrls[index] = newUrl
-                            setFormData(prev => ({ ...prev, image_urls: newUrls }))
-                          }}
-                          onRemove={() => {
-                            setFormData(prev => ({
-                              ...prev,
-                              image_urls: prev.image_urls.filter((_, i) => i !== index)
-                            }))
-                          }}
-                          className="h-32"
-                        />
-                      ))}
-                      {formData.image_urls.length < 9 && (
-                        <ImageUpload
-                          value=""
-                          onChange={(url) => {
-                            setFormData(prev => ({
-                              ...prev,
-                              image_urls: [...prev.image_urls, url]
-                            }))
-                          }}
-                          onRemove={() => { }}
-                          className="h-32"
-                        />
-                      )}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-6"
+                >
+                  <div className="text-center mb-8">
+                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-green-600 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      <CheckCircle2 className="h-10 w-10 text-white" />
                     </div>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Poți adăuga până la 10 imagini în total (1 principală + 9 adiționale)
+                    <h2 className="text-3xl font-bold text-foreground mb-2">
+                      Revizuire & Finalizare
+                    </h2>
+                    <p className="text-muted-foreground">
+                      Revizuiește informațiile înainte de a crea business-ul
                     </p>
                   </div>
-                </div>
-              </motion.div>
-            )}
 
-            {/* Step 5: Review & Submit */}
-            {step === 5 && (
-              <motion.div
-                key="step5"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-6"
-              >
-                <div className="text-center mb-8">
-                  <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-green-600 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <CheckCircle2 className="h-10 w-10 text-white" />
-                  </div>
-                  <h2 className="text-3xl font-bold text-foreground mb-2">
-                    Revizuire & Finalizare
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Revizuiește informațiile înainte de a crea business-ul
-                  </p>
-                </div>
-
-                <div className="bg-muted/10 rounded-xl p-6 space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-3">Informații Business</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Nume:</span>
-                        <span className="font-semibold text-foreground">{formData.name}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Categorie:</span>
-                        <span className="font-semibold text-foreground">
-                          {BUSINESS_CATEGORIES.find(c => c.value === formData.category)?.label}
-                        </span>
-                      </div>
-                      {formData.description && (
-                        <div>
-                          <span className="text-muted-foreground">Descriere:</span>
-                          <p className="text-foreground mt-1">{formData.description}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-foreground mb-3">Locație</h3>
-                    <div className="space-y-2 text-sm">
-                      {formData.address_line && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Adresă:</span>
-                          <span className="font-semibold text-foreground">{formData.address_line}</span>
-                        </div>
-                      )}
-                      {formData.latitude && formData.longitude && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Coordonate:</span>
-                          <span className="font-semibold text-foreground">
-                            {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {formData.category === 'Hotel' && formData.star_rating && (
+                  <div className="bg-muted/10 rounded-xl p-6 space-y-4">
                     <div>
-                      <h3 className="font-semibold text-foreground mb-3">Detalii Hotel</h3>
+                      <h3 className="font-semibold text-foreground mb-3">Informații Business</h3>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Clasificare Stele:</span>
-                          <span className="font-semibold text-foreground">{formData.star_rating} stele</span>
+                          <span className="text-muted-foreground">Nume:</span>
+                          <span className="font-semibold text-foreground">{formData.name}</span>
                         </div>
-                        {formData.check_in_time && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Categorie:</span>
+                          <span className="font-semibold text-foreground">
+                            {BUSINESS_CATEGORIES.find(c => c.value === formData.category)?.label}
+                          </span>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-3">Locație</h3>
+                      <div className="space-y-2 text-sm">
+                        {formData.address_line && (
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Check-in:</span>
-                            <span className="font-semibold text-foreground">{formData.check_in_time}</span>
+                            <span className="text-muted-foreground">Adresă:</span>
+                            <span className="font-semibold text-foreground">{formData.address_line}</span>
                           </div>
                         )}
-                        {formData.check_out_time && (
+                        {formData.latitude && formData.longitude && (
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Check-out:</span>
-                            <span className="font-semibold text-foreground">{formData.check_out_time}</span>
+                            <span className="text-muted-foreground">Coordonate:</span>
+                            <span className="font-semibold text-foreground">
+                              {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
+                            </span>
                           </div>
                         )}
                       </div>
                     </div>
-                  )}
 
-                  {formData.image_url && (
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-3">Imagine Principală</h3>
-                      <img
-                        src={formData.image_url}
-                        alt="Business preview"
-                        className="w-full h-48 object-cover rounded-xl border-2 border-border"
-                      />
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    {formData.category === 'Hotel' && formData.star_rating && (
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-3">Detalii Hotel</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Clasificare Stele:</span>
+                            <span className="font-semibold text-foreground">{formData.star_rating} stele</span>
+                          </div>
+                          {formData.check_in_time && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Check-in:</span>
+                              <span className="font-semibold text-foreground">{formData.check_in_time}</span>
+                            </div>
+                          )}
+                          {formData.check_out_time && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Check-out:</span>
+                              <span className="font-semibold text-foreground">{formData.check_out_time}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {formData.image_url && (
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-3">Imagine Principală</h3>
+                        <img
+                          src={formData.image_url}
+                          alt="Business preview"
+                          className="w-full h-48 object-cover rounded-xl border-2 border-border"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )
+            }
+          </AnimatePresence >
 
           {/* Server Error */}
-          {serverError && (
-            <div className="mt-4 p-4 bg-destructive/10 border-2 border-destructive/20 rounded-xl">
-              <p className="text-sm text-destructive">{serverError}</p>
-            </div>
-          )}
+          {
+            serverError && (
+              <div className="mt-4 p-4 bg-destructive/10 border-2 border-destructive/20 rounded-xl">
+                <p className="text-sm text-destructive">{serverError}</p>
+              </div>
+            )
+          }
 
           {/* Navigation Buttons */}
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
@@ -1804,7 +1238,7 @@ export default function BusinessOnboardingPage() {
               Înapoi
             </button>
 
-            {step < 5 ? (
+            {step < 4 ? (
               <button
                 type="button"
                 onClick={handleNext}
@@ -1835,9 +1269,9 @@ export default function BusinessOnboardingPage() {
               </button>
             )}
           </div>
-        </motion.div>
-      </div>
-    </div>
+        </motion.div >
+      </div >
+    </div >
   )
 }
 

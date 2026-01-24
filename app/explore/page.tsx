@@ -5,7 +5,7 @@ import { Loader2, MapPin, PartyPopper } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
 import { useVacationStore } from "@/store/vacation-store"
 import { useTripStore } from "@/store/trip-store"
-import { getBusinessesForMap, getUserSwipedIds, type MapBusiness } from "@/services/business/business.service"
+import { getBusinessesForMap, getEventsForMap, getUserSwipedIds, type MapBusiness } from "@/services/business/business.service"
 import { logger } from "@/lib/logger"
 import { SwipeStack } from "@/components/features/explore/swipe-stack"
 import { CategoryProgress, type SwipeCategory } from "@/components/features/explore/category-progress"
@@ -79,11 +79,14 @@ function ExploreContent() {
                 const supabase = createClient()
                 const { data: { user } } = await supabase.auth.getUser()
 
-                // Fetch businesses and user swipes in parallel
-                const [results, swipedIds] = await Promise.all([
+                // Fetch businesses, events and user swipes in parallel
+                const [businessResults, eventResults, swipedIds] = await Promise.all([
                     getBusinessesForMap(currentCity.id),
+                    getEventsForMap(currentCity.id),
                     user ? getUserSwipedIds(user.id, 'pass') : Promise.resolve([])
                 ])
+
+                const results = [...businessResults, ...eventResults]
 
                 // Categorize businesses
                 const categorized: Record<SwipeCategory, MapBusiness[]> = {

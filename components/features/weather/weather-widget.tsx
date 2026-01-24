@@ -24,7 +24,17 @@ export function WeatherWidget({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Check if vacation is too far in future to fetch weather (14 days max for Open-Meteo)
+  // We do this check synchronously to avoid initial loading skeleton flash
+  const daysUntilStart = Math.ceil((new Date(vacationStartDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+  const isTooFar = daysUntilStart > 14
+
   useEffect(() => {
+    if (isTooFar) {
+      setIsLoading(false)
+      return
+    }
+
     async function loadWeather() {
       setIsLoading(true)
       setError(null)
@@ -46,9 +56,14 @@ export function WeatherWidget({
     }
 
     loadWeather()
-  }, [latitude, longitude, cityName, vacationStartDate, vacationEndDate])
+  }, [latitude, longitude, cityName, vacationStartDate, vacationEndDate, isTooFar])
 
   // If vacation is more than 14 days away, don't show anything
+  if (isTooFar) {
+    return null
+  }
+
+  // If loading finished but no days (e.g. error or old date), don't show
   if (!isLoading && filteredDays.length === 0) {
     return null
   }

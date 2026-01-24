@@ -163,7 +163,8 @@ export async function getBusinessById(id: string): Promise<Business | null> {
     }
 
     if (!data) {
-      return null
+      // Try searching in events table
+      return await getEventAsBusiness(id)
     }
 
     // Extract from attributes JSONB
@@ -222,6 +223,76 @@ export async function getBusinessById(id: string): Promise<Business | null> {
   } catch (error) {
     logger.error('Unexpected error fetching business by ID', error, { businessId: id })
     return null
+  }
+}
+
+/**
+ * Fetch events for map display (as MapBusiness)
+ */
+export async function getEventsForMap(cityId: string): Promise<MapBusiness[]> {
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*, businesses!inner(latitude, longitude, address)')
+      .eq('city_id', cityId)
+      .eq('is_active', true)
+      .gte('end_date', new Date().toISOString()) // Only future events
+      .order('start_date', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching events for map:', error)
+      return []
+    }
+
+    return (data || []).map((event: any) => ({
+      id: event.id,
+      name: event.title,
+      category: 'Activities', // Force category
+      latitude: event.businesses?.latitude || 0,
+      longitude: event.businesses?.longitude || 0,
+      rating: 5, // Default for events
+      image_url: event.image_url,
+      address: event.location || event.businesses?.address, // Use event location override or business address
+      price_level: event.ticket_url ? 'Ticket' : 'Free',
+      description: event.description,
+      ticket_url: event.ticket_url
+    })).filter(e => e.latitude && e.longitude)
+  } catch (e) {
+    console.error('Unexpected error fetching events:', e)
+    return []
+  }
+}
+
+async function getEventAsBusiness(id: string): Promise<Business | null> {
+  const supabase = createClient()
+  const { data: event, error } = await supabase
+    .from('events')
+    .select('*, businesses(*)')
+    .eq('id', id)
+    .single()
+
+  if (error || !event) return null
+
+  // Construct synthetic business from event
+  return {
+    id: event.id,
+    city_id: event.city_id,
+    name: event.title,
+    description: event.description,
+    category: 'Activities',
+    address: event.location || event.businesses?.address,
+    latitude: event.businesses?.latitude,
+    longitude: event.businesses?.longitude,
+    image_url: event.image_url,
+    rating: 5,
+    is_verified: true,
+    created_at: event.created_at,
+    updated_at: event.created_at,
+    amenities: ['Event', 'Live Music'],
+    ticket_url: event.ticket_url,
+    website: event.facebook_event_url,
+    opening_hours: { open: event.start_date, close: event.end_date }
   }
 }
 

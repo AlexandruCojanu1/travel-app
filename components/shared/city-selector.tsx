@@ -71,13 +71,19 @@ export function CitySelector({ isOpen, onClose, onSelect }: CitySelectorProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900 text-white overflow-hidden"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-white text-neutral-900 overflow-hidden"
         >
+          {/* Title */}
+          <div className="absolute top-24 left-0 right-0 text-center z-20 pointer-events-none">
+            <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+              Unde mergi?
+            </h2>
+          </div>
           {/* Close overlay (click outside) */}
           <div className="absolute inset-0" onClick={onClose} />
 
           {/* Central selection line indicator (optional, maybe just visual focus) */}
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[80px] pointer-events-none z-0 border-y border-white/10 bg-white/5 backdrop-blur-sm" />
+          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[80px] pointer-events-none z-0 border-y border-neutral-200 bg-neutral-50/50 backdrop-blur-sm" />
 
           {/* Scroll Container */}
           <div
@@ -92,7 +98,7 @@ export function CitySelector({ isOpen, onClose, onSelect }: CitySelectorProps) {
           >
             {isLoading ? (
               <div className="flex h-full items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-white/50" />
+                <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
               </div>
             ) : (
               <div className="flex flex-col items-center">
@@ -116,7 +122,7 @@ export function CitySelector({ isOpen, onClose, onSelect }: CitySelectorProps) {
           {/* Back Button / Instruction */}
           <button
             onClick={onClose}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/50 text-sm hover:text-white transition-colors uppercase tracking-widest"
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 text-neutral-400 text-sm hover:text-neutral-900 transition-colors uppercase tracking-widest"
           >
             Close
           </button>
@@ -212,7 +218,7 @@ function CityItem({ city, containerRef, index, onClick }: {
         <motion.span
           className="block text-4xl md:text-5xl font-serif tracking-tight"
           style={{
-            color: useTransform(distance, [0, 100], ["#ffffff", "#9ca3af"]) // White -> Gray 400
+            color: useTransform(distance, [0, 100], ["#171717", "#a3a3a3"]) // Neutral 900 -> Neutral 400
           }}
         >
           {city.name}
@@ -220,7 +226,7 @@ function CityItem({ city, containerRef, index, onClick }: {
         {/* Optional Country subtitle, hidden if far away to clean up? */}
         <motion.span
           style={{ opacity: useTransform(distance, [0, 80], [1, 0]) }}
-          className="block text-xs uppercase tracking-[0.2em] text-blue-400 mt-1"
+          className="block text-xs uppercase tracking-[0.2em] text-blue-600 mt-1"
         >
           {city.country}
         </motion.span>

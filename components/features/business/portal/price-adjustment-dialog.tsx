@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/shared/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/shared/ui/dialog"
 import { Button } from "@/components/shared/ui/button"
 import { Label } from "@/components/shared/ui/label"
 import { Input } from "@/components/shared/ui/input"
@@ -65,8 +65,11 @@ export function PriceAdjustmentDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Adjust Price</DialogTitle>
+          <DialogDescription>
+            Modify the price for the selected date.
+          </DialogDescription>
         </DialogHeader>
-        
+
         {date && (
           <div className="space-y-4 py-4">
             <div>
@@ -143,7 +146,7 @@ export function PriceAdjustmentDialog({
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-900">
-                <strong>Preview:</strong> {mode === 'fixed' 
+                <strong>Preview:</strong> {mode === 'fixed'
                   ? `${parseFloat(fixedPrice || "0").toFixed(2)} RON`
                   : `${calculatePercentagePrice().toFixed(2)} RON (${percentage}%)`
                 }

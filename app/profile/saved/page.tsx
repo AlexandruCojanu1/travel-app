@@ -107,6 +107,7 @@ export default function SavedPage() {
                                             src={business.image_url}
                                             alt={business.name}
                                             fill
+                                            sizes="(max-width: 768px) 100vw, 50vw"
                                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
                                     ) : (

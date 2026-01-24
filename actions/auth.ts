@@ -229,38 +229,28 @@ export async function completeOnboarding(data: OnboardingInput): Promise<ActionR
       }
     }
 
-    console.log('completeOnboarding: User authenticated:', user.id)
 
-    console.log('completeOnboarding: Upserting profile:', {
-      userId: user.id,
-      homeCityId: validated.homeCityId,
-      role: validated.role,
-      persona: validated.persona
-    })
 
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        id: user.id,
-        home_city_id: validated.homeCityId,
+
+
+
+    // Use service to update profile
+    // This keeps logic centralized and consistent
+    const { completeUserProfileOnboarding } = await import('@/services/auth/profile.service')
+    try {
+      await completeUserProfileOnboarding(user.id, {
+        homeCityId: validated.homeCityId,
         role: validated.role,
         persona: validated.persona,
-        onboarding_data: validated.onboarding_data as any, // Cast for JSONB
-        onboarding_completed: true,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'id',
+        onboarding_data: validated.onboarding_data,
       })
-
-    if (error) {
-      console.error('completeOnboarding: Error upserting profile:', error)
+    } catch (serviceError: any) {
+      console.error('completeOnboarding: Service error:', serviceError)
       return {
         success: false,
-        error: `Eroare la salvare: ${error.message || 'Failed to save profile'}`
+        error: serviceError.message || 'Failed to update profile'
       }
     }
-
-    console.log('completeOnboarding: Profile saved successfully, redirecting to /home')
 
     revalidatePath('/home')
     revalidatePath('/onboarding')

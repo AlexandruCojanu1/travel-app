@@ -1,3 +1,0 @@
-organization_name,is_authority,is_producer,is_operator,attribution_url,attribution_email,attribution_phone,agency_id
-FlashWeb IT,0,1,0,https://flash-its.eu/?utm_source=gmaps,admin@flash-its.eu,,
-CT BUS SA,0,0,1,http://www.ctbus.ro/?utm_source=gmaps,office@ctbus.ro,0241694960,CTBUS

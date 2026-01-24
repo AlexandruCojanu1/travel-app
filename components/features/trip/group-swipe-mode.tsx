@@ -9,6 +9,7 @@ import { submitVote } from "@/actions/trip/vote"
 import { toast } from "sonner"
 import { Button } from "@/components/shared/ui/button"
 import Link from "next/link"
+import { useUIStore } from "@/store/ui-store"
 
 interface GroupSwipeModeProps {
     businesses: MapBusiness[]
@@ -20,6 +21,7 @@ export function GroupSwipeMode({ businesses, tripId, tripTitle }: GroupSwipeMode
     const [currentIndex, setCurrentIndex] = useState(0)
     const [isFinished, setIsFinished] = useState(false)
     const [matchAnimation, setMatchAnimation] = useState<string | null>(null) // Business name if matched
+    const { openBusinessDrawer } = useUIStore()
 
     const currentBusiness = businesses[currentIndex]
     const nextBusiness = businesses[currentIndex + 1]
@@ -127,17 +129,15 @@ export function GroupSwipeMode({ businesses, tripId, tripTitle }: GroupSwipeMode
                         </div>
                     )}
 
-                    {currentBusiness && (
-                        <div key={currentBusiness.id} className="absolute inset-0">
-                            <BusinessSwipeCard
-                                business={currentBusiness}
-                                onSwipeLeft={() => handleVote(false)}
-                                onSwipeRight={() => handleVote(true)}
-                                onTap={() => { }}
-                                isTop={true}
-                            />
-                        </div>
-                    )}
+                    <div key={currentBusiness.id} className="absolute inset-0">
+                        <BusinessSwipeCard
+                            business={currentBusiness}
+                            onSwipeLeft={() => handleVote(false)}
+                            onSwipeRight={() => handleVote(true)}
+                            onTap={() => openBusinessDrawer(currentBusiness.id)}
+                            isTop={true}
+                        />
+                    </div>
                 </AnimatePresence>
             </div>
 

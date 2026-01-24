@@ -8,7 +8,16 @@ export const baseBusinessSchema = z.object({
   tagline: z.string().max(100).optional(),
   description: z.string().optional(),
   phone: z.string().optional(),
-  website: z.string().url().optional().or(z.literal('')),
+  website: z.string()
+    .transform((val) => {
+      if (!val) return val;
+      if (!/^https?:\/\//i.test(val)) {
+        return `https://${val}`;
+      }
+      return val;
+    })
+    .pipe(z.string().url().optional().or(z.literal('')))
+    .or(z.literal('')),
   email: z.string().email().optional().or(z.literal('')),
   category: z.string(),
   city_id: z.string().uuid(),
