@@ -1,17 +1,18 @@
 # Dependencies
-node_modules/
-/.pnp
+node_modules
+.pnp
 .pnp.js
 
 # Testing
-/coverage
+coverage
 
 # Next.js
-/.next/
-/out/
+.next/
+out/
+build
 
-# Production
-/build
+# Backend
+BACKEND/dist
 
 # Misc
 .DS_Store
@@ -23,8 +24,13 @@ yarn-debug.log*
 yarn-error.log*
 
 # Local env files
-.env*.local
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+BACKEND/.env
+FRONTEND/.env.local
 
 # Vercel
 .vercel
@@ -34,33 +40,9 @@ yarn-error.log*
 next-env.d.ts
 
 # IDE
-# .vscode/
+.vscode/
 .idea/
-*.swp
-*.swo
-*~
-
-# OS
-Thumbs.db
 
 # Logs
 logs
 *.log
-
-# Temporary files
-*.tmp
-*.temp
-
-# Documentation (archived)
-docs/archive/
-
-# Test scripts (not needed in production)
-database/scripts/test/
-
-# Data files (too large for git)
-/data/*.osm.pbf
-/data/*.zip
-/data/*.osrm
-/data/*.osrm.hsgr
-/data/*.osrm.mld
-/data/graph.obj
